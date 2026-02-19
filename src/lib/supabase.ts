@@ -1,0 +1,58 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export interface Roadmap {
+  id: string;
+  user_id: string;
+  title: string;
+  data: RoadmapData;
+  customer_logo_base64?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoadmapData {
+  goals: Goal[];
+  typeLabels?: Record<string, string>;
+  typeColors?: Record<string, string>;
+}
+
+export interface Goal {
+  id: string;
+  number: string;
+  title: string;
+  color: string;
+  initiatives: Initiative[];
+}
+
+export interface Initiative {
+  id: string;
+  label: string;
+  activities: {
+    q1: Activity[];
+    q2: Activity[];
+    q3: Activity[];
+    q4: Activity[];
+  };
+  spanning?: SpanningActivity[];
+}
+
+export interface Activity {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface SpanningActivity {
+  id: string;
+  name: string;
+  type: string;
+}

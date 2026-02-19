@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --border: #2e3248;
+  --text: #e8eaf6;
+  --text-muted: #7b82a8;
+  --hover-bg: #2e3248;
+}
+
+:root[data-theme="light"] {
+  --bg: #E8F4FD;
+  --surface: #ffffff;
+  --surface2: #F0F8FF;
+  --border: #B8D4E8;
+  --text: #032D60;
+  --text-muted: #0B5CAB;
+  --hover-bg: #D4E9F7;
+  --primary: #00A1E0;
+  --primary-hover: #0088C3;
+}
+
+@layer utilities {
+  @keyframes slideIn {
+    from {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes modalIn {
+    from {
+      transform: scale(0.95) translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.2s ease;
+  }
+
+  .animate-modalIn {
+    animation: modalIn 0.2s ease;
+  }
+}
+
+@media print {
+  button, .no-print {
+    display: none !important;
+  }
+}
