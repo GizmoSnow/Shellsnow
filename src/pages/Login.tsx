@@ -18,13 +18,20 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        console.error('Login error:', error);
+        setError(error.message || 'Failed to sign in');
+        setLoading(false);
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
       setLoading(false);
-    } else {
-      navigate('/dashboard');
     }
   };
 
