@@ -157,7 +157,6 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--border)' }}>
             {goal.initiatives.map((initiative, iniIdx) => {
               const spanningActivities = initiative.spanning || [];
-              const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
               return (
                 <div key={initiative.id}>
@@ -196,7 +195,6 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
                           const minIdx = Math.min(...qIndexes);
                           const maxIdx = Math.max(...qIndexes);
-                          const spanCount = maxIdx - minIdx + 1;
 
                           return (
                             <div
@@ -255,15 +253,13 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                     </div>
                   )}
 
-                  {hasRegularActivities && (
-
                   <div className="grid grid-cols-[200px_repeat(4,1fr)]">
                   <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                     <div
                       className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                       style={{ background: goal.color }}
                     ></div>
-                    {(iniIdx === 0 && spanningActivities.length === 0) && (
+                    {iniIdx === 0 && spanningActivities.length === 0 && (
                       <>
                         <div
                           className="text-xs font-extrabold uppercase tracking-wide mb-1"
@@ -376,7 +372,6 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                     );
                   })}
                 </div>
-                  )}
                 </div>
               );
             })}
