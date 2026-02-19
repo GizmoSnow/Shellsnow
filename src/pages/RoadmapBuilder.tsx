@@ -401,6 +401,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         <RoadmapGrid
           data={data}
           onDataChange={setData}
+          getTypeColor={getTypeColor}
           onOpenAddModal={(context) => {
             setAddContext(context);
             setEditingActivity(null);
@@ -427,6 +428,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         editingActivity={editingActivity}
         typeLabels={data.typeLabels}
         quarterTitles={data.quarterTitles}
+        getTypeColor={getTypeColor}
         onClose={() => {
           setShowAddModal(false);
           setEditingActivity(null);

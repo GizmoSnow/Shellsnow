@@ -12,25 +12,35 @@ interface AddActivityModalProps {
     q3?: string;
     q4?: string;
   };
+  getTypeColor: (typeKey: string) => string;
   onClose: () => void;
   onAdd: (activity: Activity | SpanningActivity) => void;
 }
 
-const DEFAULT_TYPES = [
-  { key: 'csm', label: 'CSM-led', bg: '#e8194b', text: '#ffffff' },
-  { key: 'architect', label: 'Success Architect', bg: '#00b4d8', text: '#0f1117' },
-  { key: 'specialist', label: 'Success Specialist', bg: '#1a1d3e', text: '#ffffff' },
-  { key: 'review', label: 'Success Review', bg: '#7b82a8', text: '#ffffff' },
-  { key: 'event', label: 'Event', bg: '#f77f00', text: '#ffffff' },
-  { key: 'partner', label: 'Partner', bg: '#f4a261', text: '#0f1117' },
-  { key: 'trailhead', label: 'Trailhead', bg: '#9b5de5', text: '#ffffff' },
+const DEFAULT_TYPE_KEYS = [
+  { key: 'csm', label: 'CSM-led' },
+  { key: 'architect', label: 'Success Architect' },
+  { key: 'specialist', label: 'Success Specialist' },
+  { key: 'review', label: 'Success Review' },
+  { key: 'event', label: 'Event' },
+  { key: 'partner', label: 'Partner' },
+  { key: 'trailhead', label: 'Trailhead' },
 ];
+
+function getTextColor(bgColor: string): string {
+  const hex = bgColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? '#000000' : '#ffffff';
+}
 
 function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
@@ -133,20 +143,24 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 Type
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {DEFAULT_TYPES.map((type) => (
-                  <div
-                    key={type.key}
-                    onClick={() => setSelectedType(type.key)}
-                    className="cursor-pointer px-2 py-2 rounded-lg text-[10px] font-semibold text-center transition-all"
-                    style={{
-                      background: type.bg,
-                      color: type.text,
-                      border: selectedType === type.key ? '2px solid white' : '2px solid transparent'
-                    }}
-                  >
-                    {typeLabels?.[type.key] || type.label}
-                  </div>
-                ))}
+                {DEFAULT_TYPE_KEYS.map((type) => {
+                  const bgColor = getTypeColor(type.key);
+                  const textColor = getTextColor(bgColor);
+                  return (
+                    <div
+                      key={type.key}
+                      onClick={() => setSelectedType(type.key)}
+                      className="cursor-pointer px-2 py-2 rounded-lg text-[10px] font-semibold text-center transition-all"
+                      style={{
+                        background: bgColor,
+                        color: textColor,
+                        border: selectedType === type.key ? '2px solid white' : '2px solid transparent'
+                      }}
+                    >
+                      {typeLabels?.[type.key] || type.label}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

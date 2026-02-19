@@ -7,17 +7,8 @@ interface RoadmapGridProps {
   onDataChange: (data: RoadmapData) => void;
   onOpenAddModal: (context: any) => void;
   onOpenEditModal: (context: any, activity: Activity) => void;
+  getTypeColor: (typeKey: string) => string;
 }
-
-const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#e8194b',
-  architect: '#00b4d8',
-  specialist: '#1a1d3e',
-  review: '#7b82a8',
-  event: '#f77f00',
-  partner: '#f4a261',
-  trailhead: '#9b5de5',
-};
 
 function getTextColor(bgColor: string): string {
   const hex = bgColor.replace('#', '');
@@ -28,10 +19,7 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.55 ? '#000000' : '#ffffff';
 }
 
-export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpenEditModal }: RoadmapGridProps) {
-  const getTypeColor = (typeKey: string) => {
-    return data.typeColors?.[typeKey] || DEFAULT_TYPE_COLORS[typeKey] || '#6c63ff';
-  };
+export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
   const [editingQuarter, setEditingQuarter] = useState<string | null>(null);
@@ -161,44 +149,49 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
-          {qkeys.map((q, i) => (
-            <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
-              {editingSuccessPath === q ? (
-                <input
-                  type="text"
-                  defaultValue={getSuccessPathLabel(q)}
-                  autoFocus
-                  onBlur={(e) => {
-                    const newValue = e.target.value.trim();
-                    if (newValue) {
-                      updateSuccessPathLabel(q, newValue);
-                    }
-                    setEditingSuccessPath(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const newValue = e.currentTarget.value.trim();
+          {qkeys.map((q, i) => {
+            const csmColor = getTypeColor('csm');
+            const textColor = getTextColor(csmColor);
+            return (
+              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
+                {editingSuccessPath === q ? (
+                  <input
+                    type="text"
+                    defaultValue={getSuccessPathLabel(q)}
+                    autoFocus
+                    onBlur={(e) => {
+                      const newValue = e.target.value.trim();
                       if (newValue) {
                         updateSuccessPathLabel(q, newValue);
                       }
                       setEditingSuccessPath(null);
-                    } else if (e.key === 'Escape') {
-                      setEditingSuccessPath(null);
-                    }
-                  }}
-                  className="bg-[#e8194b] text-white text-xs font-semibold px-4 py-1 rounded-full text-center outline-none focus:ring-2 focus:ring-white/50"
-                  style={{ minWidth: '140px' }}
-                />
-              ) : (
-                <div
-                  onClick={() => setEditingSuccessPath(q)}
-                  className="bg-[#e8194b] text-white text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  {getSuccessPathLabel(q)}
-                </div>
-              )}
-            </div>
-          ))}
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const newValue = e.currentTarget.value.trim();
+                        if (newValue) {
+                          updateSuccessPathLabel(q, newValue);
+                        }
+                        setEditingSuccessPath(null);
+                      } else if (e.key === 'Escape') {
+                        setEditingSuccessPath(null);
+                      }
+                    }}
+                    className="text-xs font-semibold px-4 py-1 rounded-full text-center outline-none focus:ring-2 focus:ring-white/50"
+                    style={{ minWidth: '140px', background: csmColor, color: textColor }}
+                  />
+                ) : (
+                  <div
+                    onClick={() => setEditingSuccessPath(q)}
+                    className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ background: csmColor, color: textColor }}
+                  >
+                    {getSuccessPathLabel(q)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {data.goals.map((goal, goalIdx) => (
