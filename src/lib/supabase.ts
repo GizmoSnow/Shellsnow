@@ -23,6 +23,12 @@ export interface RoadmapData {
   goals: Goal[];
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
+  quarterTitles?: {
+    q1?: string;
+    q2?: string;
+    q3?: string;
+    q4?: string;
+  };
 }
 
 export interface Goal {
@@ -55,4 +61,5 @@ export interface SpanningActivity {
   id: string;
   name: string;
   type: string;
+  quarters: string[];
 }

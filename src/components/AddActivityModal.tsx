@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Activity } from '../lib/supabase';
+import { Activity, SpanningActivity } from '../lib/supabase';
 
 interface AddActivityModalProps {
   isOpen: boolean;
   context: any;
-  editingActivity?: Activity | null;
+  editingActivity?: Activity | SpanningActivity | null;
   typeLabels?: Record<string, string>;
+  quarterTitles?: {
+    q1?: string;
+    q2?: string;
+    q3?: string;
+    q4?: string;
+  };
   onClose: () => void;
-  onAdd: (activity: Activity) => void;
+  onAdd: (activity: Activity | SpanningActivity) => void;
 }
 
 const DEFAULT_TYPES = [
@@ -24,36 +30,74 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
+  const [isSpanning, setIsSpanning] = useState(false);
+  const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       if (editingActivity) {
         setName(editingActivity.name);
         setSelectedType(editingActivity.type);
+        if ('quarters' in editingActivity) {
+          setIsSpanning(true);
+          setSelectedQuarters(editingActivity.quarters || []);
+        } else {
+          setIsSpanning(false);
+          setSelectedQuarters([]);
+        }
       } else {
         setName('');
         setSelectedType('csm');
+        setIsSpanning(context?.quarter === 'spanning');
+        setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
       }
     }
-  }, [isOpen, editingActivity]);
+  }, [isOpen, editingActivity, context]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+    if (isSpanning && selectedQuarters.length === 0) {
+      alert('Please select at least one quarter for spanning activity');
+      return;
+    }
 
-    onAdd({
-      id: editingActivity ? editingActivity.id : uid(),
-      name: name.trim(),
-      type: selectedType
-    });
+    if (isSpanning) {
+      onAdd({
+        id: editingActivity ? editingActivity.id : uid(),
+        name: name.trim(),
+        type: selectedType,
+        quarters: selectedQuarters
+      });
+    } else {
+      onAdd({
+        id: editingActivity ? editingActivity.id : uid(),
+        name: name.trim(),
+        type: selectedType
+      });
+    }
 
     setName('');
     setSelectedType('csm');
+    setIsSpanning(false);
+    setSelectedQuarters([]);
+  };
+
+  const toggleQuarter = (qk: string) => {
+    if (selectedQuarters.includes(qk)) {
+      setSelectedQuarters(selectedQuarters.filter(q => q !== qk));
+    } else {
+      setSelectedQuarters([...selectedQuarters, qk].sort());
+    }
+  };
+
+  const getQuarterTitle = (qkey: string) => {
+    return quarterTitles?.[qkey as keyof typeof quarterTitles] || qkey.toUpperCase();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -105,6 +149,52 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 ))}
               </div>
             </div>
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isSpanning}
+                  onChange={(e) => {
+                    setIsSpanning(e.target.checked);
+                    if (e.target.checked && selectedQuarters.length === 0) {
+                      setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#2e3248] text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                />
+                <span className="text-xs font-semibold text-[#7b82a8] uppercase tracking-wide">
+                  Spanning Activity
+                </span>
+              </label>
+              <p className="text-xs text-[#7b82a8] mt-1 ml-6">
+                Creates a wide pill that stretches across multiple quarters
+              </p>
+            </div>
+
+            {isSpanning && (
+              <div>
+                <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                  Select Quarters
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['q1', 'q2', 'q3', 'q4'].map((qk) => (
+                    <div
+                      key={qk}
+                      onClick={() => toggleQuarter(qk)}
+                      className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
+                      style={{
+                        background: selectedQuarters.includes(qk) ? '#6c63ff' : '#22263a',
+                        color: selectedQuarters.includes(qk) ? '#ffffff' : '#7b82a8',
+                        border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid #2e3248'
+                      }}
+                    >
+                      {getQuarterTitle(qk)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3 justify-end pt-2">
               <button

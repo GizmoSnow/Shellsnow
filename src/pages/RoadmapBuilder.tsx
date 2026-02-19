@@ -426,6 +426,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         context={addContext}
         editingActivity={editingActivity}
         typeLabels={data.typeLabels}
+        quarterTitles={data.quarterTitles}
         onClose={() => {
           setShowAddModal(false);
           setEditingActivity(null);
@@ -439,28 +440,30 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           const initiative = goal.initiatives.find(i => i.id === initiativeId);
           if (!initiative) return;
 
+          const isSpanningActivity = 'quarters' in activity;
+
           if (editingActivity) {
-            if (quarter === 'spanning') {
+            if (isSpanningActivity || quarter === 'spanning') {
               const index = initiative.spanning?.findIndex(a => a.id === activity.id) ?? -1;
               if (index >= 0 && initiative.spanning) {
-                initiative.spanning[index] = activity;
+                initiative.spanning[index] = activity as any;
               }
             } else {
               const acts = initiative.activities[quarter as keyof typeof initiative.activities];
               const index = acts.findIndex(a => a.id === activity.id);
               if (index >= 0) {
-                acts[index] = activity;
+                acts[index] = activity as any;
               }
             }
           } else {
-            if (quarter === 'spanning') {
+            if (isSpanningActivity) {
               if (!initiative.spanning) initiative.spanning = [];
-              initiative.spanning.push(activity);
+              initiative.spanning.push(activity as any);
             } else {
               if (!initiative.activities[quarter as keyof typeof initiative.activities]) {
                 initiative.activities[quarter as keyof typeof initiative.activities] = [];
               }
-              initiative.activities[quarter as keyof typeof initiative.activities].push(activity);
+              initiative.activities[quarter as keyof typeof initiative.activities].push(activity as any);
             }
           }
 

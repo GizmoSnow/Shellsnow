@@ -122,9 +122,13 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
     line: { color: PRIMARY, width: 0 },
   });
 
-  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
-  quarters.forEach((q, i) => {
-    slide.addText(q, {
+  const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
+  const getQuarterTitle = (qkey: string) => {
+    return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
+  };
+
+  qkeys.forEach((qk, i) => {
+    slide.addText(getQuarterTitle(qk), {
       x: Q_START_X + i * Q_W,
       y: START_Y,
       w: Q_W,
@@ -162,7 +166,7 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
     margin: 0,
   });
 
-  quarters.forEach((q, i) => {
+  qkeys.forEach((qk, i) => {
     const label = i === 0 ? 'Success Path' : 'Success Path Review';
     const pillW = Q_W * 0.75;
     const pillX = Q_START_X + i * Q_W + (Q_W - pillW) / 2;
@@ -191,99 +195,107 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
   });
 
   let currentY = SP_Y + SP_H;
-  const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
 
   data.goals.forEach((goal) => {
     goal.initiatives.forEach((initiative, iIdx) => {
-      const isSpanning = !!initiative.spanning;
-      const rowH = ROW_H;
+      const spanningActivities = initiative.spanning || [];
+      const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
-      slide.addShape(pres.ShapeType.rect, {
-        x: MARGIN_L,
-        y: currentY,
-        w: SLIDE_W - MARGIN_L - 0.1,
-        h: rowH,
-        fill: { color: iIdx % 2 === 0 ? SURFACE2 : BG },
-        line: { color: BORDER_COLOR, width: 0.5 },
-      });
+      if (spanningActivities.length > 0) {
+        const rowH = ROW_H;
 
-      slide.addShape(pres.ShapeType.rect, {
-        x: MARGIN_L,
-        y: currentY,
-        w: 0.04,
-        h: rowH,
-        fill: { color: goal.color.replace('#', '') },
-        line: { color: goal.color.replace('#', ''), width: 0 },
-      });
+        slide.addShape(pres.ShapeType.rect, {
+          x: MARGIN_L,
+          y: currentY,
+          w: SLIDE_W - MARGIN_L - 0.1,
+          h: rowH,
+          fill: { color: iIdx % 2 === 0 ? SURFACE2 : BG },
+          line: { color: BORDER_COLOR, width: 0.5 },
+        });
 
-      if (iIdx === 0) {
-        slide.addText(goal.number, {
+        slide.addShape(pres.ShapeType.rect, {
+          x: MARGIN_L,
+          y: currentY,
+          w: 0.04,
+          h: rowH,
+          fill: { color: goal.color.replace('#', '') },
+          line: { color: goal.color.replace('#', ''), width: 0 },
+        });
+
+        if (iIdx === 0) {
+          slide.addText(goal.number, {
+            x: LABEL_X + 0.07,
+            y: currentY + 0.04,
+            w: LEFT_COL - 0.1,
+            h: 0.18,
+            fontSize: 10,
+            bold: true,
+            color: goal.color.replace('#', ''),
+            fontFace: 'Arial',
+            margin: 0,
+          });
+          slide.addText(goal.title, {
+            x: LABEL_X + 0.07,
+            y: currentY + 0.2,
+            w: LEFT_COL - 0.1,
+            h: 0.2,
+            fontSize: 12,
+            bold: true,
+            color: TEXT_COLOR,
+            fontFace: 'Arial',
+            margin: 0,
+          });
+        }
+
+        const iniLabelY = iIdx === 0 ? currentY + 0.42 : currentY + 0.1;
+        slide.addText('Key Initiative', {
           x: LABEL_X + 0.07,
-          y: currentY + 0.04,
+          y: iniLabelY,
           w: LEFT_COL - 0.1,
-          h: 0.18,
-          fontSize: 10,
+          h: 0.13,
+          fontSize: 7,
           bold: true,
-          color: goal.color.replace('#', ''),
+          color: TEXT_MUTED,
           fontFace: 'Arial',
           margin: 0,
         });
-        slide.addText(goal.title, {
+        slide.addText(initiative.label, {
           x: LABEL_X + 0.07,
-          y: currentY + 0.2,
+          y: iniLabelY + 0.13,
           w: LEFT_COL - 0.1,
-          h: 0.2,
-          fontSize: 12,
-          bold: true,
+          h: 0.22,
+          fontSize: 8,
           color: TEXT_COLOR,
           fontFace: 'Arial',
           margin: 0,
         });
-      }
 
-      const iniLabelY = iIdx === 0 ? currentY + 0.42 : currentY + 0.1;
-      slide.addText('Key Initiative', {
-        x: LABEL_X + 0.07,
-        y: iniLabelY,
-        w: LEFT_COL - 0.1,
-        h: 0.13,
-        fontSize: 7,
-        bold: true,
-        color: TEXT_MUTED,
-        fontFace: 'Arial',
-        margin: 0,
-      });
-      slide.addText(initiative.label, {
-        x: LABEL_X + 0.07,
-        y: iniLabelY + 0.13,
-        w: LEFT_COL - 0.1,
-        h: 0.22,
-        fontSize: 8,
-        color: TEXT_COLOR,
-        fontFace: 'Arial',
-        margin: 0,
-      });
-
-      if (isSpanning && initiative.spanning) {
-        const spItems = initiative.spanning;
-        spItems.forEach((sp, spIdx) => {
+        spanningActivities.forEach((sp, spIdx) => {
           const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#E8194B';
           const textColor = getTextColor(bgColor);
+          const sortedQuarters = [...(sp.quarters || [])].sort();
+          const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
+          const minIdx = Math.min(...qIndexes);
+          const maxIdx = Math.max(...qIndexes);
+          const spanWidth = (maxIdx - minIdx + 1) * Q_W;
+
           const pillH = 0.22;
           const pillY = currentY + 0.1 + spIdx * (pillH + 0.05);
+          const pillX = Q_START_X + minIdx * Q_W + 0.05;
+
           slide.addShape(pres.ShapeType.roundRect, {
-            x: Q_START_X + 0.05,
+            x: pillX,
             y: pillY,
-            w: AVAILABLE_W - 0.1,
+            w: spanWidth - 0.1,
             h: pillH,
             fill: { color: bgColor.replace('#', '') },
             line: { color: bgColor.replace('#', ''), width: 0 },
             rectRadius: 0.5,
           });
           slide.addText(sp.name, {
-            x: Q_START_X + 0.05,
+            x: pillX,
             y: pillY,
-            w: AVAILABLE_W - 0.1,
+            w: spanWidth - 0.1,
             h: pillH,
             fontSize: 9,
             bold: true,
@@ -294,7 +306,78 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
             margin: 0,
           });
         });
-      } else {
+
+        currentY += rowH;
+      }
+
+      if (hasRegularActivities) {
+        const rowH = ROW_H;
+
+        slide.addShape(pres.ShapeType.rect, {
+          x: MARGIN_L,
+          y: currentY,
+          w: SLIDE_W - MARGIN_L - 0.1,
+          h: rowH,
+          fill: { color: iIdx % 2 === 0 ? SURFACE2 : BG },
+          line: { color: BORDER_COLOR, width: 0.5 },
+        });
+
+        slide.addShape(pres.ShapeType.rect, {
+          x: MARGIN_L,
+          y: currentY,
+          w: 0.04,
+          h: rowH,
+          fill: { color: goal.color.replace('#', '') },
+          line: { color: goal.color.replace('#', ''), width: 0 },
+        });
+
+        if (iIdx === 0 && spanningActivities.length === 0) {
+          slide.addText(goal.number, {
+            x: LABEL_X + 0.07,
+            y: currentY + 0.04,
+            w: LEFT_COL - 0.1,
+            h: 0.18,
+            fontSize: 10,
+            bold: true,
+            color: goal.color.replace('#', ''),
+            fontFace: 'Arial',
+            margin: 0,
+          });
+          slide.addText(goal.title, {
+            x: LABEL_X + 0.07,
+            y: currentY + 0.2,
+            w: LEFT_COL - 0.1,
+            h: 0.2,
+            fontSize: 12,
+            bold: true,
+            color: TEXT_COLOR,
+            fontFace: 'Arial',
+            margin: 0,
+          });
+        }
+
+        const iniLabelY = (iIdx === 0 && spanningActivities.length === 0) ? currentY + 0.42 : currentY + 0.1;
+        slide.addText('Key Initiative', {
+          x: LABEL_X + 0.07,
+          y: iniLabelY,
+          w: LEFT_COL - 0.1,
+          h: 0.13,
+          fontSize: 7,
+          bold: true,
+          color: TEXT_MUTED,
+          fontFace: 'Arial',
+          margin: 0,
+        });
+        slide.addText(initiative.label, {
+          x: LABEL_X + 0.07,
+          y: iniLabelY + 0.13,
+          w: LEFT_COL - 0.1,
+          h: 0.22,
+          fontSize: 8,
+          color: TEXT_COLOR,
+          fontFace: 'Arial',
+          margin: 0,
+        });
         qkeys.forEach((qk, qi) => {
           const acts = initiative.activities[qk] || [];
           const cellX = Q_START_X + qi * Q_W;
@@ -331,9 +414,9 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
             });
           });
         });
-      }
 
-      currentY += rowH;
+        currentY += rowH;
+      }
     });
   });
 

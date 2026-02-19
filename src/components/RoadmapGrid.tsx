@@ -32,9 +32,22 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
   const getTypeColor = (typeKey: string) => {
     return data.typeColors?.[typeKey] || DEFAULT_TYPE_COLORS[typeKey] || '#6c63ff';
   };
-  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
+  const [editingQuarter, setEditingQuarter] = useState<string | null>(null);
+
+  const getQuarterTitle = (qkey: string) => {
+    return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
+  };
+
+  const updateQuarterTitle = (qkey: string, newTitle: string) => {
+    const newData = { ...data };
+    if (!newData.quarterTitles) {
+      newData.quarterTitles = {};
+    }
+    newData.quarterTitles[qkey as keyof typeof newData.quarterTitles] = newTitle;
+    onDataChange(newData);
+  };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarters: string[]) => {
     const newData = { ...data };
@@ -90,13 +103,39 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
       <div className="min-w-[900px] rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
-          {quarters.map((q, i) => (
+          {qkeys.map((qk, i) => (
             <div
               key={i}
-              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''}`}
+              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''} cursor-pointer hover:opacity-90 transition-opacity`}
               style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
+              onClick={() => setEditingQuarter(qk)}
+              title="Click to edit quarter title"
             >
-              {q}
+              {editingQuarter === qk ? (
+                <input
+                  type="text"
+                  value={getQuarterTitle(qk)}
+                  onChange={(e) => updateQuarterTitle(qk, e.target.value)}
+                  onBlur={() => setEditingQuarter(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setEditingQuarter(null);
+                    if (e.key === 'Escape') {
+                      const newData = { ...data };
+                      if (newData.quarterTitles) {
+                        delete newData.quarterTitles[qk as keyof typeof newData.quarterTitles];
+                      }
+                      onDataChange(newData);
+                      setEditingQuarter(null);
+                    }
+                  }}
+                  autoFocus
+                  className="w-full bg-white/20 border border-white/40 rounded px-2 py-1 outline-none text-center font-extrabold text-base"
+                  style={{ color: '#ffffff' }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                getQuarterTitle(qk)
+              )}
             </div>
           ))}
         </div>
@@ -117,77 +156,114 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
         {data.goals.map((goal, goalIdx) => (
           <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--border)' }}>
             {goal.initiatives.map((initiative, iniIdx) => {
-              if (initiative.spanning) {
-                return (
-                  <div key={initiative.id} className="grid grid-cols-[200px_1fr] border-t" style={{ borderColor: 'var(--border)' }}>
-                    <div className="p-2 border-r text-[10px] font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', background: 'var(--surface)', color: 'var(--text-muted)' }}>
-                      {initiative.label}
-                    </div>
-                    <div className="p-2 flex flex-col gap-1" style={{ background: 'var(--surface2)' }}>
-                      {initiative.spanning.map((sp) => {
-                        const bgColor = getTypeColor(sp.type);
-                        const textColor = getTextColor(bgColor);
-                        return (
-                          <div
-                            key={sp.id}
-                            className="group flex items-center justify-center px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85"
-                            style={{ background: bgColor, color: textColor }}
-                          >
-                            {sp.name}
-                            <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' }, sp);
-                                }}
-                                className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
-                              >
-                                <Pencil size={9} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteSpanning(goal.id, initiative.id, sp.id);
-                                }}
-                                className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
-                              >
-                                <X size={10} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <button
-                        onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' })}
-                        className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-                        style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = 'var(--primary)';
-                          e.currentTarget.style.background = 'var(--primary)';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'var(--border)';
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--text-muted)';
-                        }}
-                      >
-                        <Plus size={12} />
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
+              const spanningActivities = initiative.spanning || [];
+              const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
               return (
-                <div key={initiative.id} className="grid grid-cols-[200px_repeat(4,1fr)]">
+                <div key={initiative.id}>
+                  {spanningActivities.length > 0 && (
+                    <div className="grid grid-cols-[200px_1fr] border-t" style={{ borderColor: 'var(--border)' }}>
+                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
+                          style={{ background: goal.color }}
+                        ></div>
+                        {iniIdx === 0 && (
+                          <>
+                            <div
+                              className="text-xs font-extrabold uppercase tracking-wide mb-1"
+                              style={{ color: goal.color }}
+                            >
+                              {goal.number}
+                            </div>
+                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
+                              {goal.title}
+                            </div>
+                          </>
+                        )}
+                        <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                          Key Initiative
+                        </div>
+                        <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
+                          {initiative.label}
+                        </div>
+                      </div>
+                      <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                        {spanningActivities.map((sp) => {
+                          const bgColor = getTypeColor(sp.type);
+                          const textColor = getTextColor(bgColor);
+                          const sortedQuarters = [...(sp.quarters || [])].sort();
+                          const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
+                          const minIdx = Math.min(...qIndexes);
+                          const maxIdx = Math.max(...qIndexes);
+                          const spanCount = maxIdx - minIdx + 1;
+
+                          return (
+                            <div
+                              key={sp.id}
+                              className="group flex items-center justify-center px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85"
+                              style={{
+                                background: bgColor,
+                                color: textColor,
+                                gridColumnStart: minIdx + 1,
+                                gridColumnEnd: maxIdx + 2
+                              }}
+                            >
+                              {sp.name}
+                              <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' }, sp);
+                                  }}
+                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                                >
+                                  <Pencil size={9} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteSpanning(goal.id, initiative.id, sp.id);
+                                  }}
+                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <button
+                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' })}
+                          className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
+                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--primary)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = 'var(--text-muted)';
+                          }}
+                        >
+                          <Plus size={12} />
+                          Add Spanning
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {hasRegularActivities && (
+
+                  <div className="grid grid-cols-[200px_repeat(4,1fr)]">
                   <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                     <div
                       className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                       style={{ background: goal.color }}
                     ></div>
-                    {iniIdx === 0 && (
+                    {(iniIdx === 0 && spanningActivities.length === 0) && (
                       <>
                         <div
                           className="text-xs font-extrabold uppercase tracking-wide mb-1"
@@ -271,7 +347,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                                       className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
                                       style={{ color: 'var(--text)' }}
                                     >
-                                      {quarters[idx]}
+                                      {getQuarterTitle(targetQ)}
                                     </button>
                                   ))}
                                 </div>
@@ -299,6 +375,8 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                       </div>
                     );
                   })}
+                </div>
+                  )}
                 </div>
               );
             })}
