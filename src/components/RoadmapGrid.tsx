@@ -35,6 +35,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
   const [editingQuarter, setEditingQuarter] = useState<string | null>(null);
+  const [editingSuccessPath, setEditingSuccessPath] = useState<string | null>(null);
 
   const getQuarterTitle = (qkey: string) => {
     return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
@@ -46,6 +47,22 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
       newData.quarterTitles = {};
     }
     newData.quarterTitles[qkey as keyof typeof newData.quarterTitles] = newTitle;
+    onDataChange(newData);
+  };
+
+  const getSuccessPathLabel = (qkey: string) => {
+    if (data.successPathLabels?.[qkey as keyof typeof data.successPathLabels]) {
+      return data.successPathLabels[qkey as keyof typeof data.successPathLabels];
+    }
+    return qkey === 'q1' ? 'Success Path' : 'Success Path Review';
+  };
+
+  const updateSuccessPathLabel = (qkey: string, newLabel: string) => {
+    const newData = { ...data };
+    if (!newData.successPathLabels) {
+      newData.successPathLabels = {};
+    }
+    newData.successPathLabels[qkey as keyof typeof newData.successPathLabels] = newLabel;
     onDataChange(newData);
   };
 
@@ -146,9 +163,40 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           </div>
           {qkeys.map((q, i) => (
             <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
-              <div className="bg-[#e8194b] text-white text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap">
-                {i === 0 ? 'Success Path' : 'Success Path Review'}
-              </div>
+              {editingSuccessPath === q ? (
+                <input
+                  type="text"
+                  defaultValue={getSuccessPathLabel(q)}
+                  autoFocus
+                  onBlur={(e) => {
+                    const newValue = e.target.value.trim();
+                    if (newValue) {
+                      updateSuccessPathLabel(q, newValue);
+                    }
+                    setEditingSuccessPath(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const newValue = e.currentTarget.value.trim();
+                      if (newValue) {
+                        updateSuccessPathLabel(q, newValue);
+                      }
+                      setEditingSuccessPath(null);
+                    } else if (e.key === 'Escape') {
+                      setEditingSuccessPath(null);
+                    }
+                  }}
+                  className="bg-[#e8194b] text-white text-xs font-semibold px-4 py-1 rounded-full text-center outline-none focus:ring-2 focus:ring-white/50"
+                  style={{ minWidth: '140px' }}
+                />
+              ) : (
+                <div
+                  onClick={() => setEditingSuccessPath(q)}
+                  className="bg-[#e8194b] text-white text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
+                >
+                  {getSuccessPathLabel(q)}
+                </div>
+              )}
             </div>
           ))}
         </div>

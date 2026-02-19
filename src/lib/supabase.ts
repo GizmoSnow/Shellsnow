@@ -29,6 +29,12 @@ export interface RoadmapData {
     q3?: string;
     q4?: string;
   };
+  successPathLabels?: {
+    q1?: string;
+    q2?: string;
+    q3?: string;
+    q4?: string;
+  };
 }
 
 export interface Goal {
