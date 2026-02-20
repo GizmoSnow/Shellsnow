@@ -111,7 +111,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           {qkeys.map((qk, i) => (
             <div
               key={i}
-              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''} cursor-pointer hover:opacity-90 transition-opacity`}
+              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''} cursor-pointer hover:opacity-90 transition-opacity print-show-text`}
               style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
               onClick={() => setEditingQuarter(qk)}
               title="Click to edit quarter title"
@@ -183,7 +183,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                 ) : (
                   <div
                     onClick={() => setEditingSuccessPath(q)}
-                    className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
+                    className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity print-show-pill"
                     style={{ background: csmColor, color: textColor }}
                   >
                     {getSuccessPathLabel(q)}

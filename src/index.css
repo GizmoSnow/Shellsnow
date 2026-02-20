@@ -81,10 +81,27 @@
   .no-print,
   .print-hide,
   input[type="text"]:not(.print-show),
-  .cursor-pointer,
-  .hover\:opacity-90,
   .group-hover\:flex {
     display: none !important;
+  }
+
+  /* Show content that looks like interactive elements but needs to print */
+  .print-show-text,
+  .print-show-pill {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: default !important;
+  }
+
+  /* Quarter headers need special handling */
+  .print-show-text {
+    display: block !important;
+  }
+
+  /* Success Path pills need inline-block */
+  .print-show-pill {
+    display: inline-block !important;
   }
 
   /* Show only printable content */
@@ -204,5 +221,26 @@
   /* Remove rounded corners for cleaner print */
   .rounded-2xl {
     border-radius: 4px !important;
+  }
+
+  /* Ensure quarter headers are visible */
+  .grid.grid-cols-\[200px_repeat\(4\,1fr\)\] > div {
+    display: block !important;
+  }
+
+  /* Ensure Success Path pills are visible and styled */
+  .rounded-full {
+    display: inline-block !important;
+  }
+
+  /* Keep text visible in all elements */
+  span, div:not(button) {
+    opacity: 1 !important;
+  }
+
+  /* Prevent hover states from affecting print */
+  *:hover {
+    opacity: 1 !important;
+    background: inherit !important;
   }
 }
