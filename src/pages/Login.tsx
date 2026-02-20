@@ -3,12 +3,15 @@ import { Moon, Sun } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const { signIn } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -35,6 +38,33 @@ export default function Login() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setResetLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setResetSent(true);
+      }
+    } catch (err) {
+      console.error('Password reset error:', err);
+      setError('Failed to send reset email');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: 'var(--bg)' }}>
       <button
@@ -49,7 +79,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-[#6c63ff] to-[#00d4aa] bg-clip-text text-transparent mb-2">
-            Success Roadmap Builder
+            Success Path Builder
           </h1>
           <p style={{ color: 'var(--text-muted)' }}>Sign in to manage your roadmaps</p>
         </div>
@@ -92,6 +122,12 @@ export default function Login() {
               </div>
             )}
 
+            {resetSent && (
+              <div className="bg-[#00d4aa]/10 border border-[#00d4aa]/30 rounded-lg px-4 py-3 text-[#00d4aa] text-sm">
+                Password reset email sent! Check your inbox.
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -100,6 +136,16 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={handleForgotPassword}
+              disabled={resetLoading}
+              className="text-sm text-[#6c63ff] hover:text-[#5a52e0] font-semibold disabled:opacity-50"
+            >
+              {resetLoading ? 'Sending...' : 'Forgot Password?'}
+            </button>
+          </div>
 
           <div className="mt-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Don't have an account?{' '}
