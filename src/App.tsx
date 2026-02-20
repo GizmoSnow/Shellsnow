@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import RoadmapBuilder from './pages/RoadmapBuilder';
+import ResetPassword from './pages/ResetPassword';
 
 function Router() {
   const { user, loading } = useAuth();
@@ -17,6 +18,10 @@ function Router() {
         <div style={{ color: 'var(--text-muted)' }}>Loading...</div>
       </div>
     );
+  }
+
+  if (pathname === '/reset-password') {
+    return <ResetPassword />;
   }
 
   if (!user && pathname !== '/login' && pathname !== '/signup') {
