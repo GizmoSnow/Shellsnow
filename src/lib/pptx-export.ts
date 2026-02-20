@@ -166,17 +166,20 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
     margin: 0,
   });
 
+  const csmColor = data.typeColors?.['csm'] || DEFAULT_TYPE_COLORS['csm'];
+  const spTextColor = getTextColor(csmColor);
+
   qkeys.forEach((qk, i) => {
-    const label = i === 0 ? 'Success Path' : 'Success Path Review';
+    const label = data.successPathLabels?.[qk as keyof typeof data.successPathLabels] || (i === 0 ? 'Success Path' : 'Success Path Review');
     const pillW = Q_W * 0.75;
-    const pillX = Q_START_X + i * Q_W + (Q_W - pillW) / 2;
+    const pillX = Q_START_X + i * Q_W + (Q_W - pillw) / 2;
     slide.addShape(pres.ShapeType.roundRect, {
       x: pillX,
       y: SP_Y + 0.05,
       w: pillW,
       h: SP_H - 0.1,
-      fill: { color: 'E8194B' },
-      line: { color: 'E8194B', width: 0 },
+      fill: { color: csmColor.replace('#', '') },
+      line: { color: csmColor.replace('#', ''), width: 0 },
       rectRadius: 0.5,
     });
     slide.addText(label, {
@@ -186,7 +189,7 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
       h: SP_H - 0.1,
       fontSize: 9,
       bold: true,
-      color: 'FFFFFF',
+      color: spTextColor,
       fontFace: 'Arial',
       align: 'center',
       valign: 'middle',
