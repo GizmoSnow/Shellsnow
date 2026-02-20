@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -8,6 +8,7 @@ import RoadmapGrid from '../components/RoadmapGrid';
 import GoalsPanel from '../components/GoalsPanel';
 import AddActivityModal from '../components/AddActivityModal';
 import { exportToPptx } from '../lib/pptx-export';
+import { exportToPng } from '../lib/png-export';
 
 interface RoadmapBuilderProps {
   roadmapId: string;
@@ -97,10 +98,22 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       .eq('id', roadmapId);
   };
 
-  const handleExport = async () => {
+  const handleExportPptx = async () => {
     setExporting(true);
     try {
       await exportToPptx(title, data, customerLogoBase64);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportPng = async () => {
+    setExporting(true);
+    try {
+      await exportToPng(title, data, customerLogoBase64);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
@@ -300,7 +313,18 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             Print
           </button>
           <button
-            onClick={handleExport}
+            onClick={handleExportPng}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
+            style={{ background: exporting ? 'var(--text-muted)' : 'var(--primary)' }}
+            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary-hover)')}
+            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary)')}
+          >
+            <Image size={16} />
+            {exporting ? 'Exporting...' : 'Export PNG'}
+          </button>
+          <button
+            onClick={handleExportPptx}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
             style={{ background: exporting ? 'var(--text-muted)' : 'var(--primary)' }}
@@ -308,7 +332,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary)')}
           >
             <FileDown size={16} />
-            {exporting ? 'Exporting...' : 'Export to PowerPoint'}
+            {exporting ? 'Exporting...' : 'Export PowerPoint'}
           </button>
           <button
             onClick={handleReset}
