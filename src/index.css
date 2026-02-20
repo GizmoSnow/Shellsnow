@@ -57,7 +57,152 @@
 }
 
 @media print {
-  button, .no-print {
+  @page {
+    size: landscape;
+    margin: 0.4in;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    background: white !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide all UI controls and interactive elements */
+  button,
+  .no-print,
+  .print-hide,
+  input[type="text"]:not(.print-show),
+  .cursor-pointer,
+  .hover\:opacity-90,
+  .group-hover\:flex {
     display: none !important;
+  }
+
+  /* Show only printable content */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Main container adjustments */
+  .print-container {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Scale content to fit page width */
+  .print-roadmap-content {
+    transform-origin: top left;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 !important;
+  }
+
+  /* Prevent page breaks within rows */
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Header with logos */
+  .print-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 0.75rem !important;
+    page-break-after: avoid !important;
+    padding: 0 !important;
+  }
+
+  /* Title styling for print */
+  .print-title {
+    font-size: 22pt !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+    color: #000 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Legend styling for print */
+  .print-legend {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 8pt !important;
+    page-break-after: avoid !important;
+    padding: 0 !important;
+  }
+
+  .print-legend > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+  }
+
+  /* Grid adjustments */
+  .print-grid {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  /* Remove interactive styling from pills */
+  .group {
+    position: relative !important;
+  }
+
+  .group-hover\:flex,
+  .hidden.group-hover\:flex {
+    display: none !important;
+  }
+
+  /* Ensure all text and backgrounds are visible */
+  div, span, p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Remove overflow scrolling */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Adjust minimum widths for print */
+  .min-w-\[900px\] {
+    min-width: 100% !important;
+  }
+
+  /* Force light theme colors for print */
+  :root[data-theme="dark"] {
+    --bg: #ffffff !important;
+    --surface: #ffffff !important;
+    --surface2: #f8f9fa !important;
+    --border: #dee2e6 !important;
+    --text: #000000 !important;
+    --text-muted: #6c757d !important;
+  }
+
+  /* Hide sticky positioning for print */
+  .sticky {
+    position: static !important;
+  }
+
+  /* Remove rounded corners for cleaner print */
+  .rounded-2xl {
+    border-radius: 4px !important;
   }
 }

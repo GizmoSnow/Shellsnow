@@ -205,8 +205,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+    <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
+      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <div className="px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -240,7 +240,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           </div>
         </div>
 
-        <div className="px-8 pb-4 flex items-center gap-2">
+        <div className="px-8 pb-4 flex items-center gap-2 print-hide">
           <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
             <Upload size={16} />
             {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
@@ -271,9 +271,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           )}
         </div>
 
-        <div className="border-b" style={{ borderColor: 'var(--border)' }}></div>
+        <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
 
-        <div className="px-8 py-4 flex items-center gap-2">
+        <div className="px-8 py-4 flex items-center gap-2 print-hide">
           <div className="flex-1"></div>
           <button
             onClick={toggleTheme}
@@ -323,17 +323,44 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         </div>
       </div>
 
-      <div className="px-8 py-6">
+      <div className="px-8 py-6 print-roadmap-content">
+        {/* Print header with logos - only visible when printing */}
+        <div className="hidden print-header print-only" style={{ display: 'none' }}>
+          <div className="print-title">{title}</div>
+          <div className="flex items-center gap-4">
+            {customerLogoBase64 && (
+              <img src={customerLogoBase64} alt="Customer logo" style={{ height: '50px', objectFit: 'contain' }} />
+            )}
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg"
+              alt="Salesforce"
+              style={{ height: '50px', objectFit: 'contain' }}
+            />
+          </div>
+        </div>
+
+        {/* Legend for print - only visible when printing */}
+        <div className="hidden print-legend print-only" style={{ display: 'none' }}>
+          {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
+            <div key={typeKey} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: getTypeColor(typeKey) }}></div>
+              <span style={{ color: '#000' }}>{getTypeLabel(typeKey)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Screen title - hidden when printing */}
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-3xl font-extrabold bg-transparent border-none outline-none w-full mb-4"
+          className="text-3xl font-extrabold bg-transparent border-none outline-none w-full mb-4 print-hide"
           style={{ color: 'var(--text)' }}
           placeholder="Enter roadmap title..."
         />
 
-        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+        {/* Screen legend - hidden when printing */}
+        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
           {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
             <div key={typeKey} className="flex items-center gap-2 relative">
               <div className="relative">

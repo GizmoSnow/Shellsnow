@@ -105,8 +105,8 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+      <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: 'var(--border)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {qkeys.map((qk, i) => (
             <div
@@ -145,7 +145,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           ))}
         </div>
 
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b" style={{ background: 'var(--surface2)', borderColor: 'var(--border)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--surface2)', borderColor: 'var(--border)' }}>
           <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
@@ -202,7 +202,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
               return (
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
-                    <div className="grid grid-cols-[200px_1fr] border-t" style={{ borderColor: 'var(--border)' }}>
+                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
                       <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
@@ -294,7 +294,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_repeat(4,1fr)]">
+                  <div className="grid grid-cols-[200px_repeat(4,1fr)] print-avoid-break">
                   <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                     <div
                       className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
