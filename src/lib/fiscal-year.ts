@@ -60,6 +60,10 @@ export function getQuarterMonths(fiscalStartMonth: number, quarter: number): num
 }
 
 export function getRoadmapQuarters(config: FiscalYearConfig): QuarterInfo[] {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
+
   const quarters: QuarterInfo[] = [];
 
   for (let i = 0; i < 4; i++) {
@@ -90,11 +94,17 @@ export function getRoadmapQuarters(config: FiscalYearConfig): QuarterInfo[] {
 }
 
 export function getAllRoadmapMonths(config: FiscalYearConfig): MonthInfo[] {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const quarters = getRoadmapQuarters(config);
   return quarters.flatMap(q => q.months);
 }
 
 export function getMonthsInFiscalOrder(config: FiscalYearConfig): MonthInfo[] {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const months: MonthInfo[] = [];
 
   for (let i = 0; i < 12; i++) {
@@ -115,6 +125,9 @@ export function getMonthsInFiscalOrder(config: FiscalYearConfig): MonthInfo[] {
 }
 
 export function validateMonthRange(startMonth: number, endMonth: number, config: FiscalYearConfig): boolean {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const fiscalMonths = getMonthsInFiscalOrder(config);
   const startIdx = fiscalMonths.findIndex(m => m.calendarMonth === startMonth);
   const endIdx = fiscalMonths.findIndex(m => m.calendarMonth === endMonth);
@@ -124,12 +137,18 @@ export function validateMonthRange(startMonth: number, endMonth: number, config:
 }
 
 export function getQuarterLabel(quarter: number, fiscalYear: number, config: FiscalYearConfig): string {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const monthIndices = getQuarterMonths(config.startMonth, quarter);
   const months = monthIndices.map(idx => MONTH_ABBREV[idx]);
   return `FY${fiscalYear} Q${quarter} | ${months[0]}–${months[2]}`;
 }
 
 export function getRoadmapTitle(config: FiscalYearConfig): string {
+  if (!config) {
+    config = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const quarters = getRoadmapQuarters(config);
   const firstFY = quarters[0].fiscalYear;
   const lastFY = quarters[3].fiscalYear;

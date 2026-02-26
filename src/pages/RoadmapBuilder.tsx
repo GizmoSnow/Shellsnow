@@ -90,9 +90,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setData(roadmapData.data);
       setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
       setFiscalConfig({
-        startMonth: roadmapData.fiscal_start_month,
-        baseYear: roadmapData.base_fiscal_year,
-        roadmapStartQuarter: roadmapData.roadmap_start_quarter
+        startMonth: roadmapData.fiscal_start_month ?? 0,
+        baseYear: roadmapData.base_fiscal_year ?? 26,
+        roadmapStartQuarter: roadmapData.roadmap_start_quarter ?? 1
       });
     }
     setLoading(false);
