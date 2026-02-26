@@ -40,12 +40,21 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
+function parseMonthsFromQuarterTitle(title: string): string[] {
+  const match = title.match(/\((.*?)\)/);
+  if (match) {
+    return match[1].split('-').map(m => m.trim());
+  }
+  return [];
+}
+
 export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
-  const [position, setPosition] = useState<'full' | 'early' | 'mid' | 'late'>('full');
+  const [startMonth, setStartMonth] = useState<string>('full-quarter');
+  const [endMonth, setEndMonth] = useState<string>('full-quarter');
 
   useEffect(() => {
     if (isOpen) {
@@ -58,14 +67,18 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
-          setPosition(('position' in editingActivity && editingActivity.position) ? editingActivity.position : 'full');
+          const start = ('start_month' in editingActivity && editingActivity.start_month) ? editingActivity.start_month : 'full-quarter';
+          const end = ('end_month' in editingActivity && editingActivity.end_month) ? editingActivity.end_month : 'full-quarter';
+          setStartMonth(start);
+          setEndMonth(end);
         }
       } else {
         setName('');
         setSelectedType('csm');
         setIsSpanning(context?.quarter === 'spanning');
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
-        setPosition('full');
+        setStartMonth('full-quarter');
+        setEndMonth('full-quarter');
       }
     }
   }, [isOpen, editingActivity, context]);
@@ -92,7 +105,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         id: editingActivity ? editingActivity.id : uid(),
         name: name.trim(),
         type: selectedType,
-        position: position
+        start_month: startMonth,
+        end_month: endMonth
       });
     }
 
@@ -100,7 +114,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setSelectedType('csm');
     setIsSpanning(false);
     setSelectedQuarters([]);
-    setPosition('full');
+    setStartMonth('full-quarter');
+    setEndMonth('full-quarter');
   };
 
   const toggleQuarter = (qk: string) => {
@@ -120,6 +135,19 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
       handleSubmit(e);
     }
   };
+
+  const allMonthOptions: Array<{ value: string; label: string; quarter: string }> = [];
+  ['q1', 'q2', 'q3', 'q4'].forEach((qk) => {
+    const title = getQuarterTitle(qk);
+    const months = parseMonthsFromQuarterTitle(title);
+    months.forEach((month, idx) => {
+      allMonthOptions.push({
+        value: `${qk}-${month.toLowerCase()}`,
+        label: month,
+        quarter: qk
+      });
+    });
+  });
 
   return (
     <>
@@ -170,30 +198,40 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
             </div>
 
             {!isSpanning && (
-              <div>
-                <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
-                  Position in Quarter
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'full' as const, label: 'Full Quarter' },
-                    { value: 'early' as const, label: 'Early' },
-                    { value: 'mid' as const, label: 'Mid' },
-                    { value: 'late' as const, label: 'Late' }
-                  ].map((pos) => (
-                    <div
-                      key={pos.value}
-                      onClick={() => setPosition(pos.value)}
-                      className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
-                      style={{
-                        background: position === pos.value ? '#6c63ff' : '#22263a',
-                        color: position === pos.value ? '#ffffff' : '#7b82a8',
-                        border: position === pos.value ? '2px solid #6c63ff' : '2px solid #2e3248'
-                      }}
-                    >
-                      {pos.label}
-                    </div>
-                  ))}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                    Start Month
+                  </label>
+                  <select
+                    value={startMonth}
+                    onChange={(e) => setStartMonth(e.target.value)}
+                    className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                  >
+                    <option value="full-quarter">Full Quarter</option>
+                    {allMonthOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                    End Month
+                  </label>
+                  <select
+                    value={endMonth}
+                    onChange={(e) => setEndMonth(e.target.value)}
+                    className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                  >
+                    <option value="full-quarter">Full Quarter</option>
+                    {allMonthOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
