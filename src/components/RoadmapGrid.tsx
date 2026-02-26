@@ -1,4 +1,4 @@
-import { X, Plus, Pencil, Copy } from 'lucide-react';
+import { X, Plus, Pencil, Copy, ChevronUp, ChevronDown } from 'lucide-react';
 import { RoadmapData, Goal, Initiative, Activity } from '../lib/supabase';
 import { useState } from 'react';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -121,6 +121,26 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     if (!newData.accountSpanning) return;
 
     newData.accountSpanning = newData.accountSpanning.filter(s => s.id !== spanningId);
+    onDataChange(newData);
+  };
+
+  const reorderActivity = (goalId: string, initiativeId: string, quarter: string, activityId: string, direction: 'up' | 'down') => {
+    const newData = { ...data };
+    const goal = newData.goals.find(g => g.id === goalId);
+    if (!goal) return;
+
+    const initiative = goal.initiatives.find(i => i.id === initiativeId);
+    if (!initiative) return;
+
+    const activities = initiative.activities[quarter as keyof typeof initiative.activities];
+    const currentIndex = activities.findIndex(a => a.id === activityId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= activities.length) return;
+
+    [activities[currentIndex], activities[newIndex]] = [activities[newIndex], activities[currentIndex]];
+
     onDataChange(newData);
   };
 
@@ -574,6 +594,11 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             }
                           }
 
+                          const activities = initiative.activities[item.quarter as keyof typeof initiative.activities];
+                          const activityIndex = activities.findIndex(a => a.id === item.activity.id);
+                          const isFirst = activityIndex === 0;
+                          const isLast = activityIndex === activities.length - 1;
+
                           return (
                             <div
                               key={item.activity.id}
@@ -609,6 +634,28 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   {item.activity.name}
                                 </span>
                                 <div className="hidden group-hover:flex items-center gap-1 ml-auto flex-shrink-0">
+                                  {!isFirst && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        reorderActivity(goal.id, initiative.id, item.quarter, item.activity.id, 'up');
+                                      }}
+                                      className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                    >
+                                      <ChevronUp size={10} />
+                                    </button>
+                                  )}
+                                  {!isLast && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        reorderActivity(goal.id, initiative.id, item.quarter, item.activity.id, 'down');
+                                      }}
+                                      className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                    >
+                                      <ChevronDown size={10} />
+                                    </button>
+                                  )}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
