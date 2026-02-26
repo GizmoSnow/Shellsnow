@@ -354,7 +354,8 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                     const quarterTitle = getQuarterTitle(qk);
                     const months = parseMonthsFromQuarterTitle(quarterTitle);
 
-                    const earlyActivities = activities.filter(a => !a.position || a.position === 'early');
+                    const fullQuarterActivities = activities.filter(a => !a.position || a.position === 'full');
+                    const earlyActivities = activities.filter(a => a.position === 'early');
                     const midActivities = activities.filter(a => a.position === 'mid');
                     const lateActivities = activities.filter(a => a.position === 'late');
 
@@ -364,6 +365,73 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                         className={`border-r ${qIdx === 3 ? 'border-r-0' : ''} relative`}
                         style={{ borderColor: 'var(--border)', background: 'var(--surface2)' }}
                       >
+                        {fullQuarterActivities.length > 0 && (
+                          <div className="p-2 flex flex-col gap-1">
+                            {fullQuarterActivities.map((act) => {
+                              const bgColor = getTypeColor(act.type);
+                              const textColor = getTextColor(bgColor);
+                              const dropdownId = `${goal.id}-${initiative.id}-${qk}-${act.id}`;
+                              return (
+                                <div key={act.id} className="relative">
+                                  <div
+                                    className="group inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative w-full"
+                                    style={{ background: bgColor, color: textColor }}
+                                  >
+                                    {act.name}
+                                    <div className="hidden group-hover:flex items-center gap-1 ml-auto">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
+                                        }}
+                                        className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                      >
+                                        <Copy size={9} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk }, act);
+                                        }}
+                                        className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                      >
+                                        <Pencil size={9} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteActivity(goal.id, initiative.id, qk, act.id);
+                                        }}
+                                        className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                      >
+                                        <X size={10} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {copyDropdown === dropdownId && (
+                                    <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)' }}>
+                                      <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
+                                      {qkeys.map((targetQ, idx) => (
+                                        <button
+                                          key={targetQ}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            copyActivity(goal.id, initiative.id, qk, act.id, [targetQ]);
+                                          }}
+                                          disabled={targetQ === qk}
+                                          className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                          style={{ color: 'var(--text)' }}
+                                        >
+                                          {getQuarterTitle(targetQ)}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         <div className="grid grid-cols-3 h-full min-h-[60px]">
                           {[earlyActivities, midActivities, lateActivities].map((positionActivities, monthIdx) => (
                             <div

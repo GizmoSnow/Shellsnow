@@ -45,7 +45,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
-  const [position, setPosition] = useState<'early' | 'mid' | 'late'>('early');
+  const [position, setPosition] = useState<'full' | 'early' | 'mid' | 'late'>('full');
 
   useEffect(() => {
     if (isOpen) {
@@ -58,14 +58,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
-          setPosition(('position' in editingActivity && editingActivity.position) ? editingActivity.position : 'early');
+          setPosition(('position' in editingActivity && editingActivity.position) ? editingActivity.position : 'full');
         }
       } else {
         setName('');
         setSelectedType('csm');
         setIsSpanning(context?.quarter === 'spanning');
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
-        setPosition('early');
+        setPosition('full');
       }
     }
   }, [isOpen, editingActivity, context]);
@@ -100,7 +100,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setSelectedType('csm');
     setIsSpanning(false);
     setSelectedQuarters([]);
-    setPosition('early');
+    setPosition('full');
   };
 
   const toggleQuarter = (qk: string) => {
@@ -174,8 +174,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
                   Position in Quarter
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {[
+                    { value: 'full' as const, label: 'Full Quarter' },
                     { value: 'early' as const, label: 'Early' },
                     { value: 'mid' as const, label: 'Mid' },
                     { value: 'late' as const, label: 'Late' }
