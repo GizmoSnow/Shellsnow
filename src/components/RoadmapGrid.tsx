@@ -2,7 +2,7 @@ import { X, Plus, Pencil, Copy } from 'lucide-react';
 import { RoadmapData, Goal, Initiative, Activity } from '../lib/supabase';
 import { useState } from 'react';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
-import { getRoadmapQuarters, getMonthPosition } from '../lib/fiscal-year';
+import { getRoadmapQuarters, getMonthPosition, getAllRoadmapMonths } from '../lib/fiscal-year';
 
 interface RoadmapGridProps {
   data: RoadmapData;
@@ -428,7 +428,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_repeat(4,1fr)] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
+                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
                     <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
@@ -459,39 +459,48 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       )}
                     </div>
 
-                    <div className="relative grid grid-cols-[repeat(4,1fr)]" style={{ background: 'var(--surface2)' }}>
-                      {/* Activities overlay - single continuous grid across all quarters */}
+                    <div className="relative" style={{ background: 'var(--surface2)' }}>
+                      {/* Activities container with absolute positioning */}
                       <div
                         style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(12, 1fr)',
-                          gridTemplateRows: `repeat(${rows.length || 1}, 40px)`,
-                          gap: '4px',
-                          padding: '8px',
-                          pointerEvents: 'none',
-                          zIndex: 20
+                          position: 'relative',
+                          minHeight: `${(rows.length || 1) * 44 + 70}px`,
+                          padding: '8px 8px 60px 8px'
                         }}
                       >
                         {flatActivitiesWithRows.map((item) => {
                           const bgColor = getTypeColor(item.activity.type);
                           const textColor = getTextColor(bgColor);
-                          const dropdownId = `${goal.id}-${initiative.id}-${item.quarter}-${item.activity.id}`;
+                          const dropdownId = `${goal.id}-${initiative.id}-${item.activity.id}`;
+
+                          // Calculate position as percentage of total width
+                          const allRoadmapMonths = getAllRoadmapMonths(fiscalConfig);
+                          const startMonthNum = item.activity.start_month ? Number(item.activity.start_month) : null;
+                          const endMonthNum = item.activity.end_month ? Number(item.activity.end_month) : null;
+
+                          let leftPercent = 0;
+                          let widthPercent = 100;
+
+                          if (startMonthNum !== null && endMonthNum !== null) {
+                            const startIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === startMonthNum);
+                            const endIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === endMonthNum);
+
+                            if (startIdx !== -1 && endIdx !== -1) {
+                              leftPercent = (startIdx / 12) * 100;
+                              widthPercent = ((endIdx - startIdx + 1) / 12) * 100;
+                            }
+                          }
 
                           return (
                             <div
                               key={item.activity.id}
                               style={{
-                                gridColumnStart: item.startCol,
-                                gridColumnEnd: item.endCol,
-                                gridRowStart: item.row + 1,
-                                gridRowEnd: item.row + 2,
-                                pointerEvents: 'auto',
-                                position: 'relative',
+                                position: 'absolute',
+                                left: `${leftPercent}%`,
+                                width: `${widthPercent}%`,
+                                top: `${item.row * 44 + 8}px`,
+                                height: '36px',
+                                padding: '0 2px',
                                 zIndex: 30
                               }}
                             >
@@ -505,7 +514,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
-                                  height: '36px'
+                                  height: '100%'
                                 }}
                               >
                                 {item.activity.name}
@@ -563,52 +572,65 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         })}
                       </div>
 
-                      {/* Quarter containers with borders and month labels */}
-                      {qkeys.map((qk, qIdx) => {
-                        const quarterInfo = quarters[qIdx];
-                        const months = quarterInfo.months.map(m => m.abbrev);
-
-                        return (
-                          <div
-                            key={qIdx}
-                            className={`border-r ${qIdx === 3 ? 'border-r-0' : ''}`}
-                            style={{ borderColor: 'var(--border)', position: 'relative', zIndex: 1, minHeight: `${(rows.length || 1) * 40 + 16 + 48}px` }}
-                          >
-                            <div className="grid grid-cols-3 pt-2">
-                              {months.map((month, monthIdx) => (
-                                <div
-                                  key={monthIdx}
-                                  className={`p-2 flex flex-col ${monthIdx < 2 ? 'border-r border-dashed' : ''}`}
-                                  style={{ borderColor: 'var(--border-light, rgba(0,0,0,0.06))' }}
-                                >
-                                  <div className="text-[9px] font-medium text-center mb-0.5" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
-                                    {month}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="px-2 pb-2 mt-auto">
-                              <button
-                                onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk })}
-                                className="w-full border border-dashed rounded-md px-2 py-1 text-[10px] font-medium transition-all"
-                                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.borderColor = 'var(--primary)';
-                                  e.currentTarget.style.background = 'var(--primary)';
-                                  e.currentTarget.style.color = '#ffffff';
+                      {/* Month gridlines */}
+                      <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none" style={{ zIndex: 10 }}>
+                        {quarters.flatMap((quarter, qIdx) =>
+                          quarter.months.map((month, mIdx) => {
+                            const globalMonthIdx = qIdx * 3 + mIdx;
+                            const leftPercent = (globalMonthIdx / 12) * 100;
+                            return (
+                              <div
+                                key={`${qIdx}-${mIdx}`}
+                                style={{
+                                  position: 'absolute',
+                                  left: `${leftPercent}%`,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: '1px',
+                                  background: 'var(--border-light, rgba(0,0,0,0.06))'
                                 }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.borderColor = 'var(--border)';
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = 'var(--text-muted)';
-                                }}
+                              />
+                            );
+                          })
+                        )}
+                        {/* Month labels */}
+                        <div className="absolute top-0 left-0 right-0 h-[30px] flex">
+                          {quarters.flatMap((quarter) =>
+                            quarter.months.map((month, mIdx) => (
+                              <div
+                                key={`${quarter.quarter}-${mIdx}`}
+                                className="flex-1 flex items-center justify-center"
                               >
-                                + Add
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                                <div className="text-[9px] font-medium" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                                  {month.abbrev}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Single Add button */}
+                      <div className="absolute bottom-0 left-0 right-0 p-2" style={{ zIndex: 40 }}>
+                        <button
+                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id })}
+                          className="w-full border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
+                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--primary)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = 'var(--text-muted)';
+                          }}
+                        >
+                          <Plus size={12} />
+                          Add
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
