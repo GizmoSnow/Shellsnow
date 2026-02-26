@@ -340,13 +340,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           </div>
           <div className="flex items-center gap-3">
             {customerLogoBase64 && (
-              <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
+              <div className="bg-white rounded-lg p-1">
+                <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
+              </div>
             )}
-            <img
-              src={salesforceLogo}
-              alt="Salesforce"
-              className="h-10 object-contain"
-            />
+            <div className="bg-white rounded-lg p-1">
+              <img
+                src={salesforceLogo}
+                alt="Salesforce"
+                className="h-10 object-contain"
+              />
+            </div>
           </div>
         </div>
 
