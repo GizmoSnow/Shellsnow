@@ -76,7 +76,8 @@ export async function exportToPptx(
 
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const getQuarterTitle = (qkey: string) => {
-    return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
+    const quarterTitle = data.quarterTitles?.[qkey as keyof typeof data.quarterTitles];
+    return quarterTitle || qkey.toUpperCase();
   };
 
   const salesforceBase64 = await fetch(salesforceLogo)
@@ -122,6 +123,7 @@ export async function exportToPptx(
       color: TEXT_COLOR,
       fontFace: 'Arial',
       margin: 0,
+      wrap: false,
     });
   }
 
@@ -157,6 +159,7 @@ export async function exportToPptx(
         align: 'center',
         valign: 'middle',
         margin: 0,
+        wrap: false,
       });
     });
   }
@@ -184,6 +187,7 @@ export async function exportToPptx(
       fontFace: 'Arial',
       valign: 'middle',
       margin: 0,
+      wrap: false,
     });
 
     const successPathColor = '#04e1cb';
@@ -214,6 +218,7 @@ export async function exportToPptx(
         align: 'center',
         valign: 'middle',
         margin: 0,
+        wrap: false,
       });
     });
 
@@ -246,6 +251,7 @@ export async function exportToPptx(
         color: TEXT_COLOR,
         fontFace: 'Arial',
         margin: 0,
+        wrap: false,
       });
       lx += 1.6;
     });
@@ -270,7 +276,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.27 + 0.2);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.18 + 0.15);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -302,6 +308,7 @@ export async function exportToPptx(
       fontFace: 'Arial',
       valign: 'top',
       margin: 0,
+      wrap: false,
     });
 
     accountSpanning.forEach((sp, spIdx) => {
@@ -313,8 +320,8 @@ export async function exportToPptx(
       const maxIdx = Math.max(...qIndexes);
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-      const pillH = 0.22;
-      const pillY = currentY + 0.1 + spIdx * (pillH + 0.05);
+      const pillH = 0.16;
+      const pillY = currentY + 0.1 + spIdx * 0.18;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
 
       currentSlide.addShape(pres.ShapeType.roundRect, {
@@ -331,13 +338,14 @@ export async function exportToPptx(
         y: pillY,
         w: spanWidth - 0.1,
         h: pillH,
-        fontSize: 9,
+        fontSize: 7,
         bold: true,
         color: textColor,
         fontFace: 'Arial',
         align: 'center',
         valign: 'middle',
         margin: 0,
+        wrap: false,
       });
     });
 
@@ -354,7 +362,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.72, spanningActivities.length * 0.27 + (isFirstInitiativeOfGoal ? 0.5 : 0.4));
+        const rowH = Math.max(0.5, spanningActivities.length * 0.18 + 0.15);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -364,6 +372,7 @@ export async function exportToPptx(
           addHeader(currentSlide);
           addQuarterHeaders(currentSlide);
           currentY = addSuccessPath(currentSlide);
+          isFirstInitiativeOfGoal = true;
         }
 
         currentSlide.addShape(pres.ShapeType.rect, {
@@ -395,6 +404,7 @@ export async function exportToPptx(
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
             margin: 0,
+            wrap: false,
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
@@ -406,6 +416,7 @@ export async function exportToPptx(
             color: TEXT_COLOR,
             fontFace: 'Arial',
             margin: 0,
+            wrap: false,
           });
         }
 
@@ -420,6 +431,7 @@ export async function exportToPptx(
           color: TEXT_MUTED,
           fontFace: 'Arial',
           margin: 0,
+          wrap: false,
         });
         currentSlide.addText(initiative.label, {
           x: LABEL_X + 0.07,
@@ -430,6 +442,7 @@ export async function exportToPptx(
           color: TEXT_COLOR,
           fontFace: 'Arial',
           margin: 0,
+          wrap: false,
         });
 
         spanningActivities.forEach((sp, spIdx) => {
@@ -441,8 +454,8 @@ export async function exportToPptx(
           const maxIdx = Math.max(...qIndexes);
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-          const pillH = 0.22;
-          const pillY = currentY + 0.1 + spIdx * (pillH + 0.05);
+          const pillH = 0.16;
+          const pillY = currentY + 0.1 + spIdx * 0.18;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
 
           currentSlide.addShape(pres.ShapeType.roundRect, {
@@ -459,13 +472,14 @@ export async function exportToPptx(
             y: pillY,
             w: spanWidth - 0.1,
             h: pillH,
-            fontSize: 9,
+            fontSize: 7,
             bold: true,
             color: textColor,
             fontFace: 'Arial',
             align: 'center',
             valign: 'middle',
             margin: 0,
+            wrap: false,
           });
         });
 
@@ -541,9 +555,9 @@ export async function exportToPptx(
 
         const maxRow = activityRows.length > 0 ? Math.max(...activityRows) : 0;
         const numRows = maxRow + 1;
-        const pillH = 0.22;
-        const pillPad = 0.05;
-        const rowH = Math.max(0.72, numRows * (pillH + pillPad) + (isFirstInitiativeOfGoal ? 0.5 : 0.4));
+        const pillH = 0.16;
+        const pillPad = 0.02;
+        const rowH = Math.max(0.5, numRows * 0.18 + 0.15);
 
         checkNewSlide();
 
@@ -554,6 +568,7 @@ export async function exportToPptx(
           addHeader(currentSlide);
           addQuarterHeaders(currentSlide);
           currentY = addSuccessPath(currentSlide);
+          isFirstInitiativeOfGoal = true;
         }
 
         currentSlide.addShape(pres.ShapeType.rect, {
@@ -585,6 +600,7 @@ export async function exportToPptx(
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
             margin: 0,
+            wrap: false,
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
@@ -596,6 +612,7 @@ export async function exportToPptx(
             color: TEXT_COLOR,
             fontFace: 'Arial',
             margin: 0,
+            wrap: false,
           });
         }
 
@@ -610,6 +627,7 @@ export async function exportToPptx(
           color: TEXT_MUTED,
           fontFace: 'Arial',
           margin: 0,
+          wrap: false,
         });
         currentSlide.addText(initiative.label, {
           x: LABEL_X + 0.07,
@@ -620,6 +638,7 @@ export async function exportToPptx(
           color: TEXT_COLOR,
           fontFace: 'Arial',
           margin: 0,
+          wrap: false,
         });
 
         allActivities.forEach((act, actIdx) => {
@@ -639,7 +658,7 @@ export async function exportToPptx(
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.1 + row * (pillH + pillPad);
+              const pillY = currentY + 0.1 + row * 0.18;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
@@ -655,13 +674,14 @@ export async function exportToPptx(
                 y: pillY,
                 w: pillW,
                 h: pillH,
-                fontSize: 9,
+                fontSize: 7,
                 bold: true,
                 color: textColor,
                 fontFace: 'Arial',
                 align: 'center',
                 valign: 'middle',
                 margin: 0,
+                wrap: false,
               });
             }
           }
