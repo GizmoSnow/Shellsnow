@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -292,6 +292,24 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     setNewTypeLabel('');
   };
 
+  const deleteCustomType = (typeKey: string) => {
+    const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
+    if (isDefault) return;
+
+    if (!confirm(`Delete "${getTypeLabel(typeKey)}" type? This will remove the type from the legend.`)) {
+      return;
+    }
+
+    const newData = { ...data };
+    if (newData.typeLabels) {
+      delete newData.typeLabels[typeKey];
+    }
+    if (newData.typeColors) {
+      delete newData.typeColors[typeKey];
+    }
+    setData(newData);
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !roadmap) return;
@@ -532,68 +550,80 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
         {/* Screen legend - hidden when printing */}
         <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
-          {getAllTypeKeys().map((typeKey) => (
-            <div key={typeKey} className="flex items-center gap-2 relative">
-              <div className="relative">
-                <div
-                  className="w-3 h-3 rounded cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
-                  style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
-                  onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
-                ></div>
-                {editingColorKey === typeKey && (
+          {getAllTypeKeys().map((typeKey) => {
+            const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
+            return (
+              <div key={typeKey} className="flex items-center gap-2 relative group">
+                <div className="relative">
+                  <div
+                    className="w-3 h-3 rounded cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
+                    style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
+                    onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
+                  ></div>
+                  {editingColorKey === typeKey && (
+                    <input
+                      type="color"
+                      value={getTypeColor(typeKey)}
+                      onChange={(e) => updateTypeColor(typeKey, e.target.value)}
+                      className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
+                      style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
+                    />
+                  )}
+                </div>
+                {editingTypeKey === typeKey ? (
                   <input
-                    type="color"
-                    value={getTypeColor(typeKey)}
-                    onChange={(e) => updateTypeColor(typeKey, e.target.value)}
-                    className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
-                    style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
+                    type="text"
+                    value={getTypeLabel(typeKey)}
+                    onChange={(e) => {
+                      const newData = { ...data };
+                      if (!newData.typeLabels) {
+                        newData.typeLabels = {};
+                      }
+                      newData.typeLabels[typeKey] = e.target.value;
+                      setData(newData);
+                    }}
+                    onBlur={() => setEditingTypeKey(null)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setEditingTypeKey(null);
+                      }
+                      if (e.key === 'Escape') {
+                        const newData = { ...data };
+                        if (newData.typeLabels) {
+                          delete newData.typeLabels[typeKey];
+                        }
+                        setData(newData);
+                        setEditingTypeKey(null);
+                      }
+                    }}
+                    autoFocus
+                    className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none min-w-[120px]"
+                    style={{ background: 'var(--surface)', color: 'var(--text)' }}
                   />
+                ) : (
+                  <span
+                    onClick={() => setEditingTypeKey(typeKey)}
+                    className="cursor-pointer transition-colors"
+                    style={{ color: 'var(--text-muted)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                    title="Click to edit"
+                  >
+                    {getTypeLabel(typeKey)}
+                  </span>
+                )}
+                {!isDefault && (
+                  <button
+                    onClick={() => deleteCustomType(typeKey)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded p-0.5"
+                    title="Delete custom type"
+                  >
+                    <X className="w-3 h-3 text-red-600 dark:text-red-400" />
+                  </button>
                 )}
               </div>
-              {editingTypeKey === typeKey ? (
-                <input
-                  type="text"
-                  value={getTypeLabel(typeKey)}
-                  onChange={(e) => {
-                    const newData = { ...data };
-                    if (!newData.typeLabels) {
-                      newData.typeLabels = {};
-                    }
-                    newData.typeLabels[typeKey] = e.target.value;
-                    setData(newData);
-                  }}
-                  onBlur={() => setEditingTypeKey(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setEditingTypeKey(null);
-                    }
-                    if (e.key === 'Escape') {
-                      const newData = { ...data };
-                      if (newData.typeLabels) {
-                        delete newData.typeLabels[typeKey];
-                      }
-                      setData(newData);
-                      setEditingTypeKey(null);
-                    }
-                  }}
-                  autoFocus
-                  className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none min-w-[120px]"
-                  style={{ background: 'var(--surface)', color: 'var(--text)' }}
-                />
-              ) : (
-                <span
-                  onClick={() => setEditingTypeKey(typeKey)}
-                  className="cursor-pointer transition-colors"
-                  style={{ color: 'var(--text-muted)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                  title="Click to edit"
-                >
-                  {getTypeLabel(typeKey)}
-                </span>
-              )}
-            </div>
-          ))}
+            );
+          })}
           {addingNewType ? (
             <div className="flex items-center gap-2">
               <input

@@ -45,6 +45,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
   const [startMonth, setStartMonth] = useState<string>('');
   const [endMonth, setEndMonth] = useState<string>('');
+  const [status, setStatus] = useState<'on_track' | 'at_risk' | 'blocked'>('on_track');
+  const [description, setDescription] = useState('');
 
   const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
   const defaultMonth = roadmapMonths.length > 0 ? String(roadmapMonths[0].calendarMonth) : '0';
@@ -64,6 +66,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
           const end = ('end_month' in editingActivity && editingActivity.end_month) ? String(editingActivity.end_month) : defaultMonth;
           setStartMonth(start);
           setEndMonth(end);
+          setStatus(('status' in editingActivity && editingActivity.status) ? editingActivity.status : 'on_track');
+          setDescription(('description' in editingActivity && editingActivity.description) ? editingActivity.description : '');
         }
       } else {
         setName('');
@@ -72,6 +76,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
         setStartMonth(defaultMonth);
         setEndMonth(defaultMonth);
+        setStatus('on_track');
+        setDescription('');
       }
     }
   }, [isOpen, editingActivity, context, defaultMonth]);
@@ -109,7 +115,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         name: name.trim(),
         type: selectedType,
         start_month: startMonth,
-        end_month: endMonth
+        end_month: endMonth,
+        status,
+        description: description.trim() || undefined
       });
     }
 
@@ -119,6 +127,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setSelectedQuarters([]);
     setStartMonth(defaultMonth);
     setEndMonth(defaultMonth);
+    setStatus('on_track');
+    setDescription('');
   };
 
   const toggleQuarter = (qk: string) => {
@@ -188,6 +198,71 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 autoFocus
               />
             </div>
+
+            {!isSpanning && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+                    Description <span className="opacity-60">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Add details..."
+                    rows={3}
+                    className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+                    Status
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setStatus('on_track')}
+                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                      style={{
+                        background: status === 'on_track' ? '#10b981' : 'var(--surface2)',
+                        color: status === 'on_track' ? '#ffffff' : 'var(--text)',
+                        border: status === 'on_track' ? '2px solid #10b981' : '2px solid var(--border)'
+                      }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-current"></div>
+                      On Track
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatus('at_risk')}
+                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                      style={{
+                        background: status === 'at_risk' ? '#f59e0b' : 'var(--surface2)',
+                        color: status === 'at_risk' ? '#ffffff' : 'var(--text)',
+                        border: status === 'at_risk' ? '2px solid #f59e0b' : '2px solid var(--border)'
+                      }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-current"></div>
+                      At Risk
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatus('blocked')}
+                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                      style={{
+                        background: status === 'blocked' ? '#ef4444' : 'var(--surface2)',
+                        color: status === 'blocked' ? '#ffffff' : 'var(--text)',
+                        border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border)'
+                      }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-current"></div>
+                      Blocked
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>

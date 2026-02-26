@@ -73,6 +73,8 @@ export interface Activity {
   position?: 'full' | 'early' | 'mid' | 'late';
   start_month?: string;
   end_month?: string;
+  status?: 'on_track' | 'at_risk' | 'blocked';
+  description?: string;
 }
 
 export interface SpanningActivity {

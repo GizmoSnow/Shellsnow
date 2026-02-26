@@ -1,6 +1,6 @@
 import { X, Plus, Pencil, Copy, ChevronUp, ChevronDown } from 'lucide-react';
 import { RoadmapData, Goal, Initiative, Activity } from '../lib/supabase';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getRoadmapQuarters, getMonthPosition, getAllRoadmapMonths } from '../lib/fiscal-year';
 
@@ -31,6 +31,17 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
   const [editingQuarter, setEditingQuarter] = useState<string | null>(null);
   const [editingSuccessPath, setEditingSuccessPath] = useState<string | null>(null);
+  const [detailCardActivity, setDetailCardActivity] = useState<{ activity: Activity; goal: Goal; initiative: Initiative; quarter: string } | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && detailCardActivity) {
+        setDetailCardActivity(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [detailCardActivity]);
 
   const getQuarterTitle = (qkey: string) => {
     return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
@@ -160,6 +171,18 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     onDataChange(newData);
   };
 
+  const getStatusColor = (status?: string) => {
+    if (status === 'blocked') return '#ef4444';
+    if (status === 'at_risk') return '#f59e0b';
+    return '#10b981';
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (status === 'blocked') return 'Blocked';
+    if (status === 'at_risk') return 'At Risk';
+    return 'On Track';
+  };
+
   const renderActivityPill = (
     activity: Activity,
     goal: Goal,
@@ -170,13 +193,19 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     const bgColor = getTypeColor(activity.type);
     const textColor = getTextColor(bgColor);
     const dropdownId = `${goal.id}-${initiative.id}-${quarter}-${activity.id}`;
+    const statusColor = getStatusColor(activity.status);
 
     return (
       <div key={activity.id} className="relative">
         <div
-          className={`group inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative ${context === 'full' ? 'w-full justify-center' : ''}`}
+          onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
+          className={`group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''}`}
           style={{ background: bgColor, color: textColor }}
         >
+          <div
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ background: statusColor }}
+          />
           {activity.name}
           <div className="hidden group-hover:flex items-center gap-1 ml-auto">
             <button
@@ -640,6 +669,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const isFirst = activityIndex === 0;
                           const isLast = activityIndex === activities.length - 1;
 
+                          const statusColor = getStatusColor(item.activity.status);
+
                           return (
                             <div
                               key={item.activity.id}
@@ -654,7 +685,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                               }}
                             >
                               <div
-                                className="group flex items-center gap-1 px-3 text-xs font-semibold transition-all hover:opacity-85"
+                                onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
+                                className="group flex items-center gap-1.5 px-3 text-xs font-semibold transition-all hover:opacity-85 cursor-pointer"
                                 style={{
                                   background: bgColor,
                                   color: textColor,
@@ -664,6 +696,10 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 }}
                                 title={item.activity.name}
                               >
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ background: statusColor }}
+                                />
                                 <span
                                   style={{
                                     overflow: 'hidden',
@@ -819,6 +855,96 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           );
         })}
       </div>
+
+      {/* Detail Card Modal */}
+      {detailCardActivity && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setDetailCardActivity(null)}
+          />
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 max-w-[320px]"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              border: '1px solid var(--border)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-3">
+              <div>
+                <div className="font-bold text-base mb-2" style={{ color: 'var(--text)' }}>
+                  {detailCardActivity.activity.name}
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                    style={{
+                      background: getTypeColor(detailCardActivity.activity.type),
+                      color: getTextColor(getTypeColor(detailCardActivity.activity.type))
+                    }}
+                  >
+                    {detailCardActivity.activity.type}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: getStatusColor(detailCardActivity.activity.status) }}
+                  />
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {getStatusLabel(detailCardActivity.activity.status)}
+                  </span>
+                </div>
+              </div>
+
+              {detailCardActivity.activity.start_month && detailCardActivity.activity.end_month && (
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <div className="font-semibold mb-1">Timeline</div>
+                  <div>
+                    {(() => {
+                      const allMonths = getAllRoadmapMonths(fiscalConfig);
+                      const startMonth = allMonths.find(m => m.calendarMonth === Number(detailCardActivity.activity.start_month));
+                      const endMonth = allMonths.find(m => m.calendarMonth === Number(detailCardActivity.activity.end_month));
+                      return `${startMonth?.abbrev || ''} - ${endMonth?.abbrev || ''}`;
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {detailCardActivity.activity.description && (
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <div className="font-semibold mb-1">Description</div>
+                  <div className="whitespace-pre-wrap">{detailCardActivity.activity.description}</div>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  onOpenEditModal(
+                    {
+                      goalId: detailCardActivity.goal.id,
+                      initiativeId: detailCardActivity.initiative.id,
+                      quarter: detailCardActivity.quarter
+                    },
+                    detailCardActivity.activity
+                  );
+                  setDetailCardActivity(null);
+                }}
+                className="w-full px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                style={{
+                  background: '#066afe',
+                  color: '#ffffff'
+                }}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

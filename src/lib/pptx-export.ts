@@ -323,11 +323,12 @@ export async function exportToPptx(
       const pillH = 0.16;
       const pillY = currentY + 0.1 + spIdx * 0.18;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
+      const pillW = spanWidth - 0.1;
 
       currentSlide.addShape(pres.ShapeType.roundRect, {
         x: pillX,
         y: pillY,
-        w: spanWidth - 0.1,
+        w: pillW,
         h: pillH,
         fill: { color: bgColor.replace('#', '') },
         line: { color: bgColor.replace('#', ''), width: 0 },
@@ -336,9 +337,9 @@ export async function exportToPptx(
       currentSlide.addText(sp.name, {
         x: pillX,
         y: pillY,
-        w: spanWidth - 0.1,
+        w: pillW,
         h: pillH,
-        fontSize: 7,
+        fontSize: pillW < 1.5 ? 6 : 7,
         bold: true,
         color: textColor,
         fontFace: 'Arial',
@@ -457,11 +458,12 @@ export async function exportToPptx(
           const pillH = 0.16;
           const pillY = currentY + 0.1 + spIdx * 0.18;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
+          const pillW = spanWidth - 0.1;
 
           currentSlide.addShape(pres.ShapeType.roundRect, {
             x: pillX,
             y: pillY,
-            w: spanWidth - 0.1,
+            w: pillW,
             h: pillH,
             fill: { color: bgColor.replace('#', '') },
             line: { color: bgColor.replace('#', ''), width: 0 },
@@ -470,9 +472,9 @@ export async function exportToPptx(
           currentSlide.addText(sp.name, {
             x: pillX,
             y: pillY,
-            w: spanWidth - 0.1,
+            w: pillW,
             h: pillH,
-            fontSize: 7,
+            fontSize: pillW < 1.5 ? 6 : 7,
             bold: true,
             color: textColor,
             fontFace: 'Arial',
@@ -674,7 +676,7 @@ export async function exportToPptx(
                 y: pillY,
                 w: pillW,
                 h: pillH,
-                fontSize: 7,
+                fontSize: pillW < 1.5 ? 6 : 7,
                 bold: true,
                 color: textColor,
                 fontFace: 'Arial',
