@@ -216,7 +216,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             Success Path
           </div>
           {quarters.map((quarter, i) => {
-            const successPathColor = '#04e1cb';
+            const successPathColor = getTypeColor('csm');
             const textColor = '#ffffff';
             const quarterKey = `q${quarter.quarter}` as keyof typeof data.successPathLabels;
             const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
