@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -76,6 +76,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     baseYear: 26,
     roadmapStartQuarter: 1
   });
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -84,6 +85,20 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   useEffect(() => {
     loadRoadmap();
   }, [roadmapId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
+          setToolbarCollapsed(prev => !prev);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (roadmap) {
@@ -165,14 +180,18 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const handleExportPng = async () => {
+    const wasCollapsed = toolbarCollapsed;
+    setToolbarCollapsed(true);
     setExporting(true);
     try {
+      await new Promise(resolve => setTimeout(resolve, 100));
       await exportToPng(title, data, customerLogoBase64);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
     } finally {
       setExporting(false);
+      setToolbarCollapsed(wasCollapsed);
     }
   };
 
@@ -353,111 +372,125 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               className="h-10 object-contain"
               style={theme === 'dark' ? { filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8))' } : {}}
             />
+            <button
+              onClick={() => setToolbarCollapsed(prev => !prev)}
+              className="p-2 rounded-lg transition-colors ml-2"
+              style={{ color: 'var(--text)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              title={toolbarCollapsed ? 'Expand toolbar' : 'Collapse toolbar'}
+            >
+              {toolbarCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            </button>
           </div>
         </div>
 
-        {/* Logo upload section - white background */}
-        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
-          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
-            <Upload size={16} />
-            {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/gif"
-              onChange={handleLogoUpload}
-              disabled={uploadingLogo}
-              className="hidden"
-            />
-          </label>
-          {customerLogoBase64 && (
-            <button
-              onClick={async () => {
-                if (confirm('Remove customer logo?')) {
-                  await supabase
-                    .from('roadmaps')
-                    .update({ customer_logo_base64: null })
-                    .eq('id', roadmapId);
-                  setCustomerLogoBase64(null);
-                }
-              }}
-              className="px-3 py-2 border rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
-              style={{ borderColor: '#d1d5db', color: '#dc2626' }}
-            >
-              Remove Logo
-            </button>
-          )}
-        </div>
+        {/* Logo upload section and control buttons - collapsible toolbar */}
+        {!toolbarCollapsed && (
+          <>
+            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
+              <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
+                <Upload size={16} />
+                {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/gif"
+                  onChange={handleLogoUpload}
+                  disabled={uploadingLogo}
+                  className="hidden"
+                />
+              </label>
+              {customerLogoBase64 && (
+                <button
+                  onClick={async () => {
+                    if (confirm('Remove customer logo?')) {
+                      await supabase
+                        .from('roadmaps')
+                        .update({ customer_logo_base64: null })
+                        .eq('id', roadmapId);
+                      setCustomerLogoBase64(null);
+                    }
+                  }}
+                  className="px-3 py-2 border rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                  style={{ borderColor: '#d1d5db', color: '#dc2626' }}
+                >
+                  Remove Logo
+                </button>
+              )}
+            </div>
 
-        <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
+            <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
 
-        {/* Control buttons section */}
-        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'var(--surface)' }}>
-          <div className="flex-1"></div>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg transition-colors"
-            style={{ background: 'var(--surface2)', color: 'var(--text)' }}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button
-            onClick={() => setShowFiscalYearSettings(true)}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
-            <Settings size={16} />
-            Fiscal Year
-          </button>
-          <button
-            onClick={() => setShowGoalsPanel(true)}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
-            <Settings size={16} />
-            Edit Goals
-          </button>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
-            <Printer size={16} />
-            Print
-          </button>
-          <button
-            onClick={handleExportPng}
-            disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? '#6b7280' : '#066afe' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
-          >
-            <Image size={16} />
-            {exporting ? 'Exporting...' : 'Export PNG'}
-          </button>
-          <button
-            onClick={handleExportPptx}
-            disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? '#6b7280' : '#066afe' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
-          >
-            <FileDown size={16} />
-            {exporting ? 'Exporting...' : 'Export PowerPoint'}
-          </button>
-          <button
-            onClick={() => setShowResetConfirmation(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
-            style={{ background: '#066afe' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
-          >
-            <RotateCcw size={16} />
-            Reset All
-          </button>
-        </div>
+            {/* Control buttons section */}
+            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'var(--surface)' }}>
+              <div className="flex-1"></div>
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg transition-colors"
+                style={{ background: 'var(--surface2)', color: 'var(--text)' }}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button
+                onClick={() => setShowFiscalYearSettings(true)}
+                className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
+                style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                <Settings size={16} />
+                Fiscal Year
+              </button>
+              <button
+                onClick={() => setShowGoalsPanel(true)}
+                className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
+                style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                <Settings size={16} />
+                Edit Goals
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
+                style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                <Printer size={16} />
+                Print
+              </button>
+              <button
+                onClick={handleExportPng}
+                disabled={exporting}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
+                style={{ background: exporting ? '#6b7280' : '#066afe' }}
+                onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
+                onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
+              >
+                <Image size={16} />
+                {exporting ? 'Exporting...' : 'Export PNG'}
+              </button>
+              <button
+                onClick={handleExportPptx}
+                disabled={exporting}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
+                style={{ background: exporting ? '#6b7280' : '#066afe' }}
+                onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
+                onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
+              >
+                <FileDown size={16} />
+                {exporting ? 'Exporting...' : 'Export PowerPoint'}
+              </button>
+              <button
+                onClick={() => setShowResetConfirmation(true)}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
+                style={{ background: '#066afe' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
+              >
+                <RotateCcw size={16} />
+                Reset All
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Roadmap content area */}
