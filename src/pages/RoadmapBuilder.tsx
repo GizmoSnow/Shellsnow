@@ -8,6 +8,7 @@ import RoadmapGrid from '../components/RoadmapGrid';
 import GoalsPanel from '../components/GoalsPanel';
 import AddActivityModal from '../components/AddActivityModal';
 import FiscalYearSettings from '../components/FiscalYearSettings';
+import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -67,6 +68,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showFiscalYearSettings, setShowFiscalYearSettings] = useState(false);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({
     startMonth: 0,
     baseYear: 26,
@@ -173,25 +175,23 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const handleReset = () => {
-    if (confirm('Reset to default template?')) {
-      setData({
-        goals: [
-          {
-            id: 'g1',
-            number: 'Goal #1',
-            title: 'New Business Growth',
-            color: '#6c63ff',
-            initiatives: [
-              {
-                id: 'i1',
-                label: 'Key Initiative',
-                activities: { q1: [], q2: [], q3: [], q4: [] }
-              }
-            ]
-          }
-        ]
-      });
-    }
+    setData({
+      goals: [
+        {
+          id: 'g1',
+          number: 'Goal #1',
+          title: 'New Business Growth',
+          color: '#6c63ff',
+          initiatives: [
+            {
+              id: 'i1',
+              label: 'Key Initiative',
+              activities: { q1: [], q2: [], q3: [], q4: [] }
+            }
+          ]
+        }
+      ]
+    });
   };
 
   const getTypeLabel = (typeKey: string) => {
@@ -390,14 +390,14 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             {exporting ? 'Exporting...' : 'Export PowerPoint'}
           </button>
           <button
-            onClick={handleReset}
+            onClick={() => setShowResetConfirmation(true)}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
             style={{ background: '#066afe' }}
             onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
           >
             <RotateCcw size={16} />
-            Reset
+            Reset All
           </button>
         </div>
       </div>
@@ -530,6 +530,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         onSave={(newConfig) => {
           setFiscalConfig(newConfig);
         }}
+      />
+
+      <ResetConfirmationModal
+        isOpen={showResetConfirmation}
+        onClose={() => setShowResetConfirmation(false)}
+        onConfirm={handleReset}
       />
 
       <GoalsPanel
