@@ -103,8 +103,9 @@ export default function Dashboard() {
 
   const getFirstName = () => {
     if (!user?.email) return 'there';
-    const name = user.email.split('@')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1);
+    const emailPrefix = user.email.split('@')[0];
+    const firstName = emailPrefix.split('.')[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
   };
 
   const getTotalActivities = (roadmap: Roadmap) => {
@@ -173,6 +174,7 @@ export default function Dashboard() {
               src={astroImage}
               alt="Salesforce Astro"
               className="w-80 h-80 object-contain drop-shadow-2xl"
+              style={{ mixBlendMode: 'screen' }}
             />
           </div>
         </div>
