@@ -41,11 +41,22 @@ function uid() {
 }
 
 function parseMonthsFromQuarterTitle(title: string): string[] {
-  const match = title.match(/\((.*?)\)/);
-  if (match) {
-    return match[1].split('-').map(m => m.trim());
+  const monthPattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/gi;
+  const matches = title.match(monthPattern);
+
+  if (matches && matches.length >= 2) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const startMonth = matches[0].substring(0, 3);
+    const endMonth = matches[matches.length - 1].substring(0, 3);
+    const startIdx = months.findIndex(m => m.toLowerCase() === startMonth.toLowerCase());
+    const endIdx = months.findIndex(m => m.toLowerCase() === endMonth.toLowerCase());
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx >= startIdx) {
+      return months.slice(startIdx, endIdx + 1);
+    }
   }
-  return [];
+
+  return ['Month 1', 'Month 2', 'Month 3'];
 }
 
 export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
@@ -142,7 +153,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     const months = parseMonthsFromQuarterTitle(title);
     months.forEach((month, idx) => {
       allMonthOptions.push({
-        value: `${qk}-${month.toLowerCase()}`,
+        value: `${qk}-${month.toLowerCase().replace(/\s+/g, '')}`,
         label: month,
         quarter: qk
       });

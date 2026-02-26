@@ -20,15 +20,6 @@ function getTextColor(bgColor: string): string {
 }
 
 function parseMonthsFromQuarterTitle(title: string): string[] {
-  const defaultMonths: Record<string, string[]> = {
-    q1: ['Jan', 'Feb', 'Mar'],
-    q2: ['Apr', 'May', 'Jun'],
-    q3: ['Jul', 'Aug', 'Sep'],
-    q4: ['Oct', 'Nov', 'Dec']
-  };
-
-  const qkey = title.toLowerCase().match(/q[1-4]/)?.[0] as keyof typeof defaultMonths;
-
   const monthPattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/gi;
   const matches = title.match(monthPattern);
 
@@ -44,7 +35,7 @@ function parseMonthsFromQuarterTitle(title: string): string[] {
     }
   }
 
-  return qkey ? defaultMonths[qkey] : defaultMonths.q1;
+  return ['Month 1', 'Month 2', 'Month 3'];
 }
 
 interface MonthPosition {
@@ -97,7 +88,7 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
         quarterIndex: qIdx,
         monthIndex: mIdx,
         quarterId: qk,
-        monthId: `${qk}-${month.toLowerCase()}`
+        monthId: `${qk}-${month.toLowerCase().replace(/\s+/g, '')}`
       }));
     });
 
