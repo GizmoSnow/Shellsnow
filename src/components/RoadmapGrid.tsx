@@ -240,10 +240,10 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 activities.forEach(activity => {
                   if (renderedActivities.has(activity.id)) return;
 
-                  const startMonth = activity.start_month || 'full-quarter';
-                  const endMonth = activity.end_month || 'full-quarter';
+                  const startMonth = activity.start_month;
+                  const endMonth = activity.end_month;
 
-                  if (startMonth === 'full-quarter' && endMonth === 'full-quarter') {
+                  if (!startMonth || !endMonth) {
                     const qIdx = qkeys.indexOf(quarter as any);
                     activitiesWithSpan.push({
                       activity,
@@ -253,12 +253,19 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       row: -1
                     });
                   } else {
-                    const startPos = getMonthPosition(startMonth);
-                    const endPos = getMonthPosition(endMonth);
+                    const startMonthNum = typeof startMonth === 'string' ? parseInt(startMonth, 10) : startMonth;
+                    const endMonthNum = typeof endMonth === 'string' ? parseInt(endMonth, 10) : endMonth;
+
+                    const startPos = getMonthPosition(startMonthNum, fiscalConfig);
+                    const endPos = getMonthPosition(endMonthNum, fiscalConfig);
 
                     if (startPos && endPos) {
-                      const startCol = startPos.quarterIndex * 3 + startPos.monthIndex + 1;
-                      const endCol = endPos.quarterIndex * 3 + endPos.monthIndex + 2;
+                      const absoluteStartIndex = startPos.quarterIndex * 3 + startPos.monthIndex;
+                      const absoluteEndIndex = endPos.quarterIndex * 3 + endPos.monthIndex;
+
+                      const startCol = absoluteStartIndex + 1;
+                      const endCol = absoluteEndIndex + 2;
+
                       activitiesWithSpan.push({
                         activity,
                         quarter,

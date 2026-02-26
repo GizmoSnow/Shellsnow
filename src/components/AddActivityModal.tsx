@@ -42,8 +42,11 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
-  const [startMonth, setStartMonth] = useState<string>('full-quarter');
-  const [endMonth, setEndMonth] = useState<string>('full-quarter');
+  const [startMonth, setStartMonth] = useState<string>('');
+  const [endMonth, setEndMonth] = useState<string>('');
+
+  const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
+  const defaultMonth = roadmapMonths.length > 0 ? String(roadmapMonths[0].calendarMonth) : '0';
 
   useEffect(() => {
     if (isOpen) {
@@ -56,8 +59,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
-          const start = ('start_month' in editingActivity && editingActivity.start_month) ? editingActivity.start_month : 'full-quarter';
-          const end = ('end_month' in editingActivity && editingActivity.end_month) ? editingActivity.end_month : 'full-quarter';
+          const start = ('start_month' in editingActivity && editingActivity.start_month) ? String(editingActivity.start_month) : defaultMonth;
+          const end = ('end_month' in editingActivity && editingActivity.end_month) ? String(editingActivity.end_month) : defaultMonth;
           setStartMonth(start);
           setEndMonth(end);
         }
@@ -66,11 +69,11 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         setSelectedType('csm');
         setIsSpanning(context?.quarter === 'spanning');
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
-        setStartMonth('full-quarter');
-        setEndMonth('full-quarter');
+        setStartMonth(defaultMonth);
+        setEndMonth(defaultMonth);
       }
     }
-  }, [isOpen, editingActivity, context]);
+  }, [isOpen, editingActivity, context, defaultMonth]);
 
   if (!isOpen) return null;
 
@@ -103,8 +106,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setSelectedType('csm');
     setIsSpanning(false);
     setSelectedQuarters([]);
-    setStartMonth('full-quarter');
-    setEndMonth('full-quarter');
+    setStartMonth(defaultMonth);
+    setEndMonth(defaultMonth);
   };
 
   const toggleQuarter = (qk: string) => {
@@ -121,7 +124,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     }
   };
 
-  const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
   const quarters = getRoadmapQuarters(fiscalConfig);
 
   const allMonthOptions = roadmapMonths.map(month => ({
@@ -189,7 +191,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                     onChange={(e) => setStartMonth(e.target.value)}
                     className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
                   >
-                    <option value="full-quarter">Full Quarter</option>
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
@@ -206,7 +207,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                     onChange={(e) => setEndMonth(e.target.value)}
                     className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
                   >
-                    <option value="full-quarter">Full Quarter</option>
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
