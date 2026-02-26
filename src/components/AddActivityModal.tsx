@@ -270,8 +270,10 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 bg-transparent hover:bg-[#2e3248] border border-[#2e3248] rounded-lg font-semibold transition-colors"
-                style={{ color: '#001e5b' }}
+                className="px-5 py-2 bg-transparent rounded-lg font-semibold transition-colors"
+                style={{ color: 'var(--text)', border: '1px solid var(--text)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 Cancel
               </button>

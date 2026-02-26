@@ -254,8 +254,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   }
 
   return (
-    <div className="min-h-screen print-container" style={{ background: 'white' }}>
-      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: '#e5e7eb' }}>
+    <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
+      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)' }}>
         {/* Top header bar - white with Salesforce navy text */}
         <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'white' }}>
           <div className="flex items-center gap-4">
@@ -473,15 +473,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                   }}
                   autoFocus
                   className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none min-w-[120px]"
-                  style={{ background: 'white', color: '#1f2937' }}
+                  style={{ background: 'var(--surface)', color: 'var(--text)' }}
                 />
               ) : (
                 <span
                   onClick={() => setEditingTypeKey(typeKey)}
                   className="cursor-pointer transition-colors"
-                  style={{ color: '#6b7280' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#1f2937'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}
+                  style={{ color: 'var(--text-muted)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
                   title="Click to edit"
                 >
                   {getTypeLabel(typeKey)}
