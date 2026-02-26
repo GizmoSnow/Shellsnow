@@ -126,32 +126,32 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50" style={{ borderColor: 'var(--border)', background: '#00B3FF' }}>
+      <div className="border-b sticky top-0 z-50" style={{ borderColor: '#e5e7eb', background: 'white' }}>
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-extrabold text-white">
+            <h1 className="text-xl font-extrabold" style={{ color: '#001e5b' }}>
               Success Path Builder
             </h1>
             <img src={salesforceLogo} alt="Salesforce" className="h-8" />
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-white/90">{user?.email}</span>
+            <span className="text-sm" style={{ color: '#001e5b' }}>{user?.email}</span>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-colors text-white"
-              style={{ background: '#FF6FBF' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#FF5AAA'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#FF6FBF'}
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: '#001e5b' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold text-white"
-              style={{ background: '#FF6FBF' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#FF5AAA'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#FF6FBF'}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold border"
+              style={{ color: '#001e5b', borderColor: '#001e5b', background: 'transparent' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <LogOut size={16} />
               Sign Out
@@ -194,9 +194,9 @@ export default function Dashboard() {
           <button
             onClick={createRoadmap}
             className="flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
-            style={{ background: '#00A1E0' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#0088C3'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
+            style={{ background: '#066afe' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
           >
             <Plus size={20} />
             New Roadmap
@@ -211,9 +211,9 @@ export default function Dashboard() {
             <button
               onClick={createRoadmap}
               className="inline-flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
-              style={{ background: '#00A1E0' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#0088C3'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
+              style={{ background: '#066afe' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
             >
               <Plus size={20} />
               Create Roadmap

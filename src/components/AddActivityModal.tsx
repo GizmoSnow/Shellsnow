@@ -270,13 +270,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 bg-[#22263a] hover:bg-[#2e3248] border border-[#2e3248] text-[#e8eaf6] rounded-lg font-semibold transition-colors"
+                className="px-5 py-2 bg-transparent hover:bg-[#2e3248] border border-[#2e3248] rounded-lg font-semibold transition-colors"
+                style={{ color: '#001e5b' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[#6c63ff] hover:bg-[#5a52e0] text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5"
+                className="px-5 py-2 bg-[#066afe] hover:bg-[#0554d1] text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5"
               >
                 {editingActivity ? 'Save Changes' : 'Add Activity'}
               </button>

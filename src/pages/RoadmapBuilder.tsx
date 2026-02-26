@@ -255,17 +255,20 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)' }}>
-        {/* Top header bar - Salesforce blue */}
-        <div className="px-8 py-4 flex items-center justify-between" style={{ background: '#00A1E0' }}>
+      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: '#e5e7eb' }}>
+        {/* Top header bar - white with Salesforce navy text */}
+        <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'white' }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="p-2 rounded-lg transition-colors text-white/80 hover:text-white hover:bg-white/10"
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: '#001e5b' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-xl font-extrabold text-white">
+            <h1 className="text-xl font-extrabold" style={{ color: '#001e5b' }}>
               Success Path Builder
             </h1>
           </div>
@@ -273,13 +276,11 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             {customerLogoBase64 && (
               <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
             )}
-            <div className="bg-white rounded px-2 py-1">
-              <img
-                src={salesforceLogo}
-                alt="Salesforce"
-                className="h-8 object-contain"
-              />
-            </div>
+            <img
+              src={salesforceLogo}
+              alt="Salesforce"
+              className="h-10 object-contain"
+            />
           </div>
         </div>
 
@@ -356,9 +357,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             onClick={handleExportPng}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? '#6b7280' : '#00A1E0' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0085C3')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#00A1E0')}
+            style={{ background: exporting ? '#6b7280' : '#066afe' }}
+            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
+            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
           >
             <Image size={16} />
             {exporting ? 'Exporting...' : 'Export PNG'}
@@ -367,9 +368,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             onClick={handleExportPptx}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? '#6b7280' : '#00A1E0' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0085C3')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#00A1E0')}
+            style={{ background: exporting ? '#6b7280' : '#066afe' }}
+            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0554d1')}
+            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#066afe')}
           >
             <FileDown size={16} />
             {exporting ? 'Exporting...' : 'Export PowerPoint'}
@@ -377,9 +378,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={handleReset}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
-            style={{ background: '#00A1E0' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#0085C3'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
+            style={{ background: '#066afe' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
           >
             <RotateCcw size={16} />
             Reset
