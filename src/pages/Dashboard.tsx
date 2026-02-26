@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
 import { supabase, Roadmap } from '../lib/supabase';
+import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
+import astroImage from '../assets/Screenshot_2025-12-03_at_9.42.40_AM.png';
 
 export default function Dashboard() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
@@ -99,33 +101,79 @@ export default function Dashboard() {
     );
   }
 
+  const getFirstName = () => {
+    if (!user?.email) return 'there';
+    const name = user.email.split('@')[0];
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  const getTotalActivities = (roadmap: Roadmap) => {
+    let total = 0;
+    roadmap.data.goals.forEach(goal => {
+      goal.initiatives.forEach(initiative => {
+        total += initiative.activities.q1.length;
+        total += initiative.activities.q2.length;
+        total += initiative.activities.q3.length;
+        total += initiative.activities.q4.length;
+      });
+    });
+    if (roadmap.data.accountSpanning) {
+      total += roadmap.data.accountSpanning.length;
+    }
+    return total;
+  };
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+      <div className="border-b sticky top-0 z-50" style={{ borderColor: 'var(--border)', background: '#00B3FF' }}>
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>
-            Success Path Builder
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-extrabold text-white">
+              Success Path Builder
+            </h1>
+            <img src={salesforceLogo} alt="Salesforce" className="h-8" />
+          </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{user?.email}</span>
+            <span className="text-sm text-white/90">{user?.email}</span>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-colors"
-              style={{ background: 'var(--surface2)', color: 'var(--text)' }}
+              className="p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
-              style={{ background: 'var(--surface2)', color: 'var(--text)' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold bg-white/10 hover:bg-white/20 text-white"
             >
               <LogOut size={16} />
               Sign Out
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0B5CAB 0%, #00B3FF 100%)',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-8 py-16 flex items-center justify-between gap-12">
+          <div className="flex-1">
+            <h2 className="text-4xl font-bold mb-4 text-white">
+              Welcome back, {getFirstName()}!
+            </h2>
+            <p className="text-xl text-white/90">
+              Build and manage your customer success roadmaps
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <img
+              src={astroImage}
+              alt="Salesforce Astro"
+              className="w-80 h-80 object-contain drop-shadow-2xl"
+            />
           </div>
         </div>
       </div>
@@ -138,10 +186,10 @@ export default function Dashboard() {
           </div>
           <button
             onClick={createRoadmap}
-            className="flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5"
-            style={{ background: 'var(--primary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+            className="flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
+            style={{ background: '#00A1E0' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#0088C3'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
           >
             <Plus size={20} />
             New Roadmap
@@ -155,10 +203,10 @@ export default function Dashboard() {
             <p className="mb-6" style={{ color: 'var(--text-muted)' }}>Create your first roadmap to get started</p>
             <button
               onClick={createRoadmap}
-              className="inline-flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5"
-              style={{ background: 'var(--primary)' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+              className="inline-flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
+              style={{ background: '#00A1E0' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#0088C3'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
             >
               <Plus size={20} />
               Create Roadmap
@@ -166,39 +214,69 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {roadmaps.map((roadmap) => (
-              <div
-                key={roadmap.id}
-                className="border rounded-xl p-6 transition-all cursor-pointer group hover:shadow-lg"
-                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-                onClick={() => navigate(`/roadmap/${roadmap.id}`)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <FileText size={32} style={{ color: 'var(--primary)' }} />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteRoadmap(roadmap.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+            {roadmaps.map((roadmap) => {
+              const firstGoalColor = roadmap.data.goals[0]?.color || '#00B3FF';
+              const totalActivities = getTotalActivities(roadmap);
+
+              return (
+                <div
+                  key={roadmap.id}
+                  className="border rounded-xl overflow-hidden transition-all cursor-pointer group hover:shadow-xl relative"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = firstGoalColor;
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+                  }}
+                  onClick={() => navigate(`/roadmap/${roadmap.id}`)}
+                >
+                  <div
+                    className="h-1.5"
+                    style={{ background: firstGoalColor }}
+                  />
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <FileText size={32} style={{ color: firstGoalColor }} />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRoadmap(roadmap.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <h3 className="text-lg font-bold mb-3 line-clamp-2" style={{ color: 'var(--text)' }}>
+                      {roadmap.title}
+                    </h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: firstGoalColor }} />
+                        <span>{roadmap.data.goals.length} goal{roadmap.data.goals.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: firstGoalColor }} />
+                        <span>{totalActivities} activit{totalActivities !== 1 ? 'ies' : 'y'}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      Updated {new Date(roadmap.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-2 line-clamp-2" style={{ color: 'var(--text)' }}>
-                  {roadmap.title}
-                </h3>
-                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  {roadmap.data.goals.length} goal{roadmap.data.goals.length !== 1 ? 's' : ''}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Updated {new Date(roadmap.updated_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

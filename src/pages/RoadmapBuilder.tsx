@@ -12,6 +12,7 @@ import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
+import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
 
 interface RoadmapBuilderProps {
   roadmapId: string;
@@ -254,25 +255,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)', background: '#00B3FF' }}>
         <div className="px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--surface2)';
-                e.currentTarget.style.color = 'var(--text)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--text-muted)';
-              }}
+              className="p-2 rounded-lg transition-colors text-white/80 hover:text-white hover:bg-white/10"
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>
+            <h1 className="text-xl font-extrabold text-white">
               Success Path Builder
             </h1>
           </div>
@@ -281,7 +273,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
             )}
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg"
+              src={salesforceLogo}
               alt="Salesforce"
               className="h-10 object-contain"
             />
@@ -399,7 +391,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               <img src={customerLogoBase64} alt="Customer logo" style={{ height: '50px', objectFit: 'contain' }} />
             )}
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg"
+              src={salesforceLogo}
               alt="Salesforce"
               style={{ height: '50px', objectFit: 'contain' }}
             />
