@@ -231,11 +231,11 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           })}
         </div>
 
-        {/* Account-Level Spanning Activities */}
+        {/* Account-Level Activities */}
         <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border)' }}>
           <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-            <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-              Account Activities
+            <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--primary)' }}>
+              Ongoing Activities
             </div>
           </div>
           <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -283,7 +283,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               );
             })}
             <button
-              onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'spanning' })}
+              onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'q1' })}
               className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
               style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
               onMouseEnter={(e) => {
@@ -298,7 +298,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               }}
             >
               <Plus size={12} />
-              Add Spanning
+              Add
             </button>
           </div>
         </div>
