@@ -23,7 +23,26 @@ This guide covers important security settings that need to be configured in your
 
 ---
 
-### 2. Enable Leaked Password Protection
+### 2. Disable Anonymous Sign-ins
+
+**Issue**: Anonymous sign-ins may be enabled, allowing users to create sessions without credentials. This is a security risk for most applications.
+
+**How to Fix**:
+
+1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
+2. Select your project
+3. Navigate to **Authentication** > **Providers**
+4. Find **Anonymous** in the providers list
+5. Toggle it to **OFF** (if enabled)
+6. Click **Save**
+
+**Database Protection Applied**: ✅ A restrictive RLS policy has been added to block any anonymous access attempts at the database level.
+
+**Why This Matters**: Anonymous sign-ins bypass authentication, creating potential security vulnerabilities. Unless your app specifically requires this feature, it should be disabled.
+
+---
+
+### 3. Enable Leaked Password Protection
 
 **Issue**: Password breach protection via HaveIBeenPwned.org is currently disabled. This allows users to set passwords that have been compromised in data breaches.
 
@@ -43,7 +62,7 @@ This guide covers important security settings that need to be configured in your
 
 ## Additional Recommended Security Settings
 
-### 3. Email Confirmations (Optional but Recommended)
+### 4. Email Confirmations (Optional but Recommended)
 
 Currently, email confirmation is disabled. Consider enabling it for production:
 
@@ -55,7 +74,7 @@ Currently, email confirmation is disabled. Consider enabling it for production:
 
 ---
 
-### 4. Rate Limiting (Highly Recommended)
+### 5. Rate Limiting (Highly Recommended)
 
 Protect your Auth endpoints from brute force attacks:
 
@@ -68,7 +87,7 @@ Protect your Auth endpoints from brute force attacks:
 
 ---
 
-### 5. Session Management
+### 6. Session Management
 
 Configure secure session settings:
 
@@ -80,7 +99,7 @@ Configure secure session settings:
 
 ---
 
-### 6. Two-Factor Authentication (MFA)
+### 7. Two-Factor Authentication (MFA)
 
 Enable Multi-Factor Authentication for enhanced security:
 
@@ -95,14 +114,22 @@ Enable Multi-Factor Authentication for enhanced security:
 
 Use this checklist to ensure all security measures are in place:
 
+### Critical (Must Fix)
 - [ ] Auth connection strategy set to percentage-based (10-15%)
+- [ ] Anonymous sign-ins disabled in Dashboard
 - [ ] Leaked password protection enabled
+
+### Database Security (Already Applied ✅)
+- [x] RLS policies reviewed and restrictive by default
+- [x] Anonymous access blocked at database level
+- [x] All policies require authenticated users with explicit checks
+
+### Recommended
 - [ ] Rate limiting configured for Auth endpoints
 - [ ] Session timeouts configured appropriately
 - [ ] Email confirmation enabled (if required for your use case)
 - [ ] MFA enabled for enhanced security
 - [ ] Google OAuth credentials secured (never in code)
-- [ ] RLS policies reviewed and restrictive by default
 - [ ] Service role key never exposed to client-side code
 - [ ] HTTPS enforced for all production traffic
 
