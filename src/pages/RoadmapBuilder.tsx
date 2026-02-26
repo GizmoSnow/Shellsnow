@@ -255,8 +255,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
-      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)', background: '#00B3FF' }}>
-        <div className="px-8 py-4 flex items-center justify-between">
+      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)' }}>
+        {/* Top header bar - Salesforce blue */}
+        <div className="px-8 py-4 flex items-center justify-between" style={{ background: '#00A1E0' }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
@@ -272,16 +273,19 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             {customerLogoBase64 && (
               <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
             )}
-            <img
-              src={salesforceLogo}
-              alt="Salesforce"
-              className="h-10 object-contain"
-            />
+            <div className="bg-white rounded px-2 py-1">
+              <img
+                src={salesforceLogo}
+                alt="Salesforce"
+                className="h-8 object-contain"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="px-8 pb-4 flex items-center gap-2 print-hide">
-          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
+        {/* Logo upload section - white background */}
+        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
+          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}>
             <Upload size={16} />
             {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
             <input
@@ -304,21 +308,22 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 }
               }}
               className="px-3 py-2 border rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
-              style={{ borderColor: 'var(--border)', color: '#dc2626' }}
+              style={{ borderColor: '#d1d5db', color: '#dc2626' }}
             >
               Remove Logo
             </button>
           )}
         </div>
 
-        <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
+        <div className="border-b print-hide" style={{ borderColor: '#e5e7eb' }}></div>
 
-        <div className="px-8 py-4 flex items-center gap-2 print-hide">
+        {/* Control buttons section - white background */}
+        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
           <div className="flex-1"></div>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors"
-            style={{ background: 'var(--surface2)', color: 'var(--text)' }}
+            style={{ background: '#f3f4f6', color: '#1f2937' }}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -326,7 +331,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => setShowFiscalYearSettings(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
           >
             <Settings size={16} />
             Fiscal Year
@@ -334,7 +339,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => setShowGoalsPanel(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
           >
             <Settings size={16} />
             Edit Goals
@@ -342,7 +347,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
           >
             <Printer size={16} />
             Print
@@ -351,9 +356,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             onClick={handleExportPng}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? 'var(--text-muted)' : 'var(--primary)' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary-hover)')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary)')}
+            style={{ background: exporting ? '#6b7280' : '#00A1E0' }}
+            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0085C3')}
+            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#00A1E0')}
           >
             <Image size={16} />
             {exporting ? 'Exporting...' : 'Export PNG'}
@@ -362,9 +367,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             onClick={handleExportPptx}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-            style={{ background: exporting ? 'var(--text-muted)' : 'var(--primary)' }}
-            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary-hover)')}
-            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary)')}
+            style={{ background: exporting ? '#6b7280' : '#00A1E0' }}
+            onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = '#0085C3')}
+            onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = '#00A1E0')}
           >
             <FileDown size={16} />
             {exporting ? 'Exporting...' : 'Export PowerPoint'}
@@ -372,9 +377,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={handleReset}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
-            style={{ background: 'var(--primary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+            style={{ background: '#00A1E0' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#0085C3'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#00A1E0'}
           >
             <RotateCcw size={16} />
             Reset
@@ -382,7 +387,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         </div>
       </div>
 
-      <div className="px-8 py-6 print-roadmap-content">
+      {/* Roadmap content area - white background */}
+      <div className="px-8 py-6 print-roadmap-content" style={{ background: 'white' }}>
         {/* Print header with logos - only visible when printing */}
         <div className="hidden print-header print-only" style={{ display: 'none' }}>
           <div className="print-title">{title}</div>
@@ -414,12 +420,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="text-3xl font-extrabold bg-transparent border-none outline-none w-full mb-4 print-hide"
-          style={{ color: 'var(--text)' }}
+          style={{ color: '#1f2937' }}
           placeholder="Enter roadmap title..."
         />
 
         {/* Screen legend - hidden when printing */}
-        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: '#6b7280' }}>
           {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
             <div key={typeKey} className="flex items-center gap-2 relative">
               <div className="relative">

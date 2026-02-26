@@ -213,8 +213,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             Success Path
           </div>
           {quarters.map((quarter, i) => {
-            const csmColor = getTypeColor('csm');
-            const textColor = getTextColor(csmColor);
+            const successPathColor = '#00B0B9';
+            const textColor = '#ffffff';
             const quarterKey = `q${quarter.quarter}` as keyof typeof data.successPathLabels;
             const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
 
@@ -222,7 +222,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
                 <div
                   className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap print-show-pill"
-                  style={{ background: csmColor, color: textColor }}
+                  style={{ background: successPathColor, color: textColor }}
                 >
                   {label}
                 </div>
