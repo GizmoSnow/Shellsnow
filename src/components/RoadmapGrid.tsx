@@ -428,7 +428,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_repeat(4,1fr)] print-avoid-break">
+                  {flatActivitiesWithRows.length > 0 && (
+                  <div className="grid grid-cols-[200px_repeat(4,1fr)] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
                     <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
@@ -447,186 +448,171 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           </div>
                         </>
                       )}
-                      <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                        Key Initiative
-                      </div>
-                      <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
-                        {initiative.label}
-                      </div>
+                      {spanningActivities.length === 0 && (
+                        <>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                            Key Initiative
+                          </div>
+                          <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
+                            {initiative.label}
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {qkeys.map((qk, qIdx) => {
-                      const quarterInfo = quarters[qIdx];
-                      const months = quarterInfo.months.map(m => m.abbrev);
+                    <div className="relative grid grid-cols-[repeat(4,1fr)]" style={{ background: 'var(--surface2)' }}>
+                      {/* Activities overlay - single continuous grid across all quarters */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(12, 1fr)',
+                          gridTemplateRows: `repeat(${rows.length || 1}, 40px)`,
+                          gap: '4px',
+                          padding: '8px',
+                          pointerEvents: 'none',
+                          zIndex: 20
+                        }}
+                      >
+                        {flatActivitiesWithRows.map((item) => {
+                          const bgColor = getTypeColor(item.activity.type);
+                          const textColor = getTextColor(bgColor);
+                          const dropdownId = `${goal.id}-${initiative.id}-${item.quarter}-${item.activity.id}`;
 
-                      return (
-                        <div
-                          key={qIdx}
-                          className={`border-r ${qIdx === 3 ? 'border-r-0' : ''}`}
-                          style={{ borderColor: 'var(--border)', background: 'var(--surface2)', position: 'relative', zIndex: 1 }}
-                        >
-                          <div className="grid grid-cols-3 h-full min-h-[100px]" style={{ position: 'relative' }}>
+                          return (
                             <div
+                              key={item.activity.id}
                               style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
-                                gridTemplateRows: `repeat(${rows.length || 1}, minmax(32px, auto))`,
-                                gap: '4px',
-                                padding: '8px',
-                                pointerEvents: 'none',
-                                zIndex: 20
+                                gridColumnStart: item.startCol,
+                                gridColumnEnd: item.endCol,
+                                gridRowStart: item.row + 1,
+                                gridRowEnd: item.row + 2,
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 30
                               }}
                             >
-                              {flatActivitiesWithRows
-                                .filter(item => {
-                                  const itemStartQuarter = Math.floor((item.startCol - 1) / 3);
-                                  const itemEndQuarter = Math.floor((item.endCol - 2) / 3);
-                                  return itemStartQuarter <= qIdx && itemEndQuarter >= qIdx;
-                                })
-                                .map((item) => {
-                                  const currentQuarterStart = qIdx * 3 + 1;
-                                  const currentQuarterEnd = qIdx * 3 + 4;
-
-                                  const displayStartCol = Math.max(item.startCol, currentQuarterStart);
-                                  const displayEndCol = Math.min(item.endCol, currentQuarterEnd);
-
-                                  const localStartCol = displayStartCol - currentQuarterStart + 1;
-                                  const localEndCol = displayEndCol - currentQuarterStart + 1;
-
-                                  const isStart = item.startCol >= currentQuarterStart;
-                                  const isEnd = item.endCol <= currentQuarterEnd;
-
-                                  const bgColor = getTypeColor(item.activity.type);
-                                  const textColor = getTextColor(bgColor);
-                                  const dropdownId = `${goal.id}-${initiative.id}-${item.quarter}-${item.activity.id}`;
-
-                                  return (
-                                    <div
-                                      key={item.activity.id}
-                                      style={{
-                                        gridColumnStart: localStartCol,
-                                        gridColumnEnd: localEndCol,
-                                        gridRowStart: item.row + 1,
-                                        gridRowEnd: item.row + 2,
-                                        pointerEvents: 'auto',
-                                        position: 'relative',
-                                        zIndex: 30
-                                      }}
-                                    >
-                                      <div
-                                        className="group flex items-center gap-1 px-3 py-1 text-xs font-semibold transition-all hover:opacity-85 h-full"
-                                        style={{
-                                          background: bgColor,
-                                          color: textColor,
-                                          borderTopLeftRadius: isStart ? '9999px' : '0',
-                                          borderBottomLeftRadius: isStart ? '9999px' : '0',
-                                          borderTopRightRadius: isEnd ? '9999px' : '0',
-                                          borderBottomRightRadius: isEnd ? '9999px' : '0',
-                                          justifyContent: 'center',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap'
-                                        }}
-                                      >
-                                        {isStart && item.activity.name}
-                                        <div className="hidden group-hover:flex items-center gap-1 ml-auto">
-                                          {isEnd && (
-                                            <>
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
-                                                }}
-                                                className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
-                                              >
-                                                <Copy size={9} />
-                                              </button>
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: item.quarter }, item.activity);
-                                                }}
-                                                className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
-                                              >
-                                                <Pencil size={9} />
-                                              </button>
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  deleteActivity(goal.id, initiative.id, item.quarter, item.activity.id);
-                                                }}
-                                                className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
-                                              >
-                                                <X size={10} />
-                                              </button>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                      {copyDropdown === dropdownId && isEnd && (
-                                        <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)' }}>
-                                          <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
-                                          {qkeys.map((targetQ) => (
-                                            <button
-                                              key={targetQ}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, [targetQ]);
-                                              }}
-                                              disabled={targetQ === item.quarter}
-                                              className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                                              style={{ color: 'var(--text)' }}
-                                            >
-                                              {getQuarterTitle(targetQ)}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                            </div>
-
-                            {months.map((month, monthIdx) => (
                               <div
-                                key={monthIdx}
-                                className={`p-2 flex flex-col ${monthIdx < 2 ? 'border-r border-dashed' : ''}`}
-                                style={{ borderColor: 'var(--border-light, rgba(0,0,0,0.06))' }}
+                                className="group flex items-center gap-1 px-3 text-xs font-semibold transition-all hover:opacity-85"
+                                style={{
+                                  background: bgColor,
+                                  color: textColor,
+                                  borderRadius: '9999px',
+                                  justifyContent: 'center',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  height: '36px'
+                                }}
                               >
-                                <div className="text-[9px] font-medium text-center mb-0.5" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
-                                  {month}
+                                {item.activity.name}
+                                <div className="hidden group-hover:flex items-center gap-1 ml-auto">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
+                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                  >
+                                    <Copy size={9} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: item.quarter }, item.activity);
+                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                  >
+                                    <Pencil size={9} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteActivity(goal.id, initiative.id, item.quarter, item.activity.id);
+                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                  >
+                                    <X size={10} />
+                                  </button>
                                 </div>
                               </div>
-                            ))}
+                              {copyDropdown === dropdownId && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)' }}>
+                                  <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
+                                  {qkeys.map((targetQ) => (
+                                    <button
+                                      key={targetQ}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, [targetQ]);
+                                      }}
+                                      disabled={targetQ === item.quarter}
+                                      className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                      style={{ color: 'var(--text)' }}
+                                    >
+                                      {getQuarterTitle(targetQ)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Quarter containers with borders and month labels */}
+                      {qkeys.map((qk, qIdx) => {
+                        const quarterInfo = quarters[qIdx];
+                        const months = quarterInfo.months.map(m => m.abbrev);
+
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`border-r ${qIdx === 3 ? 'border-r-0' : ''}`}
+                            style={{ borderColor: 'var(--border)', position: 'relative', zIndex: 1, minHeight: `${(rows.length || 1) * 40 + 16 + 48}px` }}
+                          >
+                            <div className="grid grid-cols-3 pt-2">
+                              {months.map((month, monthIdx) => (
+                                <div
+                                  key={monthIdx}
+                                  className={`p-2 flex flex-col ${monthIdx < 2 ? 'border-r border-dashed' : ''}`}
+                                  style={{ borderColor: 'var(--border-light, rgba(0,0,0,0.06))' }}
+                                >
+                                  <div className="text-[9px] font-medium text-center mb-0.5" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                                    {month}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="px-2 pb-2 mt-auto">
+                              <button
+                                onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk })}
+                                className="w-full border border-dashed rounded-md px-2 py-1 text-[10px] font-medium transition-all"
+                                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = 'var(--primary)';
+                                  e.currentTarget.style.background = 'var(--primary)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = 'var(--border)';
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.color = 'var(--text-muted)';
+                                }}
+                              >
+                                + Add
+                              </button>
+                            </div>
                           </div>
-                          <div className="px-2 pb-2">
-                            <button
-                              onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk })}
-                              className="w-full border border-dashed rounded-md px-2 py-1 text-[10px] font-medium transition-all"
-                              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = 'var(--primary)';
-                                e.currentTarget.style.background = 'var(--primary)';
-                                e.currentTarget.style.color = '#ffffff';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = 'var(--border)';
-                                e.currentTarget.style.background = 'transparent';
-                                e.currentTarget.style.color = 'var(--text-muted)';
-                              }}
-                            >
-                              + Add
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
+                  )}
                 </div>
               );
             })}
