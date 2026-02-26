@@ -175,7 +175,7 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
   qkeys.forEach((qk, i) => {
     const label = data.successPathLabels?.[qk as keyof typeof data.successPathLabels] || (i === 0 ? 'Success Path' : 'Success Path Review');
     const pillW = Q_W * 0.75;
-    const pillX = Q_START_X + i * Q_W + (Q_W - pillw) / 2;
+    const pillX = Q_START_X + i * Q_W + (Q_W - pillW) / 2;
     slide.addShape(pres.ShapeType.roundRect, {
       x: pillX,
       y: SP_Y + 0.05,
