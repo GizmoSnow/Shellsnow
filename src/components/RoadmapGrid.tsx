@@ -144,6 +144,22 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     onDataChange(newData);
   };
 
+  const reorderAccountSpanning = (spanningId: string, direction: 'up' | 'down') => {
+    const newData = { ...data };
+    if (!newData.accountSpanning) return;
+
+    const currentIndex = newData.accountSpanning.findIndex(s => s.id === spanningId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= newData.accountSpanning.length) return;
+
+    [newData.accountSpanning[currentIndex], newData.accountSpanning[newIndex]] =
+      [newData.accountSpanning[newIndex], newData.accountSpanning[currentIndex]];
+
+    onDataChange(newData);
+  };
+
   const renderActivityPill = (
     activity: Activity,
     goal: Goal,
@@ -262,13 +278,15 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             </div>
           </div>
           <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {(data.accountSpanning || []).map((sp) => {
+            {(data.accountSpanning || []).map((sp, index) => {
               const bgColor = getTypeColor(sp.type);
               const textColor = getTextColor(bgColor);
               const sortedQuarters = [...(sp.quarters || [])].sort();
               const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
               const minIdx = Math.min(...qIndexes);
               const maxIdx = Math.max(...qIndexes);
+              const isFirst = index === 0;
+              const isLast = index === (data.accountSpanning || []).length - 1;
 
               return (
                 <div
@@ -283,6 +301,28 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 >
                   {sp.name}
                   <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
+                    {!isFirst && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reorderAccountSpanning(sp.id, 'up');
+                        }}
+                        className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                      >
+                        <ChevronUp size={10} />
+                      </button>
+                    )}
+                    {!isLast && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reorderAccountSpanning(sp.id, 'down');
+                        }}
+                        className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                      >
+                        <ChevronDown size={10} />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
