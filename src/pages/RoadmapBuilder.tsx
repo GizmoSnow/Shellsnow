@@ -64,6 +64,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingTypeKey, setEditingTypeKey] = useState<string | null>(null);
   const [editingColorKey, setEditingColorKey] = useState<string | null>(null);
+  const [addingNewType, setAddingNewType] = useState(false);
+  const [newTypeLabel, setNewTypeLabel] = useState('');
   const [customerLogoBase64, setCustomerLogoBase64] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -233,10 +235,18 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const handleAddCustomType = () => {
-    const label = prompt('Enter a label for the new activity type (e.g., "Product"):');
-    if (!label || !label.trim()) return;
+    setAddingNewType(true);
+    setNewTypeLabel('');
+  };
 
-    const typeKey = label.toLowerCase().replace(/\s+/g, '_');
+  const confirmAddCustomType = () => {
+    if (!newTypeLabel.trim()) {
+      setAddingNewType(false);
+      setNewTypeLabel('');
+      return;
+    }
+
+    const typeKey = newTypeLabel.toLowerCase().replace(/\s+/g, '_');
 
     if (getAllTypeKeys().includes(typeKey)) {
       alert('A type with this name already exists');
@@ -251,9 +261,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       newData.typeColors = {};
     }
 
-    newData.typeLabels[typeKey] = label.trim();
+    newData.typeLabels[typeKey] = newTypeLabel.trim();
     newData.typeColors[typeKey] = generateDefaultColor();
     setData(newData);
+    setAddingNewType(false);
+    setNewTypeLabel('');
+  };
+
+  const cancelAddCustomType = () => {
+    setAddingNewType(false);
+    setNewTypeLabel('');
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -538,19 +555,61 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               )}
             </div>
           ))}
-          <button
-            onClick={handleAddCustomType}
-            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              background: 'var(--surface2)',
-              color: 'var(--primary)',
-              border: '1px dashed var(--border)'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
-          >
-            + Add Type
-          </button>
+          {addingNewType ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newTypeLabel}
+                onChange={(e) => setNewTypeLabel(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    confirmAddCustomType();
+                  }
+                  if (e.key === 'Escape') {
+                    cancelAddCustomType();
+                  }
+                }}
+                placeholder="Type name..."
+                autoFocus
+                className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none text-xs"
+                style={{ background: 'var(--surface)', color: 'var(--text)', minWidth: '120px' }}
+              />
+              <button
+                onClick={confirmAddCustomType}
+                className="w-6 h-6 rounded flex items-center justify-center transition-colors"
+                style={{ background: '#10b981', color: 'white' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+                title="Confirm"
+              >
+                ✓
+              </button>
+              <button
+                onClick={cancelAddCustomType}
+                className="w-6 h-6 rounded flex items-center justify-center transition-colors"
+                style={{ background: '#ef4444', color: 'white' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                title="Cancel"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleAddCustomType}
+              className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+              style={{
+                background: 'var(--surface2)',
+                color: 'var(--primary)',
+                border: '1px dashed var(--border)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
+            >
+              + Add Type
+            </button>
+          )}
         </div>
 
         <RoadmapGrid
