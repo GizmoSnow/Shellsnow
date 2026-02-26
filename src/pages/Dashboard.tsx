@@ -5,7 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
 import { supabase, Roadmap } from '../lib/supabase';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
-import astroImage from '../assets/Screenshot_2025-12-03_at_9.42.40_AM.png';
+import astroImage from '../assets/Newastro.png';
 
 export default function Dashboard() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
@@ -138,14 +138,20 @@ export default function Dashboard() {
             <span className="text-sm text-white/90">{user?.email}</span>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
+              className="p-2 rounded-lg transition-colors text-white"
+              style={{ background: '#FF6FBF' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#FF5AAA'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#FF6FBF'}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold bg-white/10 hover:bg-white/20 text-white"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-semibold text-white"
+              style={{ background: '#FF6FBF' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#FF5AAA'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#FF6FBF'}
             >
               <LogOut size={16} />
               Sign Out
@@ -174,7 +180,6 @@ export default function Dashboard() {
               src={astroImage}
               alt="Salesforce Astro"
               className="w-80 h-80 object-contain drop-shadow-2xl"
-              style={{ mixBlendMode: 'screen' }}
             />
           </div>
         </div>
