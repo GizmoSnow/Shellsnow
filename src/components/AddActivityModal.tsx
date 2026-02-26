@@ -157,11 +157,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     return false;
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit(e);
-    }
-  };
 
   const quarters = getRoadmapQuarters(fiscalConfig);
 
@@ -173,7 +168,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div className="rounded-2xl p-6 md:p-8 w-full max-w-[440px] my-auto animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
           <h3 className="text-lg md:text-xl font-extrabold mb-4 md:mb-6" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
 
@@ -186,7 +181,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={handleKeyDown}
                 placeholder="e.g. CSM Health Check"
                 className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
                 style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
