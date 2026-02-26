@@ -29,13 +29,13 @@ const DEFAULT_TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  csm: '#e8194b',
-  architect: '#00b4d8',
-  specialist: '#1a1d3e',
-  review: '#7b82a8',
-  event: '#f77f00',
-  partner: '#f4a261',
-  trailhead: '#9b5de5',
+  csm: '#04e1cb',
+  architect: '#08abed',
+  specialist: '#022ac0',
+  review: '#aacbff',
+  event: '#ff538a',
+  partner: '#fcc003',
+  trailhead: '#d17dfe',
 };
 
 export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {

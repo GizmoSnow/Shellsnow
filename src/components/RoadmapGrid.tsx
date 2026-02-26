@@ -14,6 +14,9 @@ interface RoadmapGridProps {
 }
 
 function getTextColor(bgColor: string): string {
+  if (bgColor.toLowerCase() === '#fcc003') {
+    return '#001e5b';
+  }
   const hex = bgColor.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);

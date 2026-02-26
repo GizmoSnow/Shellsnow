@@ -1,13 +1,13 @@
 import { RoadmapData } from './supabase';
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#E8194B',
-  architect: '#00B4D8',
-  specialist: '#1A1D3E',
-  review: '#7B82A8',
-  event: '#F77F00',
-  partner: '#F4A261',
-  trailhead: '#9B5DE5',
+  csm: '#04e1cb',
+  architect: '#08abed',
+  specialist: '#022ac0',
+  review: '#aacbff',
+  event: '#ff538a',
+  partner: '#fcc003',
+  trailhead: '#d17dfe',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -21,6 +21,9 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 function getTextColor(bgColor: string): string {
+  if (bgColor.toLowerCase() === '#fcc003') {
+    return '#001e5b';
+  }
   const hex = bgColor.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
