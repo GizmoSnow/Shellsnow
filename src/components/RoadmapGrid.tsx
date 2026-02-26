@@ -266,6 +266,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               allActivitiesByQuarter.forEach(({ quarter, activities }) => {
                 activities.forEach(activity => {
                   if (renderedActivities.has(activity.id)) return;
+                  if (!activity.name || activity.name.trim() === '') return;
 
                   const startMonth = activity.start_month;
                   const endMonth = activity.end_month;
@@ -461,8 +462,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       return (
                         <div
                           key={qIdx}
-                          className={`border-r ${qIdx === 3 ? 'border-r-0' : ''} relative`}
-                          style={{ borderColor: 'var(--border)', background: 'var(--surface2)' }}
+                          className={`border-r ${qIdx === 3 ? 'border-r-0' : ''}`}
+                          style={{ borderColor: 'var(--border)', background: 'var(--surface2)', position: 'relative', zIndex: 1 }}
                         >
                           <div className="grid grid-cols-3 h-full min-h-[100px]" style={{ position: 'relative' }}>
                             <div
@@ -478,7 +479,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 gap: '4px',
                                 padding: '8px',
                                 pointerEvents: 'none',
-                                zIndex: 10
+                                zIndex: 20
                               }}
                             >
                               {flatActivitiesWithRows
@@ -513,7 +514,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                         gridRowStart: item.row + 1,
                                         gridRowEnd: item.row + 2,
                                         pointerEvents: 'auto',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        zIndex: 30
                                       }}
                                     >
                                       <div
