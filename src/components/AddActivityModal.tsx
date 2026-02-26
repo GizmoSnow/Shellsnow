@@ -8,6 +8,7 @@ interface AddActivityModalProps {
   context: any;
   editingActivity?: Activity | SpanningActivity | null;
   typeLabels?: Record<string, string>;
+  allTypeKeys: string[];
   fiscalConfig: FiscalYearConfig;
   getTypeColor: (typeKey: string) => string;
   onClose: () => void;
@@ -37,7 +38,7 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, fiscalConfig, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, allTypeKeys, fiscalConfig, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
@@ -193,21 +194,23 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 Type
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {DEFAULT_TYPE_KEYS.map((type) => {
-                  const bgColor = getTypeColor(type.key);
+                {allTypeKeys.map((typeKey) => {
+                  const defaultType = DEFAULT_TYPE_KEYS.find(t => t.key === typeKey);
+                  const typeLabel = typeLabels?.[typeKey] || defaultType?.label || typeKey;
+                  const bgColor = getTypeColor(typeKey);
                   const textColor = getTextColor(bgColor);
                   return (
                     <div
-                      key={type.key}
-                      onClick={() => setSelectedType(type.key)}
+                      key={typeKey}
+                      onClick={() => setSelectedType(typeKey)}
                       className="cursor-pointer px-2 py-2 rounded-lg text-[10px] font-semibold text-center transition-all"
                       style={{
                         background: bgColor,
                         color: textColor,
-                        border: selectedType === type.key ? '2px solid white' : '2px solid transparent'
+                        border: selectedType === typeKey ? '2px solid white' : '2px solid transparent'
                       }}
                     >
-                      {typeLabels?.[type.key] || type.label}
+                      {typeLabel}
                     </div>
                   );
                 })}

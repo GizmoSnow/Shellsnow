@@ -221,6 +221,41 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     return data.typeColors?.[typeKey] || TYPE_COLORS[typeKey] || '#6c63ff';
   };
 
+  const getAllTypeKeys = () => {
+    const defaultKeys = Object.keys(TYPE_COLORS);
+    const customKeys = Object.keys(data.typeLabels || {}).filter(key => !defaultKeys.includes(key));
+    return [...defaultKeys, ...customKeys];
+  };
+
+  const generateDefaultColor = () => {
+    const colors = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  const handleAddCustomType = () => {
+    const label = prompt('Enter a label for the new activity type (e.g., "Product"):');
+    if (!label || !label.trim()) return;
+
+    const typeKey = label.toLowerCase().replace(/\s+/g, '_');
+
+    if (getAllTypeKeys().includes(typeKey)) {
+      alert('A type with this name already exists');
+      return;
+    }
+
+    const newData = { ...data };
+    if (!newData.typeLabels) {
+      newData.typeLabels = {};
+    }
+    if (!newData.typeColors) {
+      newData.typeColors = {};
+    }
+
+    newData.typeLabels[typeKey] = label.trim();
+    newData.typeColors[typeKey] = generateDefaultColor();
+    setData(newData);
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !roadmap) return;
@@ -421,7 +456,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
         {/* Legend for print - only visible when printing */}
         <div className="hidden print-legend print-only" style={{ display: 'none' }}>
-          {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
+          {getAllTypeKeys().map((typeKey) => (
             <div key={typeKey} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: getTypeColor(typeKey) }}></div>
               <span style={{ color: '#000' }}>{getTypeLabel(typeKey)}</span>
@@ -441,7 +476,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
         {/* Screen legend - hidden when printing */}
         <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
-          {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
+          {getAllTypeKeys().map((typeKey) => (
             <div key={typeKey} className="flex items-center gap-2 relative">
               <div className="relative">
                 <div
@@ -503,6 +538,19 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               )}
             </div>
           ))}
+          <button
+            onClick={handleAddCustomType}
+            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+            style={{
+              background: 'var(--surface2)',
+              color: 'var(--primary)',
+              border: '1px dashed var(--border)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
+          >
+            + Add Type
+          </button>
         </div>
 
         <RoadmapGrid
@@ -550,6 +598,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         context={addContext}
         editingActivity={editingActivity}
         typeLabels={data.typeLabels}
+        allTypeKeys={getAllTypeKeys()}
         fiscalConfig={fiscalConfig}
         getTypeColor={getTypeColor}
         onClose={() => {
