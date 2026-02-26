@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import RoadmapBuilder from './pages/RoadmapBuilder';
 import ResetPassword from './pages/ResetPassword';
 
+// Main router component that handles authentication and page routing
 function Router() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
