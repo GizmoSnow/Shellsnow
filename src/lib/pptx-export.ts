@@ -1,5 +1,6 @@
 import PptxGenJS from 'pptxgenjs';
 import { RoadmapData } from './supabase';
+import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
   csm: '#04e1cb',
@@ -61,13 +62,17 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
 
   const SALESFORCE_W = 1.4;
   currentLogoX -= SALESFORCE_W;
+
+  const salesforceBase64 = await fetch(salesforceLogo)
+    .then(res => res.text())
+    .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
+
   slide.addImage({
     x: currentLogoX,
     y: LOGO_Y,
     w: SALESFORCE_W,
     h: LOGO_H,
-    path: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg',
-    sizing: { type: 'contain', w: SALESFORCE_W, h: LOGO_H },
+    data: salesforceBase64,
   });
 
   if (customerLogoBase64) {
@@ -79,7 +84,6 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
       w: CUSTOMER_W,
       h: LOGO_H,
       data: customerLogoBase64,
-      sizing: { type: 'contain', w: CUSTOMER_W, h: LOGO_H },
     });
   }
 
