@@ -19,6 +19,34 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.55 ? '#000000' : '#ffffff';
 }
 
+function parseMonthsFromQuarterTitle(title: string): string[] {
+  const defaultMonths: Record<string, string[]> = {
+    q1: ['Jan', 'Feb', 'Mar'],
+    q2: ['Apr', 'May', 'Jun'],
+    q3: ['Jul', 'Aug', 'Sep'],
+    q4: ['Oct', 'Nov', 'Dec']
+  };
+
+  const qkey = title.toLowerCase().match(/q[1-4]/)?.[0] as keyof typeof defaultMonths;
+
+  const monthPattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/gi;
+  const matches = title.match(monthPattern);
+
+  if (matches && matches.length >= 2) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const startMonth = matches[0].substring(0, 3);
+    const endMonth = matches[matches.length - 1].substring(0, 3);
+    const startIdx = months.findIndex(m => m.toLowerCase() === startMonth.toLowerCase());
+    const endIdx = months.findIndex(m => m.toLowerCase() === endMonth.toLowerCase());
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx >= startIdx) {
+      return months.slice(startIdx, endIdx + 1);
+    }
+  }
+
+  return qkey ? defaultMonths[qkey] : defaultMonths.q1;
+}
+
 export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
@@ -323,13 +351,30 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
 
                   {qkeys.map((qk, qIdx) => {
                     const activities = initiative.activities[qk] || [];
+                    const quarterTitle = getQuarterTitle(qk);
+                    const months = parseMonthsFromQuarterTitle(quarterTitle);
+
+                    const earlyActivities = activities.filter(a => !a.position || a.position === 'early');
+                    const midActivities = activities.filter(a => a.position === 'mid');
+                    const lateActivities = activities.filter(a => a.position === 'late');
+
                     return (
                       <div
                         key={qIdx}
-                        className={`p-2 border-r flex flex-col gap-1 min-h-[60px] ${qIdx === 3 ? 'border-r-0' : ''}`}
+                        className={`border-r ${qIdx === 3 ? 'border-r-0' : ''} relative`}
                         style={{ borderColor: 'var(--border)', background: 'var(--surface2)' }}
                       >
-                        {activities.map((act) => {
+                        <div className="grid grid-cols-3 h-full min-h-[60px]">
+                          {[earlyActivities, midActivities, lateActivities].map((positionActivities, monthIdx) => (
+                            <div
+                              key={monthIdx}
+                              className={`p-2 flex flex-col gap-1 ${monthIdx < 2 ? 'border-r border-dashed' : ''}`}
+                              style={{ borderColor: 'var(--border-light, rgba(0,0,0,0.06))' }}
+                            >
+                              <div className="text-[9px] font-medium text-center mb-0.5" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                                {months[monthIdx] || ''}
+                              </div>
+                              {positionActivities.map((act) => {
                           const bgColor = getTypeColor(act.type);
                           const textColor = getTextColor(bgColor);
                           const dropdownId = `${goal.id}-${initiative.id}-${qk}-${act.id}`;
@@ -392,26 +437,31 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                             </div>
                           );
                         })}
-                        <button
-                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk })}
-                          className="border border-dashed rounded-md px-2 py-1 text-[10px] font-medium transition-all mt-0.5"
-                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--primary)';
-                            e.currentTarget.style.background = 'var(--primary)';
-                            e.currentTarget.style.color = '#ffffff';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--border)';
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = 'var(--text-muted)';
-                          }}
-                        >
-                          + Add
-                        </button>
-                      </div>
-                    );
-                  })}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="px-2 pb-2">
+                            <button
+                              onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: qk })}
+                              className="w-full border border-dashed rounded-md px-2 py-1 text-[10px] font-medium transition-all"
+                              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = 'var(--primary)';
+                                e.currentTarget.style.background = 'var(--primary)';
+                                e.currentTarget.style.color = '#ffffff';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = 'var(--border)';
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = 'var(--text-muted)';
+                              }}
+                            >
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
                 </div>
               );

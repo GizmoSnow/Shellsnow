@@ -45,6 +45,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
+  const [position, setPosition] = useState<'early' | 'mid' | 'late'>('early');
 
   useEffect(() => {
     if (isOpen) {
@@ -57,12 +58,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
+          setPosition(('position' in editingActivity && editingActivity.position) ? editingActivity.position : 'early');
         }
       } else {
         setName('');
         setSelectedType('csm');
         setIsSpanning(context?.quarter === 'spanning');
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
+        setPosition('early');
       }
     }
   }, [isOpen, editingActivity, context]);
@@ -88,7 +91,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
       onAdd({
         id: editingActivity ? editingActivity.id : uid(),
         name: name.trim(),
-        type: selectedType
+        type: selectedType,
+        position: position
       });
     }
 
@@ -96,6 +100,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setSelectedType('csm');
     setIsSpanning(false);
     setSelectedQuarters([]);
+    setPosition('early');
   };
 
   const toggleQuarter = (qk: string) => {
@@ -163,6 +168,34 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 })}
               </div>
             </div>
+
+            {!isSpanning && (
+              <div>
+                <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                  Position in Quarter
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'early' as const, label: 'Early' },
+                    { value: 'mid' as const, label: 'Mid' },
+                    { value: 'late' as const, label: 'Late' }
+                  ].map((pos) => (
+                    <div
+                      key={pos.value}
+                      onClick={() => setPosition(pos.value)}
+                      className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
+                      style={{
+                        background: position === pos.value ? '#6c63ff' : '#22263a',
+                        color: position === pos.value ? '#ffffff' : '#7b82a8',
+                        border: position === pos.value ? '2px solid #6c63ff' : '2px solid #2e3248'
+                      }}
+                    >
+                      {pos.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="flex items-center gap-2 cursor-pointer">

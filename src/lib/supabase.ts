@@ -66,6 +66,7 @@ export interface Activity {
   id: string;
   name: string;
   type: string;
+  position?: 'early' | 'mid' | 'late';
 }
 
 export interface SpanningActivity {
