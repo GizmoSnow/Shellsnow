@@ -113,6 +113,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     onDataChange(newData);
   };
 
+  const deleteAccountSpanning = (spanningId: string) => {
+    const newData = { ...data };
+    if (!newData.accountSpanning) return;
+
+    newData.accountSpanning = newData.accountSpanning.filter(s => s.id !== spanningId);
+    onDataChange(newData);
+  };
+
   const renderActivityPill = (
     activity: Activity,
     goal: Goal,
@@ -221,6 +229,78 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               </div>
             );
           })}
+        </div>
+
+        {/* Account-Level Spanning Activities */}
+        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+              Account Activities
+            </div>
+          </div>
+          <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            {(data.accountSpanning || []).map((sp) => {
+              const bgColor = getTypeColor(sp.type);
+              const textColor = getTextColor(bgColor);
+              const sortedQuarters = [...(sp.quarters || [])].sort();
+              const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
+              const minIdx = Math.min(...qIndexes);
+              const maxIdx = Math.max(...qIndexes);
+
+              return (
+                <div
+                  key={sp.id}
+                  className="group flex items-center justify-center px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85"
+                  style={{
+                    background: bgColor,
+                    color: textColor,
+                    gridColumnStart: minIdx + 1,
+                    gridColumnEnd: maxIdx + 2
+                  }}
+                >
+                  {sp.name}
+                  <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenEditModal({ isAccountLevel: true, quarter: 'spanning' }, sp);
+                      }}
+                      className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                    >
+                      <Pencil size={9} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteAccountSpanning(sp.id);
+                      }}
+                      className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            <button
+              onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'spanning' })}
+              className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--primary)';
+                e.currentTarget.style.background = 'var(--primary)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              <Plus size={12} />
+              Add Spanning
+            </button>
+          </div>
         </div>
 
         {data.goals.map((goal, goalIdx) => {

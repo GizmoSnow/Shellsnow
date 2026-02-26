@@ -538,38 +538,54 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           setEditingActivity(null);
         }}
         onAdd={(activity) => {
-          const { goalId, initiativeId, quarter } = addContext;
           const newData = { ...data };
-          const goal = newData.goals.find(g => g.id === goalId);
-          if (!goal) return;
 
-          const initiative = goal.initiatives.find(i => i.id === initiativeId);
-          if (!initiative) return;
-
-          const isSpanningActivity = 'quarters' in activity;
-
-          if (editingActivity) {
-            if (isSpanningActivity || quarter === 'spanning') {
-              const index = initiative.spanning?.findIndex(a => a.id === activity.id) ?? -1;
-              if (index >= 0 && initiative.spanning) {
-                initiative.spanning[index] = activity as any;
-              }
-            } else {
-              const acts = initiative.activities[quarter as keyof typeof initiative.activities];
-              const index = acts.findIndex(a => a.id === activity.id);
-              if (index >= 0) {
-                acts[index] = activity as any;
+          if (addContext.isAccountLevel) {
+            const isSpanningActivity = 'quarters' in activity;
+            if (isSpanningActivity) {
+              if (editingActivity) {
+                const index = newData.accountSpanning?.findIndex(a => a.id === activity.id) ?? -1;
+                if (index >= 0 && newData.accountSpanning) {
+                  newData.accountSpanning[index] = activity as any;
+                }
+              } else {
+                if (!newData.accountSpanning) newData.accountSpanning = [];
+                newData.accountSpanning.push(activity as any);
               }
             }
           } else {
-            if (isSpanningActivity) {
-              if (!initiative.spanning) initiative.spanning = [];
-              initiative.spanning.push(activity as any);
-            } else {
-              if (!initiative.activities[quarter as keyof typeof initiative.activities]) {
-                initiative.activities[quarter as keyof typeof initiative.activities] = [];
+            const { goalId, initiativeId, quarter } = addContext;
+            const goal = newData.goals.find(g => g.id === goalId);
+            if (!goal) return;
+
+            const initiative = goal.initiatives.find(i => i.id === initiativeId);
+            if (!initiative) return;
+
+            const isSpanningActivity = 'quarters' in activity;
+
+            if (editingActivity) {
+              if (isSpanningActivity || quarter === 'spanning') {
+                const index = initiative.spanning?.findIndex(a => a.id === activity.id) ?? -1;
+                if (index >= 0 && initiative.spanning) {
+                  initiative.spanning[index] = activity as any;
+                }
+              } else {
+                const acts = initiative.activities[quarter as keyof typeof initiative.activities];
+                const index = acts.findIndex(a => a.id === activity.id);
+                if (index >= 0) {
+                  acts[index] = activity as any;
+                }
               }
-              initiative.activities[quarter as keyof typeof initiative.activities].push(activity as any);
+            } else {
+              if (isSpanningActivity) {
+                if (!initiative.spanning) initiative.spanning = [];
+                initiative.spanning.push(activity as any);
+              } else {
+                if (!initiative.activities[quarter as keyof typeof initiative.activities]) {
+                  initiative.activities[quarter as keyof typeof initiative.activities] = [];
+                }
+                initiative.activities[quarter as keyof typeof initiative.activities].push(activity as any);
+              }
             }
           }
 

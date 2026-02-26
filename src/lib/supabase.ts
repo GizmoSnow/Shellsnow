@@ -29,6 +29,7 @@ export interface Roadmap {
 
 export interface RoadmapData {
   goals: Goal[];
+  accountSpanning?: SpanningActivity[];
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
   quarterTitles?: {
