@@ -11,6 +11,7 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
+import { createDefaultSuccessPathItems } from '../lib/default-success-path';
 
 interface RoadmapBuilderProps {
   roadmapId: string;
@@ -87,13 +88,31 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     } else if (roadmapData) {
       setRoadmap(roadmapData);
       setTitle(roadmapData.title);
-      setData(roadmapData.data);
-      setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
-      setFiscalConfig({
+
+      const fiscalCfg = {
         startMonth: roadmapData.fiscal_start_month ?? 0,
         baseYear: roadmapData.base_fiscal_year ?? 26,
         roadmapStartQuarter: roadmapData.roadmap_start_quarter ?? 1
-      });
+      };
+
+      let loadedData = roadmapData.data;
+      if (!loadedData.successPathItems) {
+        if (loadedData.successPathLabels) {
+          loadedData.successPathItems = Object.entries(loadedData.successPathLabels)
+            .filter(([_, label]) => label)
+            .map(([quarter, label]) => ({
+              id: `sp_${quarter}`,
+              label: label as string,
+              quarter
+            }));
+        } else {
+          loadedData.successPathItems = createDefaultSuccessPathItems();
+        }
+      }
+
+      setData(loadedData);
+      setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
+      setFiscalConfig(fiscalCfg);
     }
     setLoading(false);
   };
