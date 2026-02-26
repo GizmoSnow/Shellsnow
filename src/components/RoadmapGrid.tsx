@@ -594,14 +594,21 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   color: textColor,
                                   borderRadius: '9999px',
                                   justifyContent: 'center',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
                                   height: '100%'
                                 }}
                               >
-                                {item.activity.name}
-                                <div className="hidden group-hover:flex items-center gap-1 ml-auto">
+                                <span
+                                  style={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    flex: 1,
+                                    minWidth: 0
+                                  }}
+                                >
+                                  {item.activity.name}
+                                </span>
+                                <div className="hidden group-hover:flex items-center gap-1 ml-auto flex-shrink-0">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
