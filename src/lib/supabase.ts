@@ -20,6 +20,9 @@ export interface Roadmap {
   title: string;
   data: RoadmapData;
   customer_logo_base64?: string;
+  fiscal_start_month: number;
+  base_fiscal_year: number;
+  roadmap_start_quarter: number;
   created_at: string;
   updated_at: string;
 }

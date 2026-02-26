@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Activity, SpanningActivity } from '../lib/supabase';
+import type { FiscalYearConfig } from '../lib/fiscal-year';
+import { getAllRoadmapMonths, getRoadmapQuarters } from '../lib/fiscal-year';
 
 interface AddActivityModalProps {
   isOpen: boolean;
   context: any;
   editingActivity?: Activity | SpanningActivity | null;
   typeLabels?: Record<string, string>;
-  quarterTitles?: {
-    q1?: string;
-    q2?: string;
-    q3?: string;
-    q4?: string;
-  };
+  fiscalConfig: FiscalYearConfig;
   getTypeColor: (typeKey: string) => string;
   onClose: () => void;
   onAdd: (activity: Activity | SpanningActivity) => void;
@@ -40,26 +37,7 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-function parseMonthsFromQuarterTitle(title: string): string[] {
-  const monthPattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/gi;
-  const matches = title.match(monthPattern);
-
-  if (matches && matches.length >= 2) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const startMonth = matches[0].substring(0, 3);
-    const endMonth = matches[matches.length - 1].substring(0, 3);
-    const startIdx = months.findIndex(m => m.toLowerCase() === startMonth.toLowerCase());
-    const endIdx = months.findIndex(m => m.toLowerCase() === endMonth.toLowerCase());
-
-    if (startIdx !== -1 && endIdx !== -1 && endIdx >= startIdx) {
-      return months.slice(startIdx, endIdx + 1);
-    }
-  }
-
-  return ['Month 1', 'Month 2', 'Month 3'];
-}
-
-export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, quarterTitles, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, fiscalConfig, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
@@ -137,28 +115,20 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     }
   };
 
-  const getQuarterTitle = (qkey: string) => {
-    return quarterTitles?.[qkey as keyof typeof quarterTitles] || qkey.toUpperCase();
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSubmit(e);
     }
   };
 
-  const allMonthOptions: Array<{ value: string; label: string; quarter: string }> = [];
-  ['q1', 'q2', 'q3', 'q4'].forEach((qk) => {
-    const title = getQuarterTitle(qk);
-    const months = parseMonthsFromQuarterTitle(title);
-    months.forEach((month, idx) => {
-      allMonthOptions.push({
-        value: `${qk}-${month.toLowerCase().replace(/\s+/g, '')}`,
-        label: month,
-        quarter: qk
-      });
-    });
-  });
+  const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
+  const quarters = getRoadmapQuarters(fiscalConfig);
+
+  const allMonthOptions = roadmapMonths.map(month => ({
+    value: String(month.calendarMonth),
+    label: month.abbrev,
+    quarterIndex: Math.floor(roadmapMonths.indexOf(month) / 3)
+  }));
 
   return (
     <>
@@ -275,20 +245,23 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                   Select Quarters
                 </label>
                 <div className="grid grid-cols-4 gap-2">
-                  {['q1', 'q2', 'q3', 'q4'].map((qk) => (
-                    <div
-                      key={qk}
-                      onClick={() => toggleQuarter(qk)}
-                      className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
-                      style={{
-                        background: selectedQuarters.includes(qk) ? '#6c63ff' : '#22263a',
-                        color: selectedQuarters.includes(qk) ? '#ffffff' : '#7b82a8',
-                        border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid #2e3248'
-                      }}
-                    >
-                      {getQuarterTitle(qk)}
-                    </div>
-                  ))}
+                  {quarters.map((quarter, idx) => {
+                    const qk = `q${quarter.quarter}`;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => toggleQuarter(qk)}
+                        className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
+                        style={{
+                          background: selectedQuarters.includes(qk) ? '#6c63ff' : '#22263a',
+                          color: selectedQuarters.includes(qk) ? '#ffffff' : '#7b82a8',
+                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid #2e3248'
+                        }}
+                      >
+                        {quarter.label}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

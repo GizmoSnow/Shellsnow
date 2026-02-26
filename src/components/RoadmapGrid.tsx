@@ -1,9 +1,12 @@
 import { X, Plus, Pencil, Copy } from 'lucide-react';
 import { RoadmapData, Goal, Initiative, Activity } from '../lib/supabase';
 import { useState } from 'react';
+import type { FiscalYearConfig } from '../lib/fiscal-year';
+import { getRoadmapQuarters, getMonthPosition } from '../lib/fiscal-year';
 
 interface RoadmapGridProps {
   data: RoadmapData;
+  fiscalConfig: FiscalYearConfig;
   onDataChange: (data: RoadmapData) => void;
   onOpenAddModal: (context: any) => void;
   onOpenEditModal: (context: any, activity: Activity) => void;
@@ -19,33 +22,8 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.55 ? '#000000' : '#ffffff';
 }
 
-function parseMonthsFromQuarterTitle(title: string): string[] {
-  const monthPattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/gi;
-  const matches = title.match(monthPattern);
-
-  if (matches && matches.length >= 2) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const startMonth = matches[0].substring(0, 3);
-    const endMonth = matches[matches.length - 1].substring(0, 3);
-    const startIdx = months.findIndex(m => m.toLowerCase() === startMonth.toLowerCase());
-    const endIdx = months.findIndex(m => m.toLowerCase() === endMonth.toLowerCase());
-
-    if (startIdx !== -1 && endIdx !== -1 && endIdx >= startIdx) {
-      return months.slice(startIdx, endIdx + 1);
-    }
-  }
-
-  return ['Month 1', 'Month 2', 'Month 3'];
-}
-
-interface MonthPosition {
-  quarterIndex: number;
-  monthIndex: number;
-  quarterId: string;
-  monthId: string;
-}
-
-export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
+export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
+  const quarters = getRoadmapQuarters(fiscalConfig);
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const [copyDropdown, setCopyDropdown] = useState<string | null>(null);
   const [editingQuarter, setEditingQuarter] = useState<string | null>(null);
@@ -80,19 +58,10 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
     onDataChange(newData);
   };
 
-  const getMonthPosition = (monthId: string): MonthPosition | null => {
-    const allMonths = qkeys.flatMap((qk, qIdx) => {
-      const title = getQuarterTitle(qk);
-      const months = parseMonthsFromQuarterTitle(title);
-      return months.map((month, mIdx) => ({
-        quarterIndex: qIdx,
-        monthIndex: mIdx,
-        quarterId: qk,
-        monthId: `${qk}-${month.toLowerCase().replace(/\s+/g, '')}`
-      }));
-    });
-
-    return allMonths.find(m => m.monthId === monthId) || null;
+  const getActivityMonthPosition = (monthId: string): { quarterIndex: number; monthIndex: number } | null => {
+    const pos = getMonthPosition(Number(monthId), fiscalConfig);
+    if (!pos) return null;
+    return pos;
   };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarters: string[]) => {
@@ -220,39 +189,13 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
       <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: 'var(--border)' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
-          {qkeys.map((qk, i) => (
+          {quarters.map((quarter, i) => (
             <div
               key={i}
-              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''} cursor-pointer hover:opacity-90 transition-opacity print-show-text`}
+              className={`p-4 text-center font-extrabold text-base tracking-wider border-r ${i === 3 ? 'border-r-0' : ''} print-show-text`}
               style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
-              onClick={() => setEditingQuarter(qk)}
-              title="Click to edit quarter title"
             >
-              {editingQuarter === qk ? (
-                <input
-                  type="text"
-                  value={getQuarterTitle(qk)}
-                  onChange={(e) => updateQuarterTitle(qk, e.target.value)}
-                  onBlur={() => setEditingQuarter(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') setEditingQuarter(null);
-                    if (e.key === 'Escape') {
-                      const newData = { ...data };
-                      if (newData.quarterTitles) {
-                        delete newData.quarterTitles[qk as keyof typeof newData.quarterTitles];
-                      }
-                      onDataChange(newData);
-                      setEditingQuarter(null);
-                    }
-                  }}
-                  autoFocus
-                  className="w-full bg-white/20 border border-white/40 rounded px-2 py-1 outline-none text-center font-extrabold text-base"
-                  style={{ color: '#ffffff' }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                getQuarterTitle(qk)
-              )}
+              {quarter.label}
             </div>
           ))}
         </div>
@@ -261,46 +204,20 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
           <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
-          {qkeys.map((q, i) => {
+          {quarters.map((quarter, i) => {
             const csmColor = getTypeColor('csm');
             const textColor = getTextColor(csmColor);
+            const quarterKey = `q${quarter.quarter}` as keyof typeof data.successPathLabels;
+            const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
+
             return (
               <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
-                {editingSuccessPath === q ? (
-                  <input
-                    type="text"
-                    defaultValue={getSuccessPathLabel(q)}
-                    autoFocus
-                    onBlur={(e) => {
-                      const newValue = e.target.value.trim();
-                      if (newValue) {
-                        updateSuccessPathLabel(q, newValue);
-                      }
-                      setEditingSuccessPath(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const newValue = e.currentTarget.value.trim();
-                        if (newValue) {
-                          updateSuccessPathLabel(q, newValue);
-                        }
-                        setEditingSuccessPath(null);
-                      } else if (e.key === 'Escape') {
-                        setEditingSuccessPath(null);
-                      }
-                    }}
-                    className="text-xs font-semibold px-4 py-1 rounded-full text-center outline-none focus:ring-2 focus:ring-white/50"
-                    style={{ minWidth: '140px', background: csmColor, color: textColor }}
-                  />
-                ) : (
-                  <div
-                    onClick={() => setEditingSuccessPath(q)}
-                    className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity print-show-pill"
-                    style={{ background: csmColor, color: textColor }}
-                  >
-                    {getSuccessPathLabel(q)}
-                  </div>
-                )}
+                <div
+                  className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap print-show-pill"
+                  style={{ background: csmColor, color: textColor }}
+                >
+                  {label}
+                </div>
               </div>
             );
           })}
@@ -504,8 +421,8 @@ export default function RoadmapGrid({ data, onDataChange, onOpenAddModal, onOpen
                     </div>
 
                     {qkeys.map((qk, qIdx) => {
-                      const quarterTitle = getQuarterTitle(qk);
-                      const months = parseMonthsFromQuarterTitle(quarterTitle);
+                      const quarterInfo = quarters[qIdx];
+                      const months = quarterInfo.months.map(m => m.abbrev);
 
                       return (
                         <div

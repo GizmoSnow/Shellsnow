@@ -7,8 +7,10 @@ import { supabase, Roadmap, RoadmapData, Activity } from '../lib/supabase';
 import RoadmapGrid from '../components/RoadmapGrid';
 import GoalsPanel from '../components/GoalsPanel';
 import AddActivityModal from '../components/AddActivityModal';
+import FiscalYearSettings from '../components/FiscalYearSettings';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
+import type { FiscalYearConfig } from '../lib/fiscal-year';
 
 interface RoadmapBuilderProps {
   roadmapId: string;
@@ -48,6 +50,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [customerLogoBase64, setCustomerLogoBase64] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showFiscalYearSettings, setShowFiscalYearSettings] = useState(false);
+  const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({
+    startMonth: 0,
+    baseYear: 26,
+    roadmapStartQuarter: 1
+  });
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -64,7 +72,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [title, data]);
+  }, [title, data, fiscalConfig]);
 
   const loadRoadmap = async () => {
     const { data: roadmapData, error } = await supabase
@@ -81,6 +89,11 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setTitle(roadmapData.title);
       setData(roadmapData.data);
       setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
+      setFiscalConfig({
+        startMonth: roadmapData.fiscal_start_month,
+        baseYear: roadmapData.base_fiscal_year,
+        roadmapStartQuarter: roadmapData.roadmap_start_quarter
+      });
     }
     setLoading(false);
   };
@@ -93,6 +106,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       .update({
         title,
         data,
+        fiscal_start_month: fiscalConfig.startMonth,
+        base_fiscal_year: fiscalConfig.baseYear,
+        roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
         updated_at: new Date().toISOString()
       })
       .eq('id', roadmapId);
@@ -297,6 +313,14 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <button
+            onClick={() => setShowFiscalYearSettings(true)}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
+            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+          >
+            <Settings size={16} />
+            Fiscal Year
+          </button>
+          <button
             onClick={() => setShowGoalsPanel(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
             style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
@@ -451,6 +475,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
         <RoadmapGrid
           data={data}
+          fiscalConfig={fiscalConfig}
           onDataChange={setData}
           getTypeColor={getTypeColor}
           onOpenAddModal={(context) => {
@@ -466,6 +491,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         />
       </div>
 
+      <FiscalYearSettings
+        isOpen={showFiscalYearSettings}
+        config={fiscalConfig}
+        onClose={() => setShowFiscalYearSettings(false)}
+        onSave={(newConfig) => {
+          setFiscalConfig(newConfig);
+        }}
+      />
+
       <GoalsPanel
         data={data}
         isOpen={showGoalsPanel}
@@ -478,7 +512,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         context={addContext}
         editingActivity={editingActivity}
         typeLabels={data.typeLabels}
-        quarterTitles={data.quarterTitles}
+        fiscalConfig={fiscalConfig}
         getTypeColor={getTypeColor}
         onClose={() => {
           setShowAddModal(false);

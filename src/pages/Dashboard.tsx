@@ -49,13 +49,16 @@ export default function Dashboard() {
       ]
     };
 
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('roadmaps')
       .insert([
         {
           user_id: user?.id,
           title: 'New Roadmap',
-          data: defaultData
+          data: defaultData,
+          fiscal_start_month: 9,
+          base_fiscal_year: 26,
+          roadmap_start_quarter: 2
         }
       ])
       .select()
