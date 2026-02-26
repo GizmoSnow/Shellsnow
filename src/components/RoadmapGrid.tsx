@@ -223,9 +223,36 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           })}
         </div>
 
-        {data.goals.map((goal, goalIdx) => (
+        {data.goals.map((goal, goalIdx) => {
+          const deduplicatedInitiatives = goal.initiatives.reduce((acc, initiative) => {
+            const existing = acc.find(i => i.label === initiative.label);
+            if (existing) {
+              qkeys.forEach(qk => {
+                const existingActivities = existing.activities[qk] || [];
+                const newActivities = initiative.activities[qk] || [];
+                const combinedActivities = [...existingActivities, ...newActivities];
+                const uniqueActivities = combinedActivities.filter((activity, index, self) =>
+                  index === self.findIndex(a => a.id === activity.id)
+                );
+                existing.activities[qk] = uniqueActivities;
+              });
+
+              const existingSpanning = existing.spanning || [];
+              const newSpanning = initiative.spanning || [];
+              const combinedSpanning = [...existingSpanning, ...newSpanning];
+              const uniqueSpanning = combinedSpanning.filter((activity, index, self) =>
+                index === self.findIndex(a => a.id === activity.id)
+              );
+              existing.spanning = uniqueSpanning;
+            } else {
+              acc.push(initiative);
+            }
+            return acc;
+          }, [] as typeof goal.initiatives);
+
+          return (
           <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--border)' }}>
-            {goal.initiatives.map((initiative, iniIdx) => {
+            {deduplicatedInitiatives.map((initiative, iniIdx) => {
               const spanningActivities = initiative.spanning || [];
 
               const allActivitiesByQuarter = qkeys.map(qk => ({
@@ -450,7 +477,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 gridTemplateRows: `repeat(${rows.length || 1}, minmax(32px, auto))`,
                                 gap: '4px',
                                 padding: '8px',
-                                pointerEvents: 'none'
+                                pointerEvents: 'none',
+                                zIndex: 10
                               }}
                             >
                               {flatActivitiesWithRows
@@ -601,7 +629,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
