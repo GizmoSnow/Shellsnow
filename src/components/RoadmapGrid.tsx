@@ -197,8 +197,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: 'var(--border)' }}>
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+      <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: '#e5e7eb' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#066afe', borderColor: '#066afe' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
             <div
@@ -211,8 +211,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           ))}
         </div>
 
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--surface2)', borderColor: 'var(--border)' }}>
-          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#E8F4FD', borderColor: '#e5e7eb' }}>
+          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: '#e5e7eb', color: '#6b7280' }}>
             Success Path
           </div>
           {quarters.map((quarter, i) => {
@@ -222,7 +222,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
 
             return (
-              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
+              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: '#e5e7eb' }}>
                 <div
                   className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap print-show-pill"
                   style={{ background: successPathColor, color: textColor }}
@@ -235,13 +235,13 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         </div>
 
         {/* Account-Level Activities */}
-        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-            <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--primary)' }}>
+        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: '#e5e7eb' }}>
+          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: '#e5e7eb', background: 'white' }}>
+            <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: '#066afe' }}>
               Ongoing Activities
             </div>
           </div>
-          <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="p-2 grid gap-1" style={{ background: '#E8F4FD', gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {(data.accountSpanning || []).map((sp) => {
               const bgColor = getTypeColor(sp.type);
               const textColor = getTextColor(bgColor);
@@ -288,16 +288,16 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             <button
               onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'q1' })}
               className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+              style={{ borderColor: '#d1d5db', color: '#6b7280', gridColumn: '1 / -1' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--primary)';
-                e.currentTarget.style.background = 'var(--primary)';
+                e.currentTarget.style.borderColor = '#066afe';
+                e.currentTarget.style.background = '#066afe';
                 e.currentTarget.style.color = '#ffffff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.borderColor = '#d1d5db';
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--text-muted)';
+                e.currentTarget.style.color = '#6b7280';
               }}
             >
               <Plus size={12} />
@@ -419,8 +419,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
-                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: '#e5e7eb' }}>
+                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: '#e5e7eb', background: 'white' }}>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                           style={{ background: goal.color }}
@@ -433,19 +433,19 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               {goal.number}
                             </div>
-                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
+                            <div className="text-sm font-bold mb-1" style={{ color: '#1f2937' }}>
                               {goal.title}
                             </div>
                           </>
                         )}
-                        <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#6b7280' }}>
                           Key Initiative
                         </div>
-                        <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
+                        <div className="text-xs leading-tight" style={{ color: '#6b7280' }}>
                           {initiative.label}
                         </div>
                       </div>
-                      <div className="p-2 grid gap-1" style={{ background: 'var(--surface2)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                      <div className="p-2 grid gap-1" style={{ background: '#E8F4FD', gridTemplateColumns: 'repeat(4, 1fr)' }}>
                         {spanningActivities.map((sp) => {
                           const bgColor = getTypeColor(sp.type);
                           const textColor = getTextColor(bgColor);
@@ -492,16 +492,16 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         <button
                           onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' })}
                           className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+                          style={{ borderColor: '#d1d5db', color: '#6b7280', gridColumn: '1 / -1' }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--primary)';
-                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.borderColor = '#066afe';
+                            e.currentTarget.style.background = '#066afe';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.borderColor = '#d1d5db';
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = 'var(--text-muted)';
+                            e.currentTarget.style.color = '#6b7280';
                           }}
                         >
                           <Plus size={12} />
@@ -511,8 +511,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: '#e5e7eb' }}>
+                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: '#e5e7eb', background: 'white' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                         style={{ background: goal.color }}
@@ -525,24 +525,24 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           >
                             {goal.number}
                           </div>
-                          <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
+                          <div className="text-sm font-bold mb-1" style={{ color: '#1f2937' }}>
                             {goal.title}
                           </div>
                         </>
                       )}
                       {spanningActivities.length === 0 && (
                         <>
-                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#6b7280' }}>
                             Key Initiative
                           </div>
-                          <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
+                          <div className="text-xs leading-tight" style={{ color: '#6b7280' }}>
                             {initiative.label}
                           </div>
                         </>
                       )}
                     </div>
 
-                    <div className="relative" style={{ background: 'var(--surface2)' }}>
+                    <div className="relative" style={{ background: '#E8F4FD' }}>
                       {/* Activities container with absolute positioning */}
                       <div
                         style={{
@@ -670,7 +670,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   top: 0,
                                   bottom: 0,
                                   width: '1px',
-                                  background: 'var(--border-light, rgba(0,0,0,0.06))'
+                                  background: 'rgba(0,0,0,0.06)'
                                 }}
                               />
                             );
@@ -684,7 +684,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 key={`${quarter.quarter}-${mIdx}`}
                                 className="flex-1 flex items-center justify-center"
                               >
-                                <div className="text-[9px] font-medium" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                                <div className="text-[9px] font-medium" style={{ color: '#6b7280', opacity: 0.5 }}>
                                   {month.abbrev}
                                 </div>
                               </div>
@@ -698,16 +698,16 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         <button
                           onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id })}
                           className="w-full border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                          style={{ borderColor: '#d1d5db', color: '#6b7280' }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--primary)';
-                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.borderColor = '#066afe';
+                            e.currentTarget.style.background = '#066afe';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.borderColor = '#d1d5db';
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = 'var(--text-muted)';
+                            e.currentTarget.style.color = '#6b7280';
                           }}
                         >
                           <Plus size={12} />
