@@ -135,12 +135,12 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   return (
     <>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center" onClick={onClose}>
-        <div className="bg-[#1a1d27] border border-[#2e3248] rounded-2xl p-8 w-[440px] max-w-[90vw] animate-modalIn" onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-xl font-extrabold text-[#e8eaf6] mb-6">{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
+        <div className="rounded-2xl p-8 w-[440px] max-w-[90vw] animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
+          <h3 className="text-xl font-extrabold mb-6" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                 Activity Name
               </label>
               <input
@@ -149,13 +149,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g. CSM Health Check"
-                className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-4 py-3 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                 Type
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -183,13 +184,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
             {!isSpanning && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                     Start Month
                   </label>
                   <select
                     value={startMonth}
                     onChange={(e) => setStartMonth(e.target.value)}
-                    className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
                   >
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -199,13 +201,14 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                     End Month
                   </label>
                   <select
                     value={endMonth}
                     onChange={(e) => setEndMonth(e.target.value)}
-                    className="w-full bg-[#0f1117] border border-[#2e3248] rounded-lg px-3 py-2 text-[#e8eaf6] text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
                   >
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -228,20 +231,21 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                       setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
                     }
                   }}
-                  className="w-4 h-4 rounded border-[#2e3248] text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                  className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                  style={{ borderColor: 'var(--border)' }}
                 />
-                <span className="text-xs font-semibold text-[#7b82a8] uppercase tracking-wide">
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                   Spanning Activity
                 </span>
               </label>
-              <p className="text-xs text-[#7b82a8] mt-1 ml-6">
+              <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-muted)' }}>
                 Creates a wide pill that stretches across multiple quarters
               </p>
             </div>
 
             {isSpanning && (
               <div>
-                <label className="block text-xs font-semibold text-[#7b82a8] uppercase tracking-wide mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                   Select Quarters
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -253,9 +257,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                         onClick={() => toggleQuarter(qk)}
                         className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
                         style={{
-                          background: selectedQuarters.includes(qk) ? '#6c63ff' : '#22263a',
-                          color: selectedQuarters.includes(qk) ? '#ffffff' : '#7b82a8',
-                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid #2e3248'
+                          background: selectedQuarters.includes(qk) ? '#6c63ff' : 'var(--surface2)',
+                          color: selectedQuarters.includes(qk) ? '#ffffff' : 'var(--text-muted)',
+                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid var(--border)'
                         }}
                       >
                         {quarter.label}

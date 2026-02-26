@@ -38,6 +38,19 @@ const TYPE_COLORS: Record<string, string> = {
   trailhead: '#d17dfe',
 };
 
+function determineQuarterFromMonth(activity: any, fiscalConfig: FiscalYearConfig): string {
+  if (!('start_month' in activity) || activity.start_month === undefined) return 'q1';
+
+  const startMonth = parseInt(activity.start_month);
+  const allMonths = getAllRoadmapMonths(fiscalConfig);
+
+  const monthIndex = allMonths.findIndex(m => m.calendarMonth === startMonth);
+  if (monthIndex === -1) return 'q1';
+
+  const quarterIndex = Math.floor(monthIndex / 3);
+  return `q${quarterIndex + 1}` as 'q1' | 'q2' | 'q3' | 'q4';
+}
+
 export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [loading, setLoading] = useState(true);
@@ -256,19 +269,19 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
       <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)' }}>
-        {/* Top header bar - white with Salesforce navy text */}
-        <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'white' }}>
+        {/* Top header bar */}
+        <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'var(--surface)' }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
               className="p-2 rounded-lg transition-colors"
-              style={{ color: '#001e5b' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              style={{ color: 'var(--text)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-xl font-extrabold" style={{ color: '#001e5b' }}>
+            <h1 className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>
               Success Path Builder
             </h1>
           </div>
@@ -316,15 +329,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           )}
         </div>
 
-        <div className="border-b print-hide" style={{ borderColor: '#e5e7eb' }}></div>
+        <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
 
-        {/* Control buttons section - white background */}
-        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
+        {/* Control buttons section */}
+        <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'var(--surface)' }}>
           <div className="flex-1"></div>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors"
-            style={{ background: '#f3f4f6', color: '#1f2937' }}
+            style={{ background: 'var(--surface2)', color: 'var(--text)' }}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -332,7 +345,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => setShowFiscalYearSettings(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
+            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             <Settings size={16} />
             Fiscal Year
@@ -340,7 +353,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => setShowGoalsPanel(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
+            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             <Settings size={16} />
             Edit Goals
@@ -348,7 +361,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}
+            style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             <Printer size={16} />
             Print
@@ -388,8 +401,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         </div>
       </div>
 
-      {/* Roadmap content area - white background */}
-      <div className="px-8 py-6 print-roadmap-content" style={{ background: 'white' }}>
+      {/* Roadmap content area */}
+      <div className="px-8 py-6 print-roadmap-content" style={{ background: 'var(--bg)' }}>
         {/* Print header with logos - only visible when printing */}
         <div className="hidden print-header print-only" style={{ display: 'none' }}>
           <div className="print-title">{title}</div>
@@ -421,12 +434,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="text-3xl font-extrabold bg-transparent border-none outline-none w-full mb-4 print-hide"
-          style={{ color: '#1f2937' }}
+          style={{ color: 'var(--text)' }}
           placeholder="Enter roadmap title..."
         />
 
         {/* Screen legend - hidden when printing */}
-        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: '#6b7280' }}>
+        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
           {Object.entries(TYPE_COLORS).map(([typeKey, color]) => (
             <div key={typeKey} className="flex items-center gap-2 relative">
               <div className="relative">
@@ -569,7 +582,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                   initiative.spanning[index] = activity as any;
                 }
               } else {
-                const acts = initiative.activities[quarter as keyof typeof initiative.activities];
+                const targetQuarter = quarter || determineQuarterFromMonth(activity, fiscalConfig);
+                const acts = initiative.activities[targetQuarter as keyof typeof initiative.activities];
                 const index = acts.findIndex(a => a.id === activity.id);
                 if (index >= 0) {
                   acts[index] = activity as any;
@@ -580,10 +594,11 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 if (!initiative.spanning) initiative.spanning = [];
                 initiative.spanning.push(activity as any);
               } else {
-                if (!initiative.activities[quarter as keyof typeof initiative.activities]) {
-                  initiative.activities[quarter as keyof typeof initiative.activities] = [];
+                const targetQuarter = quarter || determineQuarterFromMonth(activity, fiscalConfig);
+                if (!initiative.activities[targetQuarter as keyof typeof initiative.activities]) {
+                  initiative.activities[targetQuarter as keyof typeof initiative.activities] = [];
                 }
-                initiative.activities[quarter as keyof typeof initiative.activities].push(activity as any);
+                initiative.activities[targetQuarter as keyof typeof initiative.activities].push(activity as any);
               }
             }
           }
