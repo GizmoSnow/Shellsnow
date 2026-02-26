@@ -155,7 +155,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const handleExportPptx = async () => {
     setExporting(true);
     try {
-      await exportToPptx(title, data, customerLogoBase64);
+      await exportToPptx(title, data, customerLogoBase64, fiscalConfig);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
@@ -340,17 +340,19 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           </div>
           <div className="flex items-center gap-3">
             {customerLogoBase64 && (
-              <div className="bg-white rounded-lg p-1">
-                <img src={customerLogoBase64} alt="Customer logo" className="h-10 object-contain" />
-              </div>
-            )}
-            <div className="bg-white rounded-lg p-1">
               <img
-                src={salesforceLogo}
-                alt="Salesforce"
+                src={customerLogoBase64}
+                alt="Customer logo"
                 className="h-10 object-contain"
+                style={theme === 'dark' ? { filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8))' } : {}}
               />
-            </div>
+            )}
+            <img
+              src={salesforceLogo}
+              alt="Salesforce"
+              className="h-10 object-contain"
+              style={theme === 'dark' ? { filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8))' } : {}}
+            />
           </div>
         </div>
 
