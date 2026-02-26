@@ -298,6 +298,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     gridColumnStart: minIdx + 1,
                     gridColumnEnd: maxIdx + 2
                   }}
+                  title={sp.name}
                 >
                   {sp.name}
                   <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
@@ -661,6 +662,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   justifyContent: 'center',
                                   height: '100%'
                                 }}
+                                title={item.activity.name}
                               >
                                 <span
                                   style={{
