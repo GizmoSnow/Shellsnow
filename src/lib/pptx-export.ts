@@ -169,8 +169,8 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
     margin: 0,
   });
 
-  const csmColor = data.typeColors?.['csm'] || DEFAULT_TYPE_COLORS['csm'];
-  const spTextColor = getTextColor(csmColor);
+  const successPathColor = '#04e1cb';
+  const spTextColor = getTextColor(successPathColor);
 
   qkeys.forEach((qk, i) => {
     const label = data.successPathLabels?.[qk as keyof typeof data.successPathLabels] || (i === 0 ? 'Success Path' : 'Success Path Review');
@@ -181,8 +181,8 @@ export async function exportToPptx(title: string, data: RoadmapData, customerLog
       y: SP_Y + 0.05,
       w: pillW,
       h: SP_H - 0.1,
-      fill: { color: csmColor.replace('#', '') },
-      line: { color: csmColor.replace('#', ''), width: 0 },
+      fill: { color: successPathColor.replace('#', '') },
+      line: { color: successPathColor.replace('#', ''), width: 0 },
       rectRadius: 0.5,
     });
     slide.addText(label, {

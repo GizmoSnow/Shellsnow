@@ -299,7 +299,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
         {/* Logo upload section - white background */}
         <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
-          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937' }}>
+          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
             <Upload size={16} />
             {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
             <input
@@ -550,9 +550,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           setEditingActivity(null);
         }}
         onAdd={(activity) => {
+          console.log('=== ADD ACTIVITY DEBUG ===');
+          console.log('Activity:', activity);
+          console.log('Context:', addContext);
+          console.log('Editing:', editingActivity);
+
           const newData = { ...data };
 
           if (addContext.isAccountLevel) {
+            console.log('Adding to account level');
             const isSpanningActivity = 'quarters' in activity;
             if (isSpanningActivity) {
               if (editingActivity) {
@@ -566,12 +572,23 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               }
             }
           } else {
+            console.log('Adding to goal level');
             const { goalId, initiativeId, quarter } = addContext;
+            console.log('Goal ID:', goalId, 'Initiative ID:', initiativeId, 'Quarter:', quarter);
+
             const goal = newData.goals.find(g => g.id === goalId);
-            if (!goal) return;
+            if (!goal) {
+              console.error('Goal not found!');
+              return;
+            }
+            console.log('Found goal:', goal.name);
 
             const initiative = goal.initiatives.find(i => i.id === initiativeId);
-            if (!initiative) return;
+            if (!initiative) {
+              console.error('Initiative not found!');
+              return;
+            }
+            console.log('Found initiative:', initiative.name);
 
             const isSpanningActivity = 'quarters' in activity;
 
@@ -591,21 +608,26 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               }
             } else {
               if (isSpanningActivity) {
+                console.log('Adding spanning activity');
                 if (!initiative.spanning) initiative.spanning = [];
                 initiative.spanning.push(activity as any);
               } else {
                 const targetQuarter = quarter || determineQuarterFromMonth(activity, fiscalConfig);
+                console.log('Target quarter:', targetQuarter);
                 if (!initiative.activities[targetQuarter as keyof typeof initiative.activities]) {
                   initiative.activities[targetQuarter as keyof typeof initiative.activities] = [];
                 }
                 initiative.activities[targetQuarter as keyof typeof initiative.activities].push(activity as any);
+                console.log('Activity added to quarter', targetQuarter);
               }
             }
           }
 
+          console.log('New data:', newData);
           setData(newData);
           setShowAddModal(false);
           setEditingActivity(null);
+          console.log('=== END ADD ACTIVITY DEBUG ===');
         }}
       />
     </div>

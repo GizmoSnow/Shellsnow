@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  background: var(--bg);
+  transition: background-color 0.2s ease;
+}
+
 :root[data-theme="dark"] {
   --bg: #0f1117;
   --surface: #1a1d27;

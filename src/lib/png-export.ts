@@ -118,18 +118,18 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
   ctx.textBaseline = 'middle';
   ctx.fillText('Success Path', MARGIN + 10, currentY + SP_H / 2);
 
-  const csmColor = data.typeColors?.['csm'] || DEFAULT_TYPE_COLORS['csm'];
+  const successPathColor = '#04e1cb';
   qkeys.forEach((qk, i) => {
     const label = data.successPathLabels?.[qk as keyof typeof data.successPathLabels] || (i === 0 ? 'Success Path' : 'Success Path Review');
     const pillW = Q_W * 0.75;
     const pillX = Q_START_X + i * Q_W + (Q_W - pillW) / 2;
     const pillY = currentY + 5;
 
-    ctx.fillStyle = csmColor;
+    ctx.fillStyle = successPathColor;
     roundRect(ctx, pillX, pillY, pillW, SP_H - 10, 15);
     ctx.fill();
 
-    ctx.fillStyle = getTextColor(csmColor);
+    ctx.fillStyle = getTextColor(successPathColor);
     ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(label, pillX + pillW / 2, pillY + (SP_H - 10) / 2);

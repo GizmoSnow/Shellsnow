@@ -85,6 +85,16 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
       return;
     }
 
+    if (!isSpanning) {
+      const startMonthIndex = roadmapMonths.findIndex(m => String(m.calendarMonth) === startMonth);
+      const endMonthIndex = roadmapMonths.findIndex(m => String(m.calendarMonth) === endMonth);
+
+      if (startMonthIndex > endMonthIndex) {
+        alert('End Month must be the same as or after Start Month');
+        return;
+      }
+    }
+
     if (isSpanning) {
       onAdd({
         id: editingActivity ? editingActivity.id : uid(),
