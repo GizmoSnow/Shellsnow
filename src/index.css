@@ -81,6 +81,8 @@
   .no-print,
   .print-hide,
   input[type="text"]:not(.print-show),
+  input[type="file"],
+  label:has(input[type="file"]),
   .group-hover\:flex {
     display: none !important;
   }
@@ -97,6 +99,8 @@
   /* Quarter headers need special handling */
   .print-show-text {
     display: block !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
   }
 
   /* Success Path pills need inline-block */
@@ -106,7 +110,7 @@
 
   /* Show only printable content */
   .print-only {
-    display: block !important;
+    display: flex !important;
   }
 
   /* Main container adjustments */
@@ -122,9 +126,11 @@
   /* Scale content to fit page width */
   .print-roadmap-content {
     transform-origin: top left;
-    width: 100%;
-    max-width: 100%;
+    transform: scale(0.85);
+    width: 117.65%;
+    max-width: 117.65%;
     padding: 0 !important;
+    margin: 0 !important;
   }
 
   /* Prevent page breaks within rows */
@@ -223,7 +229,7 @@
     border-radius: 4px !important;
   }
 
-  /* Ensure quarter headers are visible */
+  /* Ensure quarter headers are visible and don't wrap */
   .grid.grid-cols-\[200px_repeat\(4\,1fr\)\] > div {
     display: block !important;
   }
@@ -242,5 +248,21 @@
   *:hover {
     opacity: 1 !important;
     background: inherit !important;
+  }
+
+  /* Keep header visible on screen */
+  .text-xl.font-extrabold {
+    display: block !important;
+  }
+
+  /* Hide the top toolbar section entirely */
+  .px-8.py-4.flex.items-center.gap-2.print-hide,
+  .px-8.pb-4.flex.items-center.gap-2.print-hide {
+    display: none !important;
+  }
+
+  /* Hide borders between sections */
+  .border-b.print-hide {
+    display: none !important;
   }
 }
