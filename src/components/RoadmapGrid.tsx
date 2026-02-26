@@ -428,7 +428,6 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  {flatActivitiesWithRows.length > 0 && (
                   <div className="grid grid-cols-[200px_repeat(4,1fr)] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
                     <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                       <div
@@ -612,7 +611,6 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       })}
                     </div>
                   </div>
-                  )}
                 </div>
               );
             })}
