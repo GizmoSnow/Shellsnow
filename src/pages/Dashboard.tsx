@@ -58,9 +58,9 @@ export default function Dashboard() {
           user_id: user?.id,
           title: 'New Roadmap',
           data: defaultData,
-          fiscal_start_month: 9,
+          fiscal_start_month: 0,
           base_fiscal_year: 26,
-          roadmap_start_quarter: 2
+          roadmap_start_quarter: 1
         }
       ])
       .select()

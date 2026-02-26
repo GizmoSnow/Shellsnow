@@ -128,6 +128,35 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     }
   };
 
+  const selectQuarterRange = (quarterIndex: number) => {
+    const startMonthIdx = quarterIndex * 3;
+    const endMonthIdx = startMonthIdx + 2;
+    if (startMonthIdx < roadmapMonths.length && endMonthIdx < roadmapMonths.length) {
+      setStartMonth(String(roadmapMonths[startMonthIdx].calendarMonth));
+      setEndMonth(String(roadmapMonths[endMonthIdx].calendarMonth));
+      setIsSpanning(false);
+    }
+  };
+
+  const getQuarterMonthRange = (quarterIndex: number) => {
+    const startMonthIdx = quarterIndex * 3;
+    const endMonthIdx = startMonthIdx + 2;
+    if (startMonthIdx < roadmapMonths.length && endMonthIdx < roadmapMonths.length) {
+      return `${roadmapMonths[startMonthIdx].abbrev}–${roadmapMonths[endMonthIdx].abbrev}`;
+    }
+    return '';
+  };
+
+  const isQuarterSelected = (quarterIndex: number) => {
+    const startMonthIdx = quarterIndex * 3;
+    const endMonthIdx = startMonthIdx + 2;
+    if (startMonthIdx < roadmapMonths.length && endMonthIdx < roadmapMonths.length) {
+      return startMonth === String(roadmapMonths[startMonthIdx].calendarMonth) &&
+             endMonth === String(roadmapMonths[endMonthIdx].calendarMonth);
+    }
+    return false;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSubmit(e);
@@ -144,11 +173,11 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center" onClick={onClose}>
-        <div className="rounded-2xl p-8 w-[440px] max-w-[90vw] animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-xl font-extrabold mb-6" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+        <div className="rounded-2xl p-6 md:p-8 w-full max-w-[440px] my-auto animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
+          <h3 className="text-lg md:text-xl font-extrabold mb-4 md:mb-6" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 max-h-[70vh] overflow-y-auto pr-2">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                 Activity Name
@@ -192,7 +221,37 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
             </div>
 
             {!isSpanning && (
-              <div className="grid grid-cols-2 gap-4">
+              <>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+                    Quick Select Quarter
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {quarters.map((quarter, idx) => {
+                      const quarterIndex = idx;
+                      const monthRange = getQuarterMonthRange(quarterIndex);
+                      const isSelected = isQuarterSelected(quarterIndex);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => selectQuarterRange(quarterIndex)}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
+                          style={{
+                            background: isSelected ? '#066afe' : 'var(--surface2)',
+                            color: isSelected ? '#ffffff' : 'var(--text)',
+                            border: isSelected ? '2px solid #066afe' : '2px solid var(--border)'
+                          }}
+                        >
+                          <div className="font-bold">{quarter.label}</div>
+                          <div className="text-[10px] opacity-80">{monthRange}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
                     Start Month
@@ -228,6 +287,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                   </select>
                 </div>
               </div>
+              </>
             )}
 
             <div>
