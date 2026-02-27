@@ -445,6 +445,7 @@ export async function exportToPptx(
         margin: 0,
         wrap: false,
         autoFit: false,
+        fit: 'shrink',
       });
     });
 
@@ -600,6 +601,7 @@ export async function exportToPptx(
             margin: 0,
             wrap: false,
             autoFit: false,
+            fit: 'shrink',
           });
         });
 
@@ -822,6 +824,7 @@ export async function exportToPptx(
                 margin: 0,
                 wrap: false,
                 autoFit: false,
+                fit: 'shrink',
               });
             }
           }
