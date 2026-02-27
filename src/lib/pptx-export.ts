@@ -107,7 +107,7 @@ export async function exportToPptx(
 
     currentLogoX -= 1.1;
 
-    if (salesforceBase64) {
+    if (salesforceBase64 && !customerLogoBase64) {
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
@@ -365,7 +365,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.2);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.25);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -410,7 +410,7 @@ export async function exportToPptx(
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
       const pillH = 0.18;
-      const pillY = currentY + 0.1 + spIdx * 0.25;
+      const pillY = currentY + 0.15 + spIdx * 0.25;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
       const pillW = spanWidth - 0.1;
 
@@ -462,7 +462,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.2);
+        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.25);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -566,7 +566,7 @@ export async function exportToPptx(
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
           const pillH = 0.18;
-          const pillY = currentY + 0.1 + spIdx * 0.25;
+          const pillY = currentY + 0.15 + spIdx * 0.25;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
           const pillW = spanWidth - 0.1;
 
@@ -679,7 +679,7 @@ export async function exportToPptx(
         const numRows = maxRow + 1;
         const pillH = 0.18;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.25 + 0.2);
+        const rowH = Math.max(0.5, numRows * 0.25 + 0.25);
 
         checkNewSlide();
 
@@ -791,7 +791,7 @@ export async function exportToPptx(
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.1 + row * 0.25;
+              const pillY = currentY + 0.15 + row * 0.25;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
