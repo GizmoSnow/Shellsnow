@@ -296,10 +296,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
     if (isDefault) return;
 
-    if (!confirm(`Delete "${getTypeLabel(typeKey)}" type? This will remove the type from the legend.`)) {
-      return;
-    }
-
     const newData = { ...data };
     if (newData.typeLabels) {
       delete newData.typeLabels[typeKey];
