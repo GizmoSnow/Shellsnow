@@ -101,31 +101,29 @@ export async function exportToPptx(
   }
 
   function addHeader(slide: any) {
-    const LOGO_W = 1.2;
-    const LOGO_H = 0.4;
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
     let currentLogoX = SLIDE_W - 0.3;
 
-    currentLogoX -= LOGO_W;
+    currentLogoX -= 1.0;
 
     if (salesforceBase64) {
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: LOGO_W,
-        h: LOGO_H,
+        w: 1.0,
+        h: 0.35,
         data: salesforceBase64,
       });
     }
 
     if (customerLogoBase64) {
-      currentLogoX -= (LOGO_W + LOGO_GAP);
+      currentLogoX -= (0.7 + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: LOGO_W,
-        h: LOGO_H,
+        w: 0.7,
+        h: 0.5,
         data: customerLogoBase64,
       });
     }
@@ -367,7 +365,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.18 + 0.15);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.20 + 0.18);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -411,8 +409,8 @@ export async function exportToPptx(
       const maxIdx = Math.max(...qIndexes);
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-      const pillH = 0.16;
-      const pillY = currentY + 0.1 + spIdx * 0.18;
+      const pillH = 0.14;
+      const pillY = currentY + 0.1 + spIdx * 0.20;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
       const pillW = spanWidth - 0.1;
 
@@ -462,7 +460,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.18 + 0.15);
+        const rowH = Math.max(0.5, spanningActivities.length * 0.20 + 0.18);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -565,8 +563,8 @@ export async function exportToPptx(
           const maxIdx = Math.max(...qIndexes);
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-          const pillH = 0.16;
-          const pillY = currentY + 0.1 + spIdx * 0.18;
+          const pillH = 0.14;
+          const pillY = currentY + 0.1 + spIdx * 0.20;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
           const pillW = spanWidth - 0.1;
 
@@ -675,9 +673,9 @@ export async function exportToPptx(
 
         const maxRow = activityRows.length > 0 ? Math.max(...activityRows) : 0;
         const numRows = maxRow + 1;
-        const pillH = 0.16;
+        const pillH = 0.14;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.18 + 0.15);
+        const rowH = Math.max(0.5, numRows * 0.20 + 0.18);
 
         checkNewSlide();
 
@@ -789,7 +787,7 @@ export async function exportToPptx(
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.1 + row * 0.18;
+              const pillY = currentY + 0.1 + row * 0.20;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
