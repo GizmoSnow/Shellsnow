@@ -1,27 +1,7 @@
 import PptxGenJS from 'pptxgenjs';
 import { RoadmapData, Activity } from './supabase';
-import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
+import salesforceLogoPng from '../assets/salesforce-cloud-logo.png';
 import { getAllRoadmapMonths, getRoadmapQuarters, FiscalYearConfig } from './fiscal-year';
-
-async function svgToPng(svgUrl: string, width: number, height: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Could not get canvas context'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = () => reject(new Error('Failed to load SVG'));
-    img.src = svgUrl;
-  });
-}
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
   csm: '#04e1cb',
@@ -113,7 +93,13 @@ export async function exportToPptx(
 
   let salesforceBase64: string | null = null;
   try {
-    salesforceBase64 = await svgToPng(salesforceLogo, 200, 150);
+    salesforceBase64 = await fetch(salesforceLogoPng)
+      .then(res => res.blob())
+      .then(blob => new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      }));
   } catch (error) {
     console.error('Failed to load Salesforce logo:', error);
   }
@@ -383,7 +369,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.25);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.30);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -480,7 +466,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.25);
+        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.30);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -697,7 +683,7 @@ export async function exportToPptx(
         const numRows = maxRow + 1;
         const pillH = 0.18;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.25 + 0.25);
+        const rowH = Math.max(0.5, numRows * 0.25 + 0.30);
 
         checkNewSlide();
 
