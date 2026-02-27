@@ -111,8 +111,8 @@ export async function exportToPptx(
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: 1.1,
-        h: 0.3,
+        w: 0.9,
+        h: 0.45,
         data: salesforceBase64,
       });
     }
@@ -221,7 +221,7 @@ export async function exportToPptx(
         y: START_Y,
         w: Q_W,
         h: HEADER_H - 0.04,
-        fontSize: 16,
+        fontSize: 11,
         bold: true,
         color: HEADER_TEXT,
         fontFace: 'Arial',
@@ -431,12 +431,13 @@ export async function exportToPptx(
           opacity: 0.15,
         },
       });
+      const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
       currentSlide.addText(sp.name, {
         x: pillX,
         y: pillY,
         w: pillW,
         h: pillH,
-        fontSize: pillW < 1.5 ? 7 : 8,
+        fontSize: fs,
         bold: true,
         color: textColor,
         fontFace: 'Arial',
@@ -445,7 +446,6 @@ export async function exportToPptx(
         margin: 0,
         wrap: false,
         autoFit: false,
-        fit: 'shrink',
       });
     });
 
@@ -519,10 +519,10 @@ export async function exportToPptx(
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
-            y: currentY + 0.22,
+            y: currentY + 0.20,
             w: LEFT_COL - 0.1,
             h: 0.2,
-            fontSize: 11,
+            fontSize: 9,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
@@ -587,12 +587,13 @@ export async function exportToPptx(
               opacity: 0.15,
             },
           });
+          const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
           currentSlide.addText(sp.name, {
             x: pillX,
             y: pillY,
             w: pillW,
             h: pillH,
-            fontSize: pillW < 1.5 ? 7 : 8,
+            fontSize: fs,
             bold: true,
             color: textColor,
             fontFace: 'Arial',
@@ -601,7 +602,6 @@ export async function exportToPptx(
             margin: 0,
             wrap: false,
             autoFit: false,
-            fit: 'shrink',
           });
         });
 
@@ -737,10 +737,10 @@ export async function exportToPptx(
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
-            y: currentY + 0.22,
+            y: currentY + 0.20,
             w: LEFT_COL - 0.1,
             h: 0.2,
-            fontSize: 11,
+            fontSize: 9,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
@@ -810,12 +810,13 @@ export async function exportToPptx(
                   opacity: 0.15,
                 },
               });
+              const fs = act.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
               currentSlide.addText(act.name, {
                 x: pillX,
                 y: pillY,
                 w: pillW,
                 h: pillH,
-                fontSize: pillW < 1.5 ? 7 : 8,
+                fontSize: fs,
                 bold: true,
                 color: textColor,
                 fontFace: 'Arial',
@@ -824,7 +825,6 @@ export async function exportToPptx(
                 margin: 0,
                 wrap: false,
                 autoFit: false,
-                fit: 'shrink',
               });
             }
           }
