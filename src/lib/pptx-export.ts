@@ -35,6 +35,11 @@ const TYPE_LABELS: Record<string, string> = {
   trailhead: 'Trailhead',
 };
 
+function getTodayDateString(): string {
+  const today = new Date();
+  return today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 export async function exportToPptx(
   title: string,
   data: RoadmapData,
@@ -91,41 +96,47 @@ export async function exportToPptx(
     .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
 
   function addHeader(slide: any) {
-    const LOGO_W = 1.2;
-    const LOGO_H = 0.4;
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
     let currentLogoX = SLIDE_W - 0.3;
 
-    currentLogoX -= LOGO_W;
+    currentLogoX -= 1.2;
 
     slide.addImage({
       x: currentLogoX,
       y: LOGO_Y,
-      w: LOGO_W,
-      h: LOGO_H,
       data: salesforceBase64,
     });
 
     if (customerLogoBase64) {
-      currentLogoX -= (LOGO_W + LOGO_GAP);
+      currentLogoX -= (1.2 + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: LOGO_W,
-        h: LOGO_H,
         data: customerLogoBase64,
       });
     }
 
     slide.addText(title, {
       x: 0.3,
-      y: 0.2,
+      y: 0.15,
       w: 9.5,
-      h: 0.6,
-      fontSize: 24,
+      h: 0.4,
+      fontSize: 28,
       bold: true,
       color: TEXT_COLOR,
+      fontFace: 'Arial',
+      margin: 0,
+      wrap: false,
+    });
+
+    slide.addText(`Last updated: ${getTodayDateString()}`, {
+      x: 0.3,
+      y: 0.58,
+      w: 9.5,
+      h: 0.25,
+      fontSize: 9,
+      color: TEXT_MUTED,
       fontFace: 'Arial',
       margin: 0,
       wrap: false,
@@ -133,14 +144,56 @@ export async function exportToPptx(
   }
 
   function addQuarterHeaders(slide: any) {
-    slide.addShape(pres.ShapeType.rect, {
-      x: MARGIN_L,
-      y: START_Y,
-      w: SLIDE_W - MARGIN_L - 0.1,
-      h: HEADER_H,
-      fill: { color: HEADER_BG },
-      line: { color: HEADER_BG, width: 0 },
-    });
+    const headerColor = data.headerColor || null;
+
+    if (headerColor) {
+      slide.addShape(pres.ShapeType.rect, {
+        x: MARGIN_L,
+        y: START_Y,
+        w: SLIDE_W - MARGIN_L - 0.1,
+        h: HEADER_H,
+        fill: { color: headerColor.replace('#', '') },
+        line: { color: headerColor.replace('#', ''), width: 0 },
+      });
+    } else {
+      slide.addShape(pres.ShapeType.rect, {
+        x: MARGIN_L,
+        y: START_Y,
+        w: SLIDE_W - MARGIN_L - 0.1,
+        h: HEADER_H,
+        fill: { type: 'solid', color: '0B5CAB', transparency: 0 },
+      });
+
+      const gradientStops = [
+        { position: 0, color: '0B5CAB' },
+        { position: 100, color: '00B3FF' }
+      ];
+
+      for (let i = 0; i < 50; i++) {
+        const pos = i / 49;
+        const color1 = parseInt('0B5CAB', 16);
+        const color2 = parseInt('00B3FF', 16);
+        const r1 = (color1 >> 16) & 0xFF;
+        const g1 = (color1 >> 8) & 0xFF;
+        const b1 = color1 & 0xFF;
+        const r2 = (color2 >> 16) & 0xFF;
+        const g2 = (color2 >> 8) & 0xFF;
+        const b2 = color2 & 0xFF;
+        const r = Math.round(r1 + (r2 - r1) * pos);
+        const g = Math.round(g1 + (g2 - g1) * pos);
+        const b = Math.round(b1 + (b2 - b1) * pos);
+        const color = ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+
+        slide.addShape(pres.ShapeType.rect, {
+          x: MARGIN_L + (SLIDE_W - MARGIN_L - 0.1) * pos,
+          y: START_Y,
+          w: (SLIDE_W - MARGIN_L - 0.1) / 49,
+          h: HEADER_H,
+          fill: { color },
+          line: { width: 0 },
+        });
+      }
+    }
 
     slide.addShape(pres.ShapeType.rect, {
       x: MARGIN_L,
@@ -195,7 +248,7 @@ export async function exportToPptx(
       wrap: false,
     });
 
-    const successPathColor = data.typeColors?.csm || '#04e1cb';
+    const successPathColor = data.typeColors?.csm || DEFAULT_TYPE_COLORS.csm;
     const spTextColor = getTextColor(successPathColor);
 
     qkeys.forEach((qk, i) => {
@@ -210,6 +263,14 @@ export async function exportToPptx(
         fill: { color: successPathColor.replace('#', '') },
         line: { color: successPathColor.replace('#', ''), width: 0 },
         rectRadius: 0.5,
+        shadow: {
+          type: 'outer',
+          angle: 90,
+          blur: 3,
+          color: '000000',
+          offset: 1,
+          opacity: 0.15,
+        },
       });
       slide.addText(label, {
         x: pillX,
@@ -233,23 +294,27 @@ export async function exportToPptx(
   function addLegend(slide: any) {
     const legendY = SLIDE_H - 0.4;
     const legendTypes = Object.keys(DEFAULT_TYPE_COLORS);
-    let lx = MARGIN_L;
-    legendTypes.forEach((key) => {
+    const totalItems = legendTypes.length;
+    const availableWidth = SLIDE_W - MARGIN_L * 2;
+    const itemWidth = availableWidth / totalItems;
+
+    legendTypes.forEach((key, idx) => {
       const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#E8194B';
-      slide.addShape(pres.ShapeType.roundRect, {
+      const lx = MARGIN_L + idx * itemWidth;
+
+      slide.addShape(pres.ShapeType.oval, {
         x: lx,
-        y: legendY,
-        w: 0.14,
-        h: 0.14,
+        y: legendY + 0.03,
+        w: 0.08,
+        h: 0.08,
         fill: { color: bgColor.replace('#', '') },
         line: { color: bgColor.replace('#', ''), width: 0 },
-        rectRadius: 0.5,
       });
       const labelText = data.typeLabels?.[key] || TYPE_LABELS[key] || key;
       slide.addText(labelText, {
-        x: lx + 0.17,
+        x: lx + 0.11,
         y: legendY,
-        w: 1.3,
+        w: itemWidth - 0.15,
         h: 0.14,
         fontSize: 9,
         bold: true,
@@ -258,7 +323,15 @@ export async function exportToPptx(
         margin: 0,
         wrap: false,
       });
-      lx += 1.6;
+    });
+
+    slide.addShape(pres.ShapeType.rect, {
+      x: 0,
+      y: SLIDE_H - 0.02,
+      w: SLIDE_W,
+      h: 0.02,
+      fill: { color: PRIMARY },
+      line: { color: PRIMARY, width: 0 },
     });
   }
 
@@ -338,6 +411,14 @@ export async function exportToPptx(
         fill: { color: bgColor.replace('#', '') },
         line: { color: bgColor.replace('#', ''), width: 0 },
         rectRadius: 0.5,
+        shadow: {
+          type: 'outer',
+          angle: 90,
+          blur: 3,
+          color: '000000',
+          offset: 1,
+          opacity: 0.15,
+        },
       });
       currentSlide.addText(sp.name, {
         x: pillX,
@@ -398,6 +479,17 @@ export async function exportToPptx(
           fill: { color: goal.color.replace('#', '') },
           line: { color: goal.color.replace('#', ''), width: 0 },
         });
+
+        if (goalIdx > 0 && isFirstInitiativeOfGoal) {
+          currentSlide.addShape(pres.ShapeType.rect, {
+            x: MARGIN_L,
+            y: currentY - 0.01,
+            w: SLIDE_W - MARGIN_L - 0.1,
+            h: 0.01,
+            fill: { color: goal.color.replace('#', '') },
+            line: { color: goal.color.replace('#', ''), width: 0 },
+          });
+        }
 
         if (isFirstInitiativeOfGoal) {
           currentSlide.addText(goal.number, {
@@ -473,6 +565,14 @@ export async function exportToPptx(
             fill: { color: bgColor.replace('#', '') },
             line: { color: bgColor.replace('#', ''), width: 0 },
             rectRadius: 0.5,
+            shadow: {
+              type: 'outer',
+              angle: 90,
+              blur: 3,
+              color: '000000',
+              offset: 1,
+              opacity: 0.15,
+            },
           });
           currentSlide.addText(sp.name, {
             x: pillX,
@@ -596,6 +696,17 @@ export async function exportToPptx(
           line: { color: goal.color.replace('#', ''), width: 0 },
         });
 
+        if (goalIdx > 0 && isFirstInitiativeOfGoal) {
+          currentSlide.addShape(pres.ShapeType.rect, {
+            x: MARGIN_L,
+            y: currentY - 0.01,
+            w: SLIDE_W - MARGIN_L - 0.1,
+            h: 0.01,
+            fill: { color: goal.color.replace('#', '') },
+            line: { color: goal.color.replace('#', ''), width: 0 },
+          });
+        }
+
         if (isFirstInitiativeOfGoal) {
           currentSlide.addText(goal.number, {
             x: LABEL_X + 0.07,
@@ -675,6 +786,14 @@ export async function exportToPptx(
                 fill: { color: bgColor.replace('#', '') },
                 line: { color: bgColor.replace('#', ''), width: 0 },
                 rectRadius: 0.5,
+                shadow: {
+                  type: 'outer',
+                  angle: 90,
+                  blur: 3,
+                  color: '000000',
+                  offset: 1,
+                  opacity: 0.15,
+                },
               });
               currentSlide.addText(act.name, {
                 x: pillX,
