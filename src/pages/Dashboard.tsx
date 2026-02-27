@@ -7,6 +7,7 @@ import { supabase, Roadmap } from '../lib/supabase';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
 import astroImage from '../assets/Newastro.png';
 import astroGif from '../assets/ASTRO_Tshirt_RunRight_SFS19_2000px.gif';
+import astroFloatingGif from '../assets/ASTRO_NoOutfitTriangle_RingFront_Shadow_SFS20_300px.gif';
 
 export default function Dashboard() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
@@ -290,7 +291,15 @@ export default function Dashboard() {
                   />
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <FileText size={32} style={{ color: firstGoalColor }} />
+                      {roadmap.customer_logo_base64 ? (
+                        <img
+                          src={roadmap.customer_logo_base64}
+                          alt="Customer logo"
+                          className="w-10 h-10 object-contain rounded-lg"
+                        />
+                      ) : (
+                        <FileText size={32} style={{ color: firstGoalColor }} />
+                      )}
                       <div className="flex items-center gap-1">
                         <button
                           onClick={(e) => {
@@ -341,7 +350,7 @@ export default function Dashboard() {
       </div>
 
       <div className="fixed bottom-8 right-8 floating-astro">
-        <img src={astroGif} alt="Astro" className="w-24 h-24 object-contain" />
+        <img src={astroFloatingGif} alt="Astro" className="w-32 h-32 object-contain" />
       </div>
     </div>
   );
