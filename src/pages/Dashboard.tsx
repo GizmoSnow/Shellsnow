@@ -349,9 +349,15 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="fixed bottom-4 right-4 floating-astro">
-        <img src={astroFloatingGif} alt="Astro" className="w-96 h-96 object-contain" />
-      </div>
+      {roadmaps.length < 3 && (
+        <div className="fixed bottom-4 right-4 floating-astro pointer-events-none">
+          <img
+            src={astroFloatingGif}
+            alt="Astro"
+            className="w-96 h-96 object-contain opacity-60 hover:opacity-100 transition-opacity"
+          />
+        </div>
+      )}
     </div>
   );
 }
