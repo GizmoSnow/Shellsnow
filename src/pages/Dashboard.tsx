@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
 import { supabase, Roadmap } from '../lib/supabase';
-import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
+import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 import astroImage from '../assets/Newastro.png';
 import astroGif from '../assets/ASTRO_Tshirt_RunRight_SFS19_2000px.gif';
 import astroFloatingGif from '../assets/ASTRO_NoOutfitTriangle_RingFront_Shadow_SFS20_300px.gif';

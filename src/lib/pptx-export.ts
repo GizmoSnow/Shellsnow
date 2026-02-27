@@ -1,7 +1,27 @@
 import PptxGenJS from 'pptxgenjs';
 import { RoadmapData, Activity } from './supabase';
-import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
+import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 import { getAllRoadmapMonths, getRoadmapQuarters, FiscalYearConfig } from './fiscal-year';
+
+async function svgToPng(svgUrl: string, width: number, height: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Failed to load SVG'));
+    img.src = svgUrl;
+  });
+}
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
   csm: '#04e1cb',
@@ -93,9 +113,7 @@ export async function exportToPptx(
 
   let salesforceBase64: string | null = null;
   try {
-    salesforceBase64 = await fetch(salesforceLogo)
-      .then(res => res.text())
-      .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
+    salesforceBase64 = await svgToPng(salesforceLogo, 200, 150);
   } catch (error) {
     console.error('Failed to load Salesforce logo:', error);
   }
