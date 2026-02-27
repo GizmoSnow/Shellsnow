@@ -118,12 +118,12 @@ export async function exportToPptx(
     }
 
     if (customerLogoBase64) {
-      currentLogoX -= (0.5 + LOGO_GAP);
+      currentLogoX -= (0.8 + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: 0.5,
-        h: 0.5,
+        w: 0.8,
+        h: 0.45,
         data: customerLogoBase64,
       });
     }
@@ -440,9 +440,9 @@ export async function exportToPptx(
         bold: true,
         color: textColor,
         fontFace: 'Arial',
-        align: 'center',
+        align: 'left',
         valign: 'middle',
-        margin: 0,
+        margin: [0, 0, 0, 4],
         wrap: false,
       });
     });
@@ -594,9 +594,9 @@ export async function exportToPptx(
             bold: true,
             color: textColor,
             fontFace: 'Arial',
-            align: 'center',
+            align: 'left',
             valign: 'middle',
-            margin: 0,
+            margin: [0, 0, 0, 4],
             wrap: false,
           });
         });
@@ -815,9 +815,9 @@ export async function exportToPptx(
                 bold: true,
                 color: textColor,
                 fontFace: 'Arial',
-                align: 'center',
+                align: 'left',
                 valign: 'middle',
-                margin: 0,
+                margin: [0, 0, 0, 4],
                 wrap: false,
               });
             }
