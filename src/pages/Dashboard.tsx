@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus, FileText, Trash2, LogOut, Moon, Sun } from 'lucide-react';
+import { Plus, FileText, Trash2, LogOut, Moon, Sun, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
 import { supabase, Roadmap } from '../lib/supabase';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
 import astroImage from '../assets/Newastro.png';
+import astroGif from '../assets/ASTRO_Tshirt_RunRight_SFS19_2000px.gif';
 
 export default function Dashboard() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
@@ -88,6 +89,30 @@ export default function Dashboard() {
     }
   };
 
+  const duplicateRoadmap = async (roadmap: Roadmap) => {
+    const { data, error } = await supabase
+      .from('roadmaps')
+      .insert([
+        {
+          user_id: user?.id,
+          title: `Copy of ${roadmap.title}`,
+          data: roadmap.data,
+          fiscal_start_month: roadmap.fiscal_start_month,
+          base_fiscal_year: roadmap.base_fiscal_year,
+          roadmap_start_quarter: roadmap.roadmap_start_quarter,
+          customer_logo_base64: roadmap.customer_logo_base64
+        }
+      ])
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error duplicating roadmap:', error);
+    } else if (data) {
+      loadRoadmaps();
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
@@ -125,7 +150,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen relative" style={{ background: 'var(--bg)' }}>
+      <style>{`
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-12px);
+          }
+        }
+        .floating-astro {
+          animation: bounce 2s ease-in-out infinite;
+        }
+      `}</style>
       <div className="border-b sticky top-0 z-50" style={{ borderColor: '#e5e7eb', background: 'white' }}>
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -205,7 +243,7 @@ export default function Dashboard() {
 
         {roadmaps.length === 0 ? (
           <div className="text-center py-20">
-            <FileText size={64} className="mx-auto mb-4" style={{ color: 'var(--border)' }} />
+            <img src={astroGif} alt="Astro" className="w-32 h-32 mx-auto mb-6 object-contain" />
             <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>No roadmaps yet</h3>
             <p className="mb-6" style={{ color: 'var(--text-muted)' }}>Create your first roadmap to get started</p>
             <button
@@ -253,16 +291,30 @@ export default function Dashboard() {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <FileText size={32} style={{ color: firstGoalColor }} />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteRoadmap(roadmap.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            duplicateRoadmap(roadmap);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-blue-500/10 hover:text-blue-600 rounded-lg transition-all"
+                          style={{ color: 'var(--text-muted)' }}
+                          title="Duplicate roadmap"
+                        >
+                          <Copy size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteRoadmap(roadmap.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
+                          style={{ color: 'var(--text-muted)' }}
+                          title="Delete roadmap"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                     <h3 className="text-lg font-bold mb-3 line-clamp-2" style={{ color: 'var(--text)' }}>
                       {roadmap.title}
@@ -286,6 +338,10 @@ export default function Dashboard() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="fixed bottom-8 right-8 floating-astro">
+        <img src={astroGif} alt="Astro" className="w-12 h-12 object-contain" />
       </div>
     </div>
   );
