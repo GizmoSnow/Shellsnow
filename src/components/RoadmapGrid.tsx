@@ -173,8 +173,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
   const getStatusColor = (status?: string) => {
     if (status === 'blocked') return '#ef4444';
-    if (status === 'at_risk') return '#f59e0b';
-    return '#10b981';
+    if (status === 'at_risk') return '#eab308';
+    return '#22c55e';
   };
 
   const getStatusLabel = (status?: string) => {
@@ -205,6 +205,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           <div
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{ background: statusColor }}
+            title={getStatusLabel(activity.status)}
           />
           {activity.name}
           <div className="hidden group-hover:flex items-center gap-1 ml-auto">
@@ -263,7 +264,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: 'var(--border)' }}>
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
             <div
@@ -699,6 +700,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 <div
                                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                   style={{ background: statusColor }}
+                                  title={getStatusLabel(item.activity.status)}
                                 />
                                 <span
                                   style={{

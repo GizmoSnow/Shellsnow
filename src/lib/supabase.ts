@@ -32,6 +32,7 @@ export interface RoadmapData {
   accountSpanning?: SpanningActivity[];
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
+  headerColor?: string;
   quarterTitles?: {
     q1?: string;
     q2?: string;

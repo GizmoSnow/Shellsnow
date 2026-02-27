@@ -225,9 +225,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                       onClick={() => setStatus('on_track')}
                       className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                       style={{
-                        background: status === 'on_track' ? '#10b981' : 'var(--surface2)',
+                        background: status === 'on_track' ? '#22c55e' : 'var(--surface2)',
                         color: status === 'on_track' ? '#ffffff' : 'var(--text)',
-                        border: status === 'on_track' ? '2px solid #10b981' : '2px solid var(--border)'
+                        border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border)'
                       }}
                     >
                       <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -238,9 +238,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                       onClick={() => setStatus('at_risk')}
                       className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                       style={{
-                        background: status === 'at_risk' ? '#f59e0b' : 'var(--surface2)',
+                        background: status === 'at_risk' ? '#eab308' : 'var(--surface2)',
                         color: status === 'at_risk' ? '#ffffff' : 'var(--text)',
-                        border: status === 'at_risk' ? '2px solid #f59e0b' : '2px solid var(--border)'
+                        border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border)'
                       }}
                     >
                       <div className="w-2 h-2 rounded-full bg-current"></div>

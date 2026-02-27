@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -64,6 +64,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingTypeKey, setEditingTypeKey] = useState<string | null>(null);
   const [editingColorKey, setEditingColorKey] = useState<string | null>(null);
+  const [showHeaderColorPicker, setShowHeaderColorPicker] = useState(false);
   const [addingNewType, setAddingNewType] = useState(false);
   const [newTypeLabel, setNewTypeLabel] = useState('');
   const [customerLogoBase64, setCustomerLogoBase64] = useState<string | null>(null);
@@ -306,6 +307,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     setData(newData);
   };
 
+  const updateHeaderColor = (color: string) => {
+    const newData = { ...data };
+    newData.headerColor = color;
+    setData(newData);
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !roadmap) return;
@@ -545,7 +552,42 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         />
 
         {/* Screen legend - hidden when printing */}
-        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide items-center" style={{ color: 'var(--text-muted)' }}>
+          <div className="relative">
+            <button
+              onClick={() => setShowHeaderColorPicker(!showHeaderColorPicker)}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+              style={{
+                background: 'var(--surface2)',
+                color: 'var(--text-muted)',
+                border: '1px solid var(--border)'
+              }}
+              title="Customize header color"
+            >
+              <Palette size={14} />
+              Header
+            </button>
+            {showHeaderColorPicker && (
+              <div className="absolute top-full mt-2 left-0 z-50 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-xl border" style={{ borderColor: 'var(--border)' }}>
+                <div className="text-[10px] font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Header Color
+                </div>
+                <input
+                  type="color"
+                  value={data.headerColor || '#066afe'}
+                  onChange={(e) => updateHeaderColor(e.target.value)}
+                  className="w-24 h-8 rounded cursor-pointer"
+                />
+                <button
+                  onClick={() => setShowHeaderColorPicker(false)}
+                  className="mt-2 w-full px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                  style={{ background: 'var(--surface2)', color: 'var(--text)' }}
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
           {getAllTypeKeys().map((typeKey) => {
             const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
             return (
