@@ -95,26 +95,33 @@ export async function exportToPptx(
   function addHeader(slide: any) {
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
-    let currentLogoX = SLIDE_W - 0.3;
+    const SALESFORCE_LOGO_W = 1.2;
+    const SALESFORCE_LOGO_H = 0.5;
+    const CUSTOMER_LOGO_W = 0.8;
+    const CUSTOMER_LOGO_H = 0.5;
 
-    currentLogoX -= 1.1;
+    let currentLogoX = SLIDE_W - 0.2;
+
+    currentLogoX -= SALESFORCE_LOGO_W;
 
     slide.addImage({
       x: currentLogoX,
       y: LOGO_Y,
-      w: 0.9,
-      h: 0.45,
+      w: SALESFORCE_LOGO_W,
+      h: SALESFORCE_LOGO_H,
       data: SALESFORCE_LOGO_BASE64,
+      sizing: { type: 'contain', w: SALESFORCE_LOGO_W, h: SALESFORCE_LOGO_H }
     });
 
     if (customerLogoBase64) {
-      currentLogoX -= (0.8 + LOGO_GAP + 0.1);
+      currentLogoX -= (CUSTOMER_LOGO_W + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: 0.8,
-        h: 0.45,
+        w: CUSTOMER_LOGO_W,
+        h: CUSTOMER_LOGO_H,
         data: customerLogoBase64,
+        sizing: { type: 'contain', w: CUSTOMER_LOGO_W, h: CUSTOMER_LOGO_H }
       });
     }
 
