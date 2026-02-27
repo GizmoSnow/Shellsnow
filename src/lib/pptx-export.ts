@@ -315,7 +315,7 @@ export async function exportToPptx(
       const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#E8194B';
       const lx = MARGIN_L + idx * itemWidth;
 
-      slide.addShape(pres.ShapeType.oval, {
+      slide.addShape(pres.ShapeType.ellipse, {
         x: lx,
         y: legendY + 0.03,
         w: 0.08,
