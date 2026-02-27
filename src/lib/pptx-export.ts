@@ -99,15 +99,13 @@ export async function exportToPptx(
 
     currentLogoX -= 1.1;
 
-    if (!customerLogoBase64) {
-      slide.addImage({
-        x: currentLogoX,
-        y: LOGO_Y,
-        w: 0.9,
-        h: 0.45,
-        data: SALESFORCE_LOGO_BASE64,
-      });
-    }
+    slide.addImage({
+      x: currentLogoX,
+      y: LOGO_Y,
+      w: 0.9,
+      h: 0.45,
+      data: SALESFORCE_LOGO_BASE64,
+    });
 
     if (customerLogoBase64) {
       currentLogoX -= (0.8 + LOGO_GAP + 0.1);
