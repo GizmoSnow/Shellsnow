@@ -91,28 +91,41 @@ export async function exportToPptx(
     return quarterTitle || qkey.toUpperCase();
   };
 
-  const salesforceBase64 = await fetch(salesforceLogo)
-    .then(res => res.text())
-    .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
+  let salesforceBase64: string | null = null;
+  try {
+    salesforceBase64 = await fetch(salesforceLogo)
+      .then(res => res.text())
+      .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
+  } catch (error) {
+    console.error('Failed to load Salesforce logo:', error);
+  }
 
   function addHeader(slide: any) {
+    const LOGO_W = 1.2;
+    const LOGO_H = 0.4;
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
     let currentLogoX = SLIDE_W - 0.3;
 
-    currentLogoX -= 1.2;
+    currentLogoX -= LOGO_W;
 
-    slide.addImage({
-      x: currentLogoX,
-      y: LOGO_Y,
-      data: salesforceBase64,
-    });
-
-    if (customerLogoBase64) {
-      currentLogoX -= (1.2 + LOGO_GAP);
+    if (salesforceBase64) {
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
+        w: LOGO_W,
+        h: LOGO_H,
+        data: salesforceBase64,
+      });
+    }
+
+    if (customerLogoBase64) {
+      currentLogoX -= (LOGO_W + LOGO_GAP);
+      slide.addImage({
+        x: currentLogoX,
+        y: LOGO_Y,
+        w: LOGO_W,
+        h: LOGO_H,
         data: customerLogoBase64,
       });
     }
