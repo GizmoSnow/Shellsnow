@@ -1,7 +1,7 @@
 import PptxGenJS from 'pptxgenjs';
 import { RoadmapData, Activity } from './supabase';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo.svg';
-import { getAllRoadmapMonths, FiscalYearConfig } from './fiscal-year';
+import { getAllRoadmapMonths, getRoadmapQuarters, FiscalYearConfig } from './fiscal-year';
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
   csm: '#04e1cb',
@@ -75,7 +75,13 @@ export async function exportToPptx(
   const MAX_CONTENT_Y = SLIDE_H - LEGEND_H - 0.1;
 
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
+  const quarters = getRoadmapQuarters(fiscalConfig);
+
   const getQuarterTitle = (qkey: string) => {
+    const qIndex = qkeys.indexOf(qkey as any);
+    if (qIndex !== -1 && quarters[qIndex]) {
+      return quarters[qIndex].label;
+    }
     const quarterTitle = data.quarterTitles?.[qkey as keyof typeof data.quarterTitles];
     return quarterTitle || qkey.toUpperCase();
   };
@@ -85,29 +91,28 @@ export async function exportToPptx(
     .then(svg => `data:image/svg+xml;base64,${btoa(svg)}`);
 
   function addHeader(slide: any) {
-    const LOGO_H = 0.5;
+    const LOGO_W = 1.2;
+    const LOGO_H = 0.4;
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
     let currentLogoX = SLIDE_W - 0.3;
 
-    const SALESFORCE_W = 1.4;
-    currentLogoX -= SALESFORCE_W;
+    currentLogoX -= LOGO_W;
 
     slide.addImage({
       x: currentLogoX,
       y: LOGO_Y,
-      w: SALESFORCE_W,
+      w: LOGO_W,
       h: LOGO_H,
       data: salesforceBase64,
     });
 
     if (customerLogoBase64) {
-      const CUSTOMER_W = 1.4;
-      currentLogoX -= (CUSTOMER_W + LOGO_GAP);
+      currentLogoX -= (LOGO_W + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: CUSTOMER_W,
+        w: LOGO_W,
         h: LOGO_H,
         data: customerLogoBase64,
       });
@@ -190,7 +195,7 @@ export async function exportToPptx(
       wrap: false,
     });
 
-    const successPathColor = '#04e1cb';
+    const successPathColor = data.typeColors?.csm || '#04e1cb';
     const spTextColor = getTextColor(successPathColor);
 
     qkeys.forEach((qk, i) => {
