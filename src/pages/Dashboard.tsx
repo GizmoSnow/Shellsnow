@@ -350,7 +350,7 @@ export default function Dashboard() {
       </div>
 
       <div className="fixed bottom-4 right-4 floating-astro">
-        <img src={astroFloatingGif} alt="Astro" className="w-64 h-64 object-contain" />
+        <img src={astroFloatingGif} alt="Astro" className="w-96 h-96 object-contain" />
       </div>
     </div>
   );
