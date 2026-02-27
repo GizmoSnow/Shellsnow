@@ -105,24 +105,24 @@ export async function exportToPptx(
     const LOGO_Y = 0.15;
     let currentLogoX = SLIDE_W - 0.3;
 
-    currentLogoX -= 1.0;
+    currentLogoX -= 1.1;
 
     if (salesforceBase64) {
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: 1.0,
-        h: 0.35,
+        w: 1.1,
+        h: 0.3,
         data: salesforceBase64,
       });
     }
 
     if (customerLogoBase64) {
-      currentLogoX -= (0.7 + LOGO_GAP);
+      currentLogoX -= (0.5 + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
-        w: 0.7,
+        w: 0.5,
         h: 0.5,
         data: customerLogoBase64,
       });
@@ -302,8 +302,8 @@ export async function exportToPptx(
     return SP_Y + SP_H;
   }
 
-  function addLegend(slide: any) {
-    const legendY = SLIDE_H - 0.4;
+  function addLegend(slide: any, legendY?: number) {
+    const y = legendY || (SLIDE_H - 0.4);
     const legendTypes = Object.keys(DEFAULT_TYPE_COLORS);
     const totalItems = legendTypes.length;
     const availableWidth = SLIDE_W - MARGIN_L * 2;
@@ -315,7 +315,7 @@ export async function exportToPptx(
 
       slide.addShape(pres.ShapeType.ellipse, {
         x: lx,
-        y: legendY + 0.03,
+        y: y + 0.03,
         w: 0.08,
         h: 0.08,
         fill: { color: bgColor.replace('#', '') },
@@ -324,7 +324,7 @@ export async function exportToPptx(
       const labelText = data.typeLabels?.[key] || TYPE_LABELS[key] || key;
       slide.addText(labelText, {
         x: lx + 0.11,
-        y: legendY,
+        y: y,
         w: itemWidth - 0.15,
         h: 0.14,
         fontSize: 9,
@@ -338,7 +338,7 @@ export async function exportToPptx(
 
     slide.addShape(pres.ShapeType.rect, {
       x: 0,
-      y: SLIDE_H - 0.02,
+      y: y + 0.25,
       w: SLIDE_W,
       h: 0.02,
       fill: { color: PRIMARY },
@@ -365,7 +365,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.20 + 0.18);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.2);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -409,8 +409,8 @@ export async function exportToPptx(
       const maxIdx = Math.max(...qIndexes);
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-      const pillH = 0.14;
-      const pillY = currentY + 0.1 + spIdx * 0.20;
+      const pillH = 0.18;
+      const pillY = currentY + 0.1 + spIdx * 0.25;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
       const pillW = spanWidth - 0.1;
 
@@ -436,7 +436,7 @@ export async function exportToPptx(
         y: pillY,
         w: pillW,
         h: pillH,
-        fontSize: pillW < 1.5 ? 6 : 7,
+        fontSize: pillW < 1.5 ? 7 : 8,
         bold: true,
         color: textColor,
         fontFace: 'Arial',
@@ -460,7 +460,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.20 + 0.18);
+        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.2);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -563,8 +563,8 @@ export async function exportToPptx(
           const maxIdx = Math.max(...qIndexes);
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-          const pillH = 0.14;
-          const pillY = currentY + 0.1 + spIdx * 0.20;
+          const pillH = 0.18;
+          const pillY = currentY + 0.1 + spIdx * 0.25;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
           const pillW = spanWidth - 0.1;
 
@@ -590,7 +590,7 @@ export async function exportToPptx(
             y: pillY,
             w: pillW,
             h: pillH,
-            fontSize: pillW < 1.5 ? 6 : 7,
+            fontSize: pillW < 1.5 ? 7 : 8,
             bold: true,
             color: textColor,
             fontFace: 'Arial',
@@ -673,9 +673,9 @@ export async function exportToPptx(
 
         const maxRow = activityRows.length > 0 ? Math.max(...activityRows) : 0;
         const numRows = maxRow + 1;
-        const pillH = 0.14;
+        const pillH = 0.18;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.20 + 0.18);
+        const rowH = Math.max(0.5, numRows * 0.25 + 0.2);
 
         checkNewSlide();
 
@@ -787,7 +787,7 @@ export async function exportToPptx(
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.1 + row * 0.20;
+              const pillY = currentY + 0.1 + row * 0.25;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
@@ -811,7 +811,7 @@ export async function exportToPptx(
                 y: pillY,
                 w: pillW,
                 h: pillH,
-                fontSize: pillW < 1.5 ? 6 : 7,
+                fontSize: pillW < 1.5 ? 7 : 8,
                 bold: true,
                 color: textColor,
                 fontFace: 'Arial',
@@ -830,7 +830,7 @@ export async function exportToPptx(
     });
   });
 
-  addLegend(currentSlide);
+  addLegend(currentSlide, currentY + 0.3);
 
   const fileName = title
     .replace(/[^a-z0-9\s]/gi, '')
