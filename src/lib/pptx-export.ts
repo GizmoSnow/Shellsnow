@@ -27,8 +27,7 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.5 ? '000000' : 'FFFFFF';
 }
 
-// NOTE: /salesforce-logo.png must exist in the app's public assets directory
-async function fetchAsPptxBase64(url: string): Promise<string> {
+async function fetchAsDataUrl(url: string): Promise<string> {
   const res = await fetch(url, { cache: "force-cache" });
   if (!res.ok) throw new Error(`Failed to fetch image: ${url} (${res.status})`);
 
@@ -41,10 +40,7 @@ async function fetchAsPptxBase64(url: string): Promise<string> {
     reader.readAsDataURL(blob);
   });
 
-  const m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
-  if (!m) throw new Error("Unexpected data URL format");
-
-  return `${m[1]};base64,${m[2]}`;
+  return dataUrl;
 }
 
 function normalizePptxImageData(input: string): string {
@@ -60,6 +56,15 @@ function normalizePptxImageData(input: string): string {
   }
 
   return s;
+}
+
+async function getImageSizeFromDataUrl(dataUrl: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.src = dataUrl;
+  });
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -90,7 +95,10 @@ export async function exportToPptx(
   const pres = new PptxGenJS();
   pres.layout = 'LAYOUT_WIDE';
 
-  const salesforceLogoData = await fetchAsPptxBase64("/salesforce-logo.png");
+  const sfLogoDataUrl = await fetchAsDataUrl("/salesforce-logo.png");
+  const sfLogoPptxData = normalizePptxImageData(sfLogoDataUrl);
+  const sfLogoSize = await getImageSizeFromDataUrl(sfLogoDataUrl);
+
   const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
 
   const SLIDE_W = 13.3;
@@ -135,22 +143,22 @@ export async function exportToPptx(
   function addHeader(slide: any) {
     const LOGO_GAP = 0.2;
     const LOGO_Y = 0.15;
-    const SALESFORCE_LOGO_W = 1.2;
-    const SALESFORCE_LOGO_H = 0.5;
+    const SF_LOGO_W = 1.15;
+    const SF_LOGO_H = SF_LOGO_W * (sfLogoSize.h / sfLogoSize.w);
     const CUSTOMER_LOGO_W = 0.8;
     const CUSTOMER_LOGO_H = 0.5;
 
     let currentLogoX = SLIDE_W - 0.2;
 
-    currentLogoX -= SALESFORCE_LOGO_W;
+    currentLogoX -= SF_LOGO_W;
 
     slide.addImage({
       x: currentLogoX,
       y: LOGO_Y,
-      w: SALESFORCE_LOGO_W,
-      h: SALESFORCE_LOGO_H,
-      path: "/salesforce-logo.png",
-      sizing: { type: 'contain', w: SALESFORCE_LOGO_W, h: SALESFORCE_LOGO_H }
+      w: SF_LOGO_W,
+      h: SF_LOGO_H,
+      data: sfLogoPptxData,
+      sizing: { type: 'contain', w: SF_LOGO_W, h: SF_LOGO_H }
     });
 
     if (customerLogoData) {
