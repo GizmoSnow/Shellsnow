@@ -122,7 +122,7 @@ export async function exportToPptx(
   const AVAILABLE_W = SLIDE_W - MARGIN_L - LEFT_COL - 0.1;
   const Q_W = AVAILABLE_W / Q_COUNT;
   const HEADER_H = 0.50;
-  const SP_H = 0.32;
+  const SP_H = 0.36;
   const START_Y = 0.95;
   const LABEL_X = MARGIN_L;
   const Q_START_X = MARGIN_L + LEFT_COL;
@@ -411,7 +411,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.27 + 0.30);
+    const ACCOUNT_ROW_H = Math.max(0.54, accountSpanning.length * 0.30 + 0.34);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -483,9 +483,9 @@ export async function exportToPptx(
       const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
       currentSlide.addText(nameText, {
         x: pillX,
-        y: pillY,
+        y: pillY + 0.02,
         w: pillW,
-        h: pillH,
+        h: pillH - 0.04,
         fontSize: fs,
         bold: true,
         color: textColor,
@@ -498,7 +498,7 @@ export async function exportToPptx(
       });
     });
 
-    currentY += ACCOUNT_ROW_H;
+    currentY += ACCOUNT_ROW_H + 0.08;
   }
 
   const allRoadmapMonths = getAllRoadmapMonths(fiscalConfig);
@@ -511,7 +511,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.27 + 0.30);
+        const rowH = Math.max(0.54, spanningActivities.length * 0.30 + 0.34);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -657,7 +657,7 @@ export async function exportToPptx(
           });
         });
 
-        currentY += rowH;
+        currentY += rowH + 0.06;
         isFirstInitiativeOfGoal = false;
       }
 
@@ -731,7 +731,7 @@ export async function exportToPptx(
         const numRows = maxRow + 1;
         const pillH = 0.20;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.27 + 0.30);
+        const rowH = Math.max(0.54, numRows * 0.30 + 0.34);
 
         checkNewSlide();
 
@@ -868,9 +868,9 @@ export async function exportToPptx(
               const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
               currentSlide.addText(nameText, {
                 x: pillX,
-                y: pillY,
+                y: pillY + 0.02,
                 w: pillW,
-                h: pillH,
+                h: pillH - 0.04,
                 fontSize: fs,
                 bold: true,
                 color: textColor,
@@ -885,7 +885,7 @@ export async function exportToPptx(
           }
         });
 
-        currentY += rowH;
+        currentY += rowH + 0.06;
         isFirstInitiativeOfGoal = false;
       }
     });
