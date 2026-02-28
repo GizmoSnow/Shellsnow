@@ -26,8 +26,8 @@ function getTextColor(bgColor: string): string {
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5 ? '000000' : 'FFFFFF';
 }
-// ---------- Image helpers for PPT export (Bolt/browser safe) ----------
 
+// NOTE: /salesforce-logo.png must exist in the app's public assets directory
 async function fetchAsPptxBase64(url: string): Promise<string> {
   const res = await fetch(url, { cache: "force-cache" });
   if (!res.ok) throw new Error(`Failed to fetch image: ${url} (${res.status})`);
@@ -61,8 +61,6 @@ function normalizePptxImageData(input: string): string {
 
   return s;
 }
-const salesforceLogoData = await fetchAsPptxBase64("/salesforce-logo.png");
-const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
 
 const TYPE_LABELS: Record<string, string> = {
   csm: 'CSM-led',
@@ -91,6 +89,9 @@ export async function exportToPptx(
 
   const pres = new PptxGenJS();
   pres.layout = 'LAYOUT_WIDE';
+
+  const salesforceLogoData = await fetchAsPptxBase64("/salesforce-logo.png");
+  const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
 
   const SLIDE_W = 13.3;
   const SLIDE_H = 7.5;
@@ -130,41 +131,6 @@ export async function exportToPptx(
     const quarterTitle = data.quarterTitles?.[qkey as keyof typeof data.quarterTitles];
     return quarterTitle || qkey.toUpperCase();
   };
-// Browser-safe: fetch an image and convert to PptxGenJS base64 format ("image/png;base64,...")
-async function fetchAsPptxBase64(url: string): Promise<string> {
-  const res = await fetch(url, { cache: "force-cache" });
-  if (!res.ok) throw new Error(`Failed to fetch image: ${url} (${res.status})`);
-
-  const blob = await res.blob();
-
-  const dataUrl: string = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("FileReader failed"));
-    reader.onload = () => resolve(String(reader.result));
-    reader.readAsDataURL(blob);
-  });
-
-  // Convert "data:image/png;base64,AAA" -> "image/png;base64,AAA"
-  const m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
-  if (!m) throw new Error("Unexpected data URL format");
-  return `${m[1]};base64,${m[2]}`;
-}
-
-function normalizePptxImageData(input: string): string {
-  const s = (input || "").trim();
-
-  // Already in PptxGenJS-friendly form
-  if (/^image\/(png|jpeg|jpg|gif);base64,/i.test(s)) return s;
-
-  // Convert data URL to PptxGenJS-friendly form
-  const m = s.match(/^data:(image\/(png|jpeg|jpg|gif));base64,(.*)$/i);
-  if (m) return `${m[1]};base64,${m[3]}`;
-
-  // Raw base64 fallback: assume png
-  if (/^[A-Za-z0-9+/=\s]+$/.test(s)) return `image/png;base64,${s.replace(/\s+/g, "")}`;
-
-  return s;
-}
 
   function addHeader(slide: any) {
     const LOGO_GAP = 0.2;
@@ -183,18 +149,18 @@ function normalizePptxImageData(input: string): string {
       y: LOGO_Y,
       w: SALESFORCE_LOGO_W,
       h: SALESFORCE_LOGO_H,
-      data: SALESFORCE_LOGO_BASE64,
+      data: salesforceLogoData,
       sizing: { type: 'contain', w: SALESFORCE_LOGO_W, h: SALESFORCE_LOGO_H }
     });
 
-    if (customerLogoBase64) {
+    if (customerLogoData) {
       currentLogoX -= (CUSTOMER_LOGO_W + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
         y: LOGO_Y,
         w: CUSTOMER_LOGO_W,
         h: CUSTOMER_LOGO_H,
-        data: customerLogoBase64,
+        data: customerLogoData,
         sizing: { type: 'contain', w: CUSTOMER_LOGO_W, h: CUSTOMER_LOGO_H }
       });
     }
