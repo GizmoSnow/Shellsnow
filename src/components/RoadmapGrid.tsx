@@ -1,4 +1,4 @@
-import { X, Plus, Pencil, Copy, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Plus, Pencil, Copy, ChevronUp, ChevronDown, Star } from 'lucide-react';
 import { RoadmapData, Goal, Initiative, Activity } from '../lib/supabase';
 import { useState, useEffect } from 'react';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -200,7 +200,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
       <div key={activity.id} className="relative">
         <div
           onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
-          className={`group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''}`}
+          className={`group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
           style={{ background: bgColor, color: textColor }}
         >
           <div
@@ -208,6 +208,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             style={{ background: statusColor }}
             title={getStatusLabel(activity.status)}
           />
+          {activity.isCriticalPath && (
+            <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+          )}
           {activity.name}
           <div className="hidden group-hover:flex items-center gap-1 ml-auto">
             <button
@@ -329,7 +332,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <div
                   key={sp.id}
-                  className="group flex items-center justify-center px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85"
+                  className={`group flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
                   style={{
                     background: bgColor,
                     color: textColor,
@@ -338,6 +341,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   }}
                   title={sp.name}
                 >
+                  {sp.isCriticalPath && (
+                    <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                  )}
                   {sp.name}
                   <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
                     {!isFirst && (
@@ -556,7 +562,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           return (
                             <div
                               key={sp.id}
-                              className="group flex items-center justify-center px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85"
+                              className={`group flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold text-xs relative transition-all hover:opacity-85 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
                               style={{
                                 background: bgColor,
                                 color: textColor,
@@ -564,6 +570,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 gridColumnEnd: maxIdx + 2
                               }}
                             >
+                              {sp.isCriticalPath && (
+                                <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                              )}
                               {sp.name}
                               <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
                                 <button

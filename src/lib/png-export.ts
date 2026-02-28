@@ -189,10 +189,19 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           roundRect(ctx, pillX, pillY, spanWidth - 16, pillH, 14);
           ctx.fill();
 
+          if (sp.isCriticalPath) {
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            roundRect(ctx, pillX, pillY, spanWidth - 16, pillH, 14);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+          }
+
           ctx.fillStyle = textColor;
           ctx.font = 'bold 12px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(sp.name, pillX + (spanWidth - 16) / 2, pillY + pillH / 2);
+          const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
+          ctx.fillText(nameText, pillX + (spanWidth - 16) / 2, pillY + pillH / 2);
         });
 
         currentY += ROW_H;
@@ -245,10 +254,19 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
             roundRect(ctx, cellX + 8, pillY, pillW, pillH, 12);
             ctx.fill();
 
+            if (act.isCriticalPath) {
+              ctx.strokeStyle = '#FFD700';
+              ctx.lineWidth = 3;
+              roundRect(ctx, cellX + 8, pillY, pillW, pillH, 12);
+              ctx.stroke();
+              ctx.lineWidth = 1;
+            }
+
             ctx.fillStyle = textColor;
             ctx.font = 'bold 11px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(act.name, cellX + 8 + pillW / 2, pillY + pillH / 2);
+            const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
+            ctx.fillText(nameText, cellX + 8 + pillW / 2, pillY + pillH / 2);
           });
         });
 

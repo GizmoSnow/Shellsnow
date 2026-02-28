@@ -47,6 +47,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
   const [endMonth, setEndMonth] = useState<string>('');
   const [status, setStatus] = useState<'on_track' | 'at_risk' | 'blocked'>('on_track');
   const [description, setDescription] = useState('');
+  const [isCriticalPath, setIsCriticalPath] = useState(false);
 
   const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
   const defaultMonth = roadmapMonths.length > 0 ? String(roadmapMonths[0].calendarMonth) : '0';
@@ -59,6 +60,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         if ('quarters' in editingActivity) {
           setIsSpanning(true);
           setSelectedQuarters(editingActivity.quarters || []);
+          setIsCriticalPath(editingActivity.isCriticalPath || false);
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
@@ -68,6 +70,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
           setEndMonth(end);
           setStatus(('status' in editingActivity && editingActivity.status) ? editingActivity.status : 'on_track');
           setDescription(('description' in editingActivity && editingActivity.description) ? editingActivity.description : '');
+          setIsCriticalPath(editingActivity.isCriticalPath || false);
         }
       } else {
         setName('');
@@ -78,6 +81,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         setEndMonth(defaultMonth);
         setStatus('on_track');
         setDescription('');
+        setIsCriticalPath(false);
       }
     }
   }, [isOpen, editingActivity, context, defaultMonth]);
@@ -107,7 +111,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         id: editingActivity ? editingActivity.id : uid(),
         name: name.trim(),
         type: selectedType,
-        quarters: selectedQuarters
+        quarters: selectedQuarters,
+        isCriticalPath: isCriticalPath || undefined
       });
     } else {
       onAdd({
@@ -117,7 +122,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
         start_month: startMonth,
         end_month: endMonth,
         status,
-        description: description.trim() || undefined
+        description: description.trim() || undefined,
+        isCriticalPath: isCriticalPath || undefined
       });
     }
 
@@ -129,6 +135,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     setEndMonth(defaultMonth);
     setStatus('on_track');
     setDescription('');
+    setIsCriticalPath(false);
   };
 
   const toggleQuarter = (qk: string) => {
@@ -411,6 +418,24 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 </div>
               </div>
             )}
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isCriticalPath}
+                  onChange={(e) => setIsCriticalPath(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                  style={{ borderColor: 'var(--border)' }}
+                />
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                  Critical Path
+                </span>
+              </label>
+              <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-muted)' }}>
+                Mark as critical path to highlight in executive and print views
+              </p>
+            </div>
 
             <div className="flex gap-3 justify-end pt-2">
               <button

@@ -77,6 +77,7 @@ export interface Activity {
   end_month?: string;
   status?: 'on_track' | 'at_risk' | 'blocked';
   description?: string;
+  isCriticalPath?: boolean;
 }
 
 export interface SpanningActivity {
@@ -84,4 +85,5 @@ export interface SpanningActivity {
   name: string;
   type: string;
   quarters: string[];
+  isCriticalPath?: boolean;
 }

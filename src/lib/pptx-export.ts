@@ -465,7 +465,9 @@ export async function exportToPptx(
         w: pillW,
         h: pillH,
         fill: { color: bgColor.replace('#', '') },
-        line: { color: bgColor.replace('#', ''), width: 0 },
+        line: sp.isCriticalPath
+          ? { color: 'FFD700', width: 2 }
+          : { color: bgColor.replace('#', ''), width: 0 },
         rectRadius: 0.5,
         shadow: {
           type: 'outer',
@@ -477,7 +479,8 @@ export async function exportToPptx(
         },
       });
       const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
-      currentSlide.addText(sp.name, {
+      const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
+      currentSlide.addText(nameText, {
         x: pillX,
         y: pillY,
         w: pillW,
@@ -621,7 +624,9 @@ export async function exportToPptx(
             w: pillW,
             h: pillH,
             fill: { color: bgColor.replace('#', '') },
-            line: { color: bgColor.replace('#', ''), width: 0 },
+            line: sp.isCriticalPath
+              ? { color: 'FFD700', width: 2 }
+              : { color: bgColor.replace('#', ''), width: 0 },
             rectRadius: 0.5,
             shadow: {
               type: 'outer',
@@ -633,7 +638,8 @@ export async function exportToPptx(
             },
           });
           const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
-          currentSlide.addText(sp.name, {
+          const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
+          currentSlide.addText(nameText, {
             x: pillX,
             y: pillY,
             w: pillW,
@@ -844,7 +850,9 @@ export async function exportToPptx(
                 w: pillW,
                 h: pillH,
                 fill: { color: bgColor.replace('#', '') },
-                line: { color: bgColor.replace('#', ''), width: 0 },
+                line: act.isCriticalPath
+                  ? { color: 'FFD700', width: 2 }
+                  : { color: bgColor.replace('#', ''), width: 0 },
                 rectRadius: 0.5,
                 shadow: {
                   type: 'outer',
@@ -856,7 +864,8 @@ export async function exportToPptx(
                 },
               });
               const fs = act.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
-              currentSlide.addText(act.name, {
+              const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
+              currentSlide.addText(nameText, {
                 x: pillX,
                 y: pillY,
                 w: pillW,
