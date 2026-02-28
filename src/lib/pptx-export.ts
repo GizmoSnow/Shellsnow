@@ -200,7 +200,7 @@ export async function exportToPptx(
       y: 0.15,
       w: 9.5,
       h: 0.4,
-      fontSize: 36,
+      fontSize: 32,
       bold: true,
       color: TEXT_COLOR,
       fontFace: 'Arial',
@@ -210,7 +210,7 @@ export async function exportToPptx(
 
     slide.addText(`Last updated: ${getTodayDateString()}`, {
       x: 0.3,
-      y: 0.58,
+      y: 0.64,
       w: 9.5,
       h: 0.25,
       fontSize: 9,
