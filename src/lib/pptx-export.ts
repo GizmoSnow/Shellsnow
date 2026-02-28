@@ -58,35 +58,18 @@ function normalizePptxImageData(input: string): string {
   return s;
 }
 
-async function getImageDimsFromData(data: string): Promise<{ w: number; h: number }> {
+async function getImageSize(url: string): Promise<{ w: number; h: number; aspect: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onerror = () => reject(new Error("Failed to load image"));
-
-    img.onload = async () => {
-      try {
-        if (img.decode) {
-          await img.decode();
-        }
-      } catch (e) {
-        // Fallback: decode failed, use onload dimensions
-      }
-      resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const aspect = w / h;
+      resolve({ w, h, aspect });
     };
-
-    img.src = data;
+    img.src = url;
   });
-}
-
-function fitContain(inW: number, inH: number, maxW: number, maxH: number): { w: number; h: number } {
-  const aspectRatio = inW / inH;
-  const maxAspectRatio = maxW / maxH;
-
-  if (aspectRatio > maxAspectRatio) {
-    return { w: maxW, h: maxW / aspectRatio };
-  } else {
-    return { w: maxH * aspectRatio, h: maxH };
-  }
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -119,15 +102,10 @@ export async function exportToPptx(
 
   const sfLogoDataUrl = await fetchAsDataUrl("/salesforce-logo.png");
   const sfLogoPptxData = normalizePptxImageData(sfLogoDataUrl);
-  const sfLogoIntrinsic = await getImageDimsFromData(sfLogoDataUrl);
+  const sfLogoSize = await getImageSize(sfLogoDataUrl);
 
   const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
-  const customerLogoIntrinsic = customerLogoData ? await getImageDimsFromData(customerLogoBase64!) : null;
-
-  const sfLogoFitted = fitContain(sfLogoIntrinsic.w, sfLogoIntrinsic.h, 1.2, 0.5);
-  const customerLogoFitted = customerLogoIntrinsic
-    ? fitContain(customerLogoIntrinsic.w, customerLogoIntrinsic.h, 0.8, 0.5)
-    : null;
+  const customerLogoSize = customerLogoData ? await getImageSize(customerLogoBase64!) : null;
 
   const SLIDE_W = 13.3;
   const SLIDE_H = 7.5;
@@ -170,48 +148,50 @@ export async function exportToPptx(
 
   function addHeader(slide: any) {
     const LOGO_GAP = 0.24;
-    const LOGO_PADDING = 0.12;
-    const SF_SCALE = 0.88;
-    const baselineY = 0.15 + LOGO_PADDING;
+    const LOGO_Y = 0.15;
+    const LOGO_H = 0.45;
 
-    if (customerLogoData && customerLogoFitted) {
-      const customerW = customerLogoFitted.w;
-      const customerH = customerLogoFitted.h;
+    if (customerLogoData && customerLogoSize) {
+      const customerH = LOGO_H;
+      const customerW = customerH * customerLogoSize.aspect;
 
-      const sfH = customerH * SF_SCALE;
-      const sfW = sfH * (sfLogoIntrinsic.w / sfLogoIntrinsic.h);
+      const sfH = LOGO_H;
+      const sfW = sfH * sfLogoSize.aspect;
 
-      let currentLogoX = SLIDE_W - LOGO_PADDING;
+      let currentLogoX = SLIDE_W - 0.2;
 
       currentLogoX -= sfW;
       slide.addImage({
         x: currentLogoX,
-        y: baselineY,
+        y: LOGO_Y,
         w: sfW,
         h: sfH,
-        data: sfLogoPptxData
+        data: sfLogoPptxData,
+        sizing: { type: 'contain' }
       });
 
       currentLogoX -= (LOGO_GAP + customerW);
       slide.addImage({
         x: currentLogoX,
-        y: baselineY,
+        y: LOGO_Y,
         w: customerW,
         h: customerH,
-        data: customerLogoData
+        data: customerLogoData,
+        sizing: { type: 'contain' }
       });
     } else {
-      const sfW = sfLogoFitted.w;
-      const sfH = sfLogoFitted.h;
+      const sfH = LOGO_H;
+      const sfW = sfH * sfLogoSize.aspect;
 
-      const sfX = SLIDE_W - LOGO_PADDING - sfW;
+      const sfX = SLIDE_W - 0.2 - sfW;
 
       slide.addImage({
         x: sfX,
-        y: baselineY,
+        y: LOGO_Y,
         w: sfW,
         h: sfH,
-        data: sfLogoPptxData
+        data: sfLogoPptxData,
+        sizing: { type: 'contain' }
       });
     }
 
