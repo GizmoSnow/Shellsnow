@@ -274,3 +274,21 @@ html, body {
     display: none !important;
   }
 }
+
+/* Timeline banner styles for Success Path images */
+.timelineBanner {
+  width: 100%;
+  aspect-ratio: 16 / 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.timelineBanner img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
