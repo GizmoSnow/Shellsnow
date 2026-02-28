@@ -351,9 +351,9 @@ export async function exportToPptx(
         },
       });
       slide.addText(label, {
-        x: pillX,
+        x: pillX + 0.04,
         y: SP_Y + 0.05,
-        w: pillW,
+        w: pillW - 0.08,
         h: SP_H - 0.1,
         fontSize: 9,
         bold: true,
