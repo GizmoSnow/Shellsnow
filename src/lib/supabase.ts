@@ -33,6 +33,7 @@ export interface RoadmapData {
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
   headerColor?: string;
+  backgroundColor?: string;
   quarterTitles?: {
     q1?: string;
     q2?: string;
