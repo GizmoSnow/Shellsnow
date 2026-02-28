@@ -100,6 +100,7 @@ export async function exportToPptx(
   const sfLogoSize = await getImageSizeFromDataUrl(sfLogoDataUrl);
 
   const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
+  const customerLogoSize = customerLogoData ? await getImageSizeFromDataUrl(customerLogoBase64!) : null;
 
   const SLIDE_W = 13.3;
   const SLIDE_H = 7.5;
@@ -146,7 +147,6 @@ export async function exportToPptx(
     const SF_LOGO_W = 1.15;
     const SF_LOGO_H = SF_LOGO_W * (sfLogoSize.h / sfLogoSize.w);
     const CUSTOMER_LOGO_W = 0.8;
-    const CUSTOMER_LOGO_H = 0.5;
 
     let currentLogoX = SLIDE_W - 0.2;
 
@@ -161,7 +161,8 @@ export async function exportToPptx(
       sizing: { type: 'contain', w: SF_LOGO_W, h: SF_LOGO_H }
     });
 
-    if (customerLogoData) {
+    if (customerLogoData && customerLogoSize) {
+      const CUSTOMER_LOGO_H = CUSTOMER_LOGO_W * (customerLogoSize.h / customerLogoSize.w);
       currentLogoX -= (CUSTOMER_LOGO_W + LOGO_GAP);
       slide.addImage({
         x: currentLogoX,
@@ -410,7 +411,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.25 + 0.30);
+    const ACCOUNT_ROW_H = Math.max(0.5, accountSpanning.length * 0.27 + 0.30);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -454,8 +455,8 @@ export async function exportToPptx(
       const maxIdx = Math.max(...qIndexes);
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-      const pillH = 0.18;
-      const pillY = currentY + 0.15 + spIdx * 0.25;
+      const pillH = 0.20;
+      const pillY = currentY + 0.15 + spIdx * 0.27;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
       const pillW = spanWidth - 0.1;
 
@@ -478,7 +479,7 @@ export async function exportToPptx(
           opacity: 0.15,
         },
       });
-      const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
+      const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
       const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
       currentSlide.addText(nameText, {
         x: pillX,
@@ -510,7 +511,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.5, spanningActivities.length * 0.25 + 0.30);
+        const rowH = Math.max(0.5, spanningActivities.length * 0.27 + 0.30);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -613,8 +614,8 @@ export async function exportToPptx(
           const maxIdx = Math.max(...qIndexes);
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-          const pillH = 0.18;
-          const pillY = currentY + 0.15 + spIdx * 0.25;
+          const pillH = 0.20;
+          const pillY = currentY + 0.15 + spIdx * 0.27;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
           const pillW = spanWidth - 0.1;
 
@@ -637,7 +638,7 @@ export async function exportToPptx(
               opacity: 0.15,
             },
           });
-          const fs = sp.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
+          const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
           const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
           currentSlide.addText(nameText, {
             x: pillX,
@@ -728,9 +729,9 @@ export async function exportToPptx(
 
         const maxRow = activityRows.length > 0 ? Math.max(...activityRows) : 0;
         const numRows = maxRow + 1;
-        const pillH = 0.18;
+        const pillH = 0.20;
         const pillPad = 0.02;
-        const rowH = Math.max(0.5, numRows * 0.25 + 0.30);
+        const rowH = Math.max(0.5, numRows * 0.27 + 0.30);
 
         checkNewSlide();
 
@@ -842,7 +843,7 @@ export async function exportToPptx(
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.15 + row * 0.25;
+              const pillY = currentY + 0.15 + row * 0.27;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
@@ -863,7 +864,7 @@ export async function exportToPptx(
                   opacity: 0.15,
                 },
               });
-              const fs = act.name.length > 35 && pillW < 3 ? 6 : pillW < 1.5 ? 6 : 7;
+              const fs = act.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
               const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
               currentSlide.addText(nameText, {
                 x: pillX,
