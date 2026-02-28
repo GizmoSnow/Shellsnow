@@ -198,7 +198,7 @@ export async function exportToPptx(
     slide.addText(title, {
       x: 0.3,
       y: 0.15,
-      w: 9.5,
+      w: 10.0,
       h: 0.4,
       fontSize: 32,
       bold: true,
@@ -503,10 +503,10 @@ export async function exportToPptx(
       const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
       const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
       currentSlide.addText(nameText, {
-        x: pillX,
-        y: pillY + 0.02,
-        w: pillW,
-        h: pillH - 0.04,
+        x: pillX + 0.04,
+        y: pillY,
+        w: pillW - 0.08,
+        h: pillH,
         fontSize: fs,
         bold: true,
         color: textColor,
@@ -662,9 +662,9 @@ export async function exportToPptx(
           const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
           const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
           currentSlide.addText(nameText, {
-            x: pillX,
+            x: pillX + 0.04,
             y: pillY,
-            w: pillW,
+            w: pillW - 0.08,
             h: pillH,
             fontSize: fs,
             bold: true,
@@ -888,10 +888,10 @@ export async function exportToPptx(
               const fs = act.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
               const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
               currentSlide.addText(nameText, {
-                x: pillX,
-                y: pillY + 0.02,
-                w: pillW,
-                h: pillH - 0.04,
+                x: pillX + 0.04,
+                y: pillY,
+                w: pillW - 0.08,
+                h: pillH,
                 fontSize: fs,
                 bold: true,
                 color: textColor,
