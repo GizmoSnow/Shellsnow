@@ -58,13 +58,35 @@ function normalizePptxImageData(input: string): string {
   return s;
 }
 
-async function getImageSizeFromDataUrl(dataUrl: string): Promise<{ w: number; h: number }> {
+async function getImageDimsFromData(data: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onerror = () => reject(new Error("Failed to load image"));
-    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-    img.src = dataUrl;
+
+    img.onload = async () => {
+      try {
+        if (img.decode) {
+          await img.decode();
+        }
+      } catch (e) {
+        // Fallback: decode failed, use onload dimensions
+      }
+      resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    };
+
+    img.src = data;
   });
+}
+
+function fitContain(inW: number, inH: number, maxW: number, maxH: number): { w: number; h: number } {
+  const aspectRatio = inW / inH;
+  const maxAspectRatio = maxW / maxH;
+
+  if (aspectRatio > maxAspectRatio) {
+    return { w: maxW, h: maxW / aspectRatio };
+  } else {
+    return { w: maxH * aspectRatio, h: maxH };
+  }
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -97,10 +119,15 @@ export async function exportToPptx(
 
   const sfLogoDataUrl = await fetchAsDataUrl("/salesforce-logo.png");
   const sfLogoPptxData = normalizePptxImageData(sfLogoDataUrl);
-  const sfLogoSize = await getImageSizeFromDataUrl(sfLogoDataUrl);
+  const sfLogoIntrinsic = await getImageDimsFromData(sfLogoDataUrl);
 
   const customerLogoData = customerLogoBase64 ? normalizePptxImageData(customerLogoBase64) : null;
-  const customerLogoSize = customerLogoData ? await getImageSizeFromDataUrl(customerLogoBase64!) : null;
+  const customerLogoIntrinsic = customerLogoData ? await getImageDimsFromData(customerLogoBase64!) : null;
+
+  const sfLogoFitted = fitContain(sfLogoIntrinsic.w, sfLogoIntrinsic.h, 1.2, 0.5);
+  const customerLogoFitted = customerLogoIntrinsic
+    ? fitContain(customerLogoIntrinsic.w, customerLogoIntrinsic.h, 0.8, 0.5)
+    : null;
 
   const SLIDE_W = 13.3;
   const SLIDE_H = 7.5;
@@ -142,35 +169,49 @@ export async function exportToPptx(
   };
 
   function addHeader(slide: any) {
-    const LOGO_GAP = 0.2;
-    const LOGO_Y = 0.15;
-    const SF_LOGO_W = 1.15;
-    const SF_LOGO_H = SF_LOGO_W * (sfLogoSize.h / sfLogoSize.w);
-    const CUSTOMER_LOGO_W = 0.8;
+    const LOGO_GAP = 0.24;
+    const LOGO_PADDING = 0.12;
+    const SF_SCALE = 0.88;
+    const baselineY = 0.15 + LOGO_PADDING;
 
-    let currentLogoX = SLIDE_W - 0.2;
+    if (customerLogoData && customerLogoFitted) {
+      const customerW = customerLogoFitted.w;
+      const customerH = customerLogoFitted.h;
 
-    currentLogoX -= SF_LOGO_W;
+      const sfH = customerH * SF_SCALE;
+      const sfW = sfH * (sfLogoIntrinsic.w / sfLogoIntrinsic.h);
 
-    slide.addImage({
-      x: currentLogoX,
-      y: LOGO_Y,
-      w: SF_LOGO_W,
-      h: SF_LOGO_H,
-      data: sfLogoPptxData,
-      sizing: { type: 'contain', w: SF_LOGO_W, h: SF_LOGO_H }
-    });
+      let currentLogoX = SLIDE_W - LOGO_PADDING;
 
-    if (customerLogoData && customerLogoSize) {
-      const CUSTOMER_LOGO_H = CUSTOMER_LOGO_W * (customerLogoSize.h / customerLogoSize.w);
-      currentLogoX -= (CUSTOMER_LOGO_W + LOGO_GAP);
+      currentLogoX -= sfW;
       slide.addImage({
         x: currentLogoX,
-        y: LOGO_Y,
-        w: CUSTOMER_LOGO_W,
-        h: CUSTOMER_LOGO_H,
-        data: customerLogoData,
-        sizing: { type: 'contain', w: CUSTOMER_LOGO_W, h: CUSTOMER_LOGO_H }
+        y: baselineY,
+        w: sfW,
+        h: sfH,
+        data: sfLogoPptxData
+      });
+
+      currentLogoX -= (LOGO_GAP + customerW);
+      slide.addImage({
+        x: currentLogoX,
+        y: baselineY,
+        w: customerW,
+        h: customerH,
+        data: customerLogoData
+      });
+    } else {
+      const sfW = sfLogoFitted.w;
+      const sfH = sfLogoFitted.h;
+
+      const sfX = SLIDE_W - LOGO_PADDING - sfW;
+
+      slide.addImage({
+        x: sfX,
+        y: baselineY,
+        w: sfW,
+        h: sfH,
+        data: sfLogoPptxData
       });
     }
 
