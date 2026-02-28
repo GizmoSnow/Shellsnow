@@ -121,7 +121,7 @@ export async function exportToPptx(
   const MARGIN_L = 0.25;
   const AVAILABLE_W = SLIDE_W - MARGIN_L - LEFT_COL - 0.1;
   const Q_W = AVAILABLE_W / Q_COUNT;
-  const HEADER_H = 0.42;
+  const HEADER_H = 0.50;
   const SP_H = 0.32;
   const START_Y = 0.95;
   const LABEL_X = MARGIN_L;
@@ -179,7 +179,7 @@ export async function exportToPptx(
       y: 0.15,
       w: 9.5,
       h: 0.4,
-      fontSize: 28,
+      fontSize: 36,
       bold: true,
       color: TEXT_COLOR,
       fontFace: 'Arial',
@@ -267,7 +267,7 @@ export async function exportToPptx(
         y: START_Y,
         w: Q_W,
         h: HEADER_H - 0.04,
-        fontSize: 11,
+        fontSize: 13,
         bold: true,
         color: HEADER_TEXT,
         fontFace: 'Arial',
@@ -559,7 +559,7 @@ export async function exportToPptx(
             y: currentY + 0.04,
             w: LEFT_COL - 0.1,
             h: 0.18,
-            fontSize: 10,
+            fontSize: 11,
             bold: true,
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
@@ -571,7 +571,7 @@ export async function exportToPptx(
             y: currentY + 0.20,
             w: LEFT_COL - 0.1,
             h: 0.2,
-            fontSize: 9,
+            fontSize: 10,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
@@ -780,7 +780,7 @@ export async function exportToPptx(
             y: currentY + 0.04,
             w: LEFT_COL - 0.1,
             h: 0.18,
-            fontSize: 10,
+            fontSize: 11,
             bold: true,
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
@@ -792,7 +792,7 @@ export async function exportToPptx(
             y: currentY + 0.20,
             w: LEFT_COL - 0.1,
             h: 0.2,
-            fontSize: 9,
+            fontSize: 10,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
