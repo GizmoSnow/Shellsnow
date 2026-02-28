@@ -149,7 +149,7 @@ export async function exportToPptx(
       y: LOGO_Y,
       w: SALESFORCE_LOGO_W,
       h: SALESFORCE_LOGO_H,
-      data: salesforceLogoData,
+      path: "/salesforce-logo.png",
       sizing: { type: 'contain', w: SALESFORCE_LOGO_W, h: SALESFORCE_LOGO_H }
     });
 
