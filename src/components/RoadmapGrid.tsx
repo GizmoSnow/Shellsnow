@@ -704,7 +704,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               <div
                                 onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
-                                className="group flex items-center gap-1.5 px-3 text-xs font-semibold transition-all hover:opacity-85 cursor-pointer"
+                                className={`group flex items-center gap-1.5 px-3 text-xs font-semibold transition-all hover:opacity-85 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
                                 style={{
                                   background: bgColor,
                                   color: textColor,
@@ -719,6 +719,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   style={{ background: statusColor }}
                                   title={getStatusLabel(item.activity.status)}
                                 />
+                                {item.activity.isCriticalPath && (
+                                  <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                                )}
                                 <span
                                   style={{
                                     overflow: 'hidden',
