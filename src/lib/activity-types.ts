@@ -7,6 +7,8 @@ export interface ActivityTypeMetadata {
   owner: ActivityOwner;
 }
 
+export const QUICK_PICK_TYPE_KEYS = ['csm', 'architect', 'specialist', 'review', 'event'] as const;
+
 export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
   {
     key: 'csm',
@@ -76,4 +78,15 @@ export function getTypesByOwner(
   customTypes: ActivityTypeMetadata[] = []
 ): ActivityTypeMetadata[] {
   return getAllTypeMetadata(customTypes).filter(t => t.owner === owner);
+}
+
+export function getQuickPickTypes(
+  customTypes: ActivityTypeMetadata[] = []
+): ActivityTypeMetadata[] {
+  const allTypes = getAllTypeMetadata(customTypes);
+  const quickPickSet = new Set(QUICK_PICK_TYPE_KEYS);
+
+  return allTypes.filter(t =>
+    quickPickSet.has(t.key as any) && t.owner === 'salesforce'
+  );
 }

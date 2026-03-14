@@ -1,29 +1,22 @@
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { Activity, SpanningActivity } from '../lib/supabase';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths, getRoadmapQuarters } from '../lib/fiscal-year';
+import { getQuickPickTypes } from '../lib/activity-types';
+import type { ActivityTypeMetadata } from '../lib/activity-types';
 
 interface AddActivityModalProps {
   isOpen: boolean;
   context: any;
   editingActivity?: Activity | SpanningActivity | null;
-  typeLabels?: Record<string, string>;
-  allTypeKeys: string[];
+  customActivityTypes?: ActivityTypeMetadata[];
   fiscalConfig: FiscalYearConfig;
   getTypeColor: (typeKey: string) => string;
+  getTypeLabel: (typeKey: string) => string;
   onClose: () => void;
   onAdd: (activity: Activity | SpanningActivity) => void;
 }
-
-const DEFAULT_TYPE_KEYS = [
-  { key: 'csm', label: 'CSM-led' },
-  { key: 'architect', label: 'Success Architect' },
-  { key: 'specialist', label: 'Success Specialist' },
-  { key: 'review', label: 'Success Review' },
-  { key: 'event', label: 'Event' },
-  { key: 'partner', label: 'Partner' },
-  { key: 'trailhead', label: 'Trailhead' },
-];
 
 function getTextColor(bgColor: string): string {
   const hex = bgColor.replace('#', '');
@@ -38,7 +31,7 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-export default function AddActivityModal({ isOpen, context, editingActivity, typeLabels, allTypeKeys, fiscalConfig, getTypeColor, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, customActivityTypes, fiscalConfig, getTypeColor, getTypeLabel, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [isSpanning, setIsSpanning] = useState(false);
@@ -86,7 +79,22 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     }
   }, [isOpen, editingActivity, context, defaultMonth]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
+
+  const quickPickTypes = getQuickPickTypes(customActivityTypes);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +196,20 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
     <>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div className="rounded-2xl p-6 md:p-8 w-full max-w-[440px] my-auto animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-lg md:text-xl font-extrabold mb-4 md:mb-6" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h3 className="text-lg md:text-xl font-extrabold" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+              style={{ background: 'var(--surface2)', color: 'var(--text-muted)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 max-h-[70vh] overflow-y-auto pr-2">
             <div>
@@ -276,23 +297,21 @@ export default function AddActivityModal({ isOpen, context, editingActivity, typ
                 Type
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {allTypeKeys.map((typeKey) => {
-                  const defaultType = DEFAULT_TYPE_KEYS.find(t => t.key === typeKey);
-                  const typeLabel = typeLabels?.[typeKey] || defaultType?.label || typeKey;
-                  const bgColor = getTypeColor(typeKey);
+                {quickPickTypes.map((typeMetadata) => {
+                  const bgColor = typeMetadata.color;
                   const textColor = getTextColor(bgColor);
                   return (
                     <div
-                      key={typeKey}
-                      onClick={() => setSelectedType(typeKey)}
+                      key={typeMetadata.key}
+                      onClick={() => setSelectedType(typeMetadata.key)}
                       className="cursor-pointer px-2 py-2 rounded-lg text-[10px] font-semibold text-center transition-all"
                       style={{
                         background: bgColor,
                         color: textColor,
-                        border: selectedType === typeKey ? '2px solid white' : '2px solid transparent'
+                        border: selectedType === typeMetadata.key ? '2px solid white' : '2px solid transparent'
                       }}
                     >
-                      {typeLabel}
+                      {typeMetadata.label}
                     </div>
                   );
                 })}
