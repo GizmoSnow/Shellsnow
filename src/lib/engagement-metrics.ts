@@ -1,6 +1,8 @@
 import type { RoadmapData, Activity, SpanningActivity } from './supabase';
 import type { FiscalYearConfig } from './fiscal-year';
 import { getAllRoadmapMonths } from './fiscal-year';
+import { getTypeMetadata } from './activity-types';
+import type { ActivityOwner } from './activity-types';
 
 export interface EngagementCategory {
   type: string;
@@ -124,10 +126,10 @@ export function calculateSalesforceMetrics(
   selectedYear: number,
   typeLabels: Record<string, string>,
   typeColors: Record<string, string>,
-  typeOwners: Record<string, 'salesforce' | 'customer'>,
+  typeOwners: Record<string, ActivityOwner>,
   defaultTypeLabels: Record<string, string>,
   defaultTypeColors: Record<string, string>,
-  defaultTypeOwners: Record<string, 'salesforce' | 'customer'>
+  defaultTypeOwners: Record<string, ActivityOwner>
 ): EngagementMetrics {
   const allMetrics = calculateEngagementMetrics(
     data,
@@ -140,7 +142,9 @@ export function calculateSalesforceMetrics(
   );
 
   const salesforceCategoryCounts = allMetrics.categoryCounts.filter(category => {
-    const owner = typeOwners[category.type] || defaultTypeOwners[category.type] || 'customer';
+    const metadata = getTypeMetadata(category.type, data.customActivityTypes);
+    const owner = metadata?.owner || typeOwners[category.type] || defaultTypeOwners[category.type];
+
     return owner === 'salesforce';
   });
 

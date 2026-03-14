@@ -17,6 +17,8 @@ import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
+import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES } from '../lib/activity-types';
+import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -43,13 +45,13 @@ const TYPE_COLORS: Record<string, string> = {
   trailhead: '#d17dfe',
 };
 
-const TYPE_OWNERS: Record<string, 'salesforce' | 'customer'> = {
+const TYPE_OWNERS: Record<string, ActivityOwner> = {
   csm: 'salesforce',
   architect: 'salesforce',
   specialist: 'salesforce',
   review: 'salesforce',
   event: 'salesforce',
-  partner: 'salesforce',
+  partner: 'partner',
   trailhead: 'salesforce',
 };
 
@@ -80,6 +82,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [showHeaderColorPicker, setShowHeaderColorPicker] = useState(false);
   const [addingNewType, setAddingNewType] = useState(false);
   const [newTypeLabel, setNewTypeLabel] = useState('');
+  const [newTypeOwner, setNewTypeOwner] = useState<'salesforce' | 'partner' | 'customer'>('customer');
   const [customerLogoBase64, setCustomerLogoBase64] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -231,36 +234,68 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const getTypeLabel = (typeKey: string) => {
-    return data.typeLabels?.[typeKey] || DEFAULT_TYPE_LABELS[typeKey] || typeKey;
+    const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+    return metadata?.label || data.typeLabels?.[typeKey] || typeKey;
   };
 
   const updateTypeLabel = (typeKey: string, newLabel: string) => {
     const newData = { ...data };
-    if (!newData.typeLabels) {
-      newData.typeLabels = {};
+    const customTypeIndex = newData.customActivityTypes?.findIndex(t => t.key === typeKey);
+
+    if (customTypeIndex !== undefined && customTypeIndex >= 0 && newData.customActivityTypes) {
+      newData.customActivityTypes[customTypeIndex] = {
+        ...newData.customActivityTypes[customTypeIndex],
+        label: newLabel
+      };
+    } else {
+      if (!newData.typeLabels) {
+        newData.typeLabels = {};
+      }
+      newData.typeLabels[typeKey] = newLabel;
     }
-    newData.typeLabels[typeKey] = newLabel;
+
     setData(newData);
     setEditingTypeKey(null);
   };
 
   const updateTypeColor = (typeKey: string, newColor: string) => {
     const newData = { ...data };
-    if (!newData.typeColors) {
-      newData.typeColors = {};
+    const customTypeIndex = newData.customActivityTypes?.findIndex(t => t.key === typeKey);
+
+    if (customTypeIndex !== undefined && customTypeIndex >= 0 && newData.customActivityTypes) {
+      newData.customActivityTypes[customTypeIndex] = {
+        ...newData.customActivityTypes[customTypeIndex],
+        color: newColor
+      };
+    } else {
+      if (!newData.typeColors) {
+        newData.typeColors = {};
+      }
+      newData.typeColors[typeKey] = newColor;
     }
-    newData.typeColors[typeKey] = newColor;
+
     setData(newData);
   };
 
   const getTypeColor = (typeKey: string) => {
-    return data.typeColors?.[typeKey] || TYPE_COLORS[typeKey] || '#6c63ff';
+    const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+    return metadata?.color || data.typeColors?.[typeKey] || '#6c63ff';
+  };
+
+  const getTypeOwner = (typeKey: string): ActivityOwner | undefined => {
+    const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+    if (metadata?.owner) return metadata.owner;
+
+    return data.typeOwners?.[typeKey] || TYPE_OWNERS[typeKey];
   };
 
   const getAllTypeKeys = () => {
-    const defaultKeys = Object.keys(TYPE_COLORS);
-    const customKeys = Object.keys(data.typeLabels || {}).filter(key => !defaultKeys.includes(key));
-    return [...defaultKeys, ...customKeys];
+    const allMetadata = getAllTypeMetadata(data.customActivityTypes);
+    const metadataKeys = allMetadata.map(m => m.key);
+
+    const legacyKeys = Object.keys(data.typeLabels || {}).filter(key => !metadataKeys.includes(key));
+
+    return [...metadataKeys, ...legacyKeys];
   };
 
   const generateDefaultColor = () => {
@@ -277,6 +312,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     if (!newTypeLabel.trim()) {
       setAddingNewType(false);
       setNewTypeLabel('');
+      setNewTypeOwner('customer');
       return;
     }
 
@@ -288,36 +324,49 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
 
     const newData = { ...data };
-    if (!newData.typeLabels) {
-      newData.typeLabels = {};
-    }
-    if (!newData.typeColors) {
-      newData.typeColors = {};
+    if (!newData.customActivityTypes) {
+      newData.customActivityTypes = [];
     }
 
-    newData.typeLabels[typeKey] = newTypeLabel.trim();
-    newData.typeColors[typeKey] = generateDefaultColor();
+    newData.customActivityTypes.push({
+      key: typeKey,
+      label: newTypeLabel.trim(),
+      color: generateDefaultColor(),
+      owner: newTypeOwner
+    });
+
     setData(newData);
     setAddingNewType(false);
     setNewTypeLabel('');
+    setNewTypeOwner('customer');
   };
 
   const cancelAddCustomType = () => {
     setAddingNewType(false);
     setNewTypeLabel('');
+    setNewTypeOwner('customer');
   };
 
   const deleteCustomType = (typeKey: string) => {
-    const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
+    const isDefault = DEFAULT_ACTIVITY_TYPES.some(t => t.key === typeKey);
     if (isDefault) return;
 
     const newData = { ...data };
+
+    if (newData.customActivityTypes) {
+      newData.customActivityTypes = newData.customActivityTypes.filter(t => t.key !== typeKey);
+    }
+
     if (newData.typeLabels) {
       delete newData.typeLabels[typeKey];
     }
     if (newData.typeColors) {
       delete newData.typeColors[typeKey];
     }
+    if (newData.typeOwners) {
+      delete newData.typeOwners[typeKey];
+    }
+
     setData(newData);
   };
 
@@ -727,6 +776,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none text-xs"
                 style={{ background: 'var(--surface)', color: 'var(--text)', minWidth: '120px' }}
               />
+              <select
+                value={newTypeOwner}
+                onChange={(e) => setNewTypeOwner(e.target.value as 'salesforce' | 'partner' | 'customer')}
+                className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none text-xs"
+                style={{ background: 'var(--surface)', color: 'var(--text)' }}
+              >
+                <option value="salesforce">Salesforce</option>
+                <option value="partner">Partner</option>
+                <option value="customer">Customer</option>
+              </select>
               <button
                 onClick={confirmAddCustomType}
                 className="w-6 h-6 rounded flex items-center justify-center transition-colors"

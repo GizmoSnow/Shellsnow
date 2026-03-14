@@ -3,6 +3,7 @@ import { TrendingUp, Layers, Award, Calendar } from 'lucide-react';
 import type { RoadmapData } from '../lib/supabase';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { calculateSalesforceMetrics, getAvailableYears } from '../lib/engagement-metrics';
+import type { ActivityOwner } from '../lib/activity-types';
 
 interface SalesforceContributionSummaryProps {
   data: RoadmapData;
@@ -11,10 +12,10 @@ interface SalesforceContributionSummaryProps {
   onYearChange: (year: number) => void;
   typeLabels: Record<string, string>;
   typeColors: Record<string, string>;
-  typeOwners: Record<string, 'salesforce' | 'customer'>;
+  typeOwners: Record<string, ActivityOwner>;
   defaultTypeLabels: Record<string, string>;
   defaultTypeColors: Record<string, string>;
-  defaultTypeOwners: Record<string, 'salesforce' | 'customer'>;
+  defaultTypeOwners: Record<string, ActivityOwner>;
 }
 
 export function SalesforceContributionSummary({

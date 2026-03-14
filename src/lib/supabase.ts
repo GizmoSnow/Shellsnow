@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { ActivityTypeMetadata } from './activity-types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -30,9 +31,10 @@ export interface Roadmap {
 export interface RoadmapData {
   goals: Goal[];
   accountSpanning?: SpanningActivity[];
+  customActivityTypes?: ActivityTypeMetadata[];
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
-  typeOwners?: Record<string, 'salesforce' | 'customer'>;
+  typeOwners?: Record<string, 'salesforce' | 'customer' | 'partner'>;
   headerColor?: string;
   backgroundColor?: string;
   quarterTitles?: {
