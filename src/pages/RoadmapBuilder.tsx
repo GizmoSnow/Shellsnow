@@ -11,6 +11,7 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { BackgroundColorPicker } from '../components/BackgroundColorPicker';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
+import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -40,6 +41,16 @@ const TYPE_COLORS: Record<string, string> = {
   event: '#ff538a',
   partner: '#fcc003',
   trailhead: '#d17dfe',
+};
+
+const TYPE_OWNERS: Record<string, 'salesforce' | 'customer'> = {
+  csm: 'salesforce',
+  architect: 'salesforce',
+  specialist: 'salesforce',
+  review: 'salesforce',
+  event: 'salesforce',
+  partner: 'salesforce',
+  trailhead: 'salesforce',
 };
 
 function determineQuarterFromMonth(activity: any, fiscalConfig: FiscalYearConfig): string {
@@ -80,6 +91,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     roadmapStartQuarter: 1
   });
   const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -561,7 +573,21 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           placeholder="Enter roadmap title..."
         />
 
-        {/* Engagement Value Summary */}
+        {/* Salesforce Contribution Summary - Compact */}
+        <SalesforceContributionSummary
+          data={data}
+          fiscalConfig={fiscalConfig}
+          selectedYear={selectedYear}
+          onYearChange={setSelectedYear}
+          typeLabels={data.typeLabels || {}}
+          typeColors={data.typeColors || {}}
+          typeOwners={data.typeOwners || {}}
+          defaultTypeLabels={DEFAULT_TYPE_LABELS}
+          defaultTypeColors={TYPE_COLORS}
+          defaultTypeOwners={TYPE_OWNERS}
+        />
+
+        {/* Engagement Value Summary - Full Details (Collapsible) */}
         <EngagementValueSummary
           data={data}
           fiscalConfig={fiscalConfig}

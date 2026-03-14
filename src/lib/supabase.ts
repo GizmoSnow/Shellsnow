@@ -32,6 +32,7 @@ export interface RoadmapData {
   accountSpanning?: SpanningActivity[];
   typeLabels?: Record<string, string>;
   typeColors?: Record<string, string>;
+  typeOwners?: Record<string, 'salesforce' | 'customer'>;
   headerColor?: string;
   backgroundColor?: string;
   quarterTitles?: {

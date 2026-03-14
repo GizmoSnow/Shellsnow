@@ -117,3 +117,38 @@ export function getAvailableYears(fiscalConfig: FiscalYearConfig): number[] {
 
   return years.sort((a, b) => b - a);
 }
+
+export function calculateSalesforceMetrics(
+  data: RoadmapData,
+  fiscalConfig: FiscalYearConfig,
+  selectedYear: number,
+  typeLabels: Record<string, string>,
+  typeColors: Record<string, string>,
+  typeOwners: Record<string, 'salesforce' | 'customer'>,
+  defaultTypeLabels: Record<string, string>,
+  defaultTypeColors: Record<string, string>,
+  defaultTypeOwners: Record<string, 'salesforce' | 'customer'>
+): EngagementMetrics {
+  const allMetrics = calculateEngagementMetrics(
+    data,
+    fiscalConfig,
+    selectedYear,
+    typeLabels,
+    typeColors,
+    defaultTypeLabels,
+    defaultTypeColors
+  );
+
+  const salesforceCategoryCounts = allMetrics.categoryCounts.filter(category => {
+    const owner = typeOwners[category.type] || defaultTypeOwners[category.type] || 'customer';
+    return owner === 'salesforce';
+  });
+
+  const totalSalesforceEngagements = salesforceCategoryCounts.reduce((sum, cat) => sum + cat.count, 0);
+
+  return {
+    totalEngagements: totalSalesforceEngagements,
+    categoryCounts: salesforceCategoryCounts,
+    selectedYear
+  };
+}
