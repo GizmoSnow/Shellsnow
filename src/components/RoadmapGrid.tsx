@@ -266,15 +266,10 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   };
 
   const isDark = isDarkBackground(data.backgroundColor);
-  const containerTextColor = isDark ? '#ffffff' : 'var(--text)';
-  const containerMutedColor = isDark ? '#cccccc' : 'var(--text-muted)';
-  const containerBorder = isDark ? 'rgba(255, 255, 255, 0.2)' : 'var(--border)';
-  const containerSurface = data.backgroundColor || 'var(--surface)';
-  const containerSurface2 = isDark ? 'rgba(255, 255, 255, 0.05)' : 'var(--surface2)';
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-2xl overflow-hidden border print-grid" style={{ borderColor: containerBorder, backgroundColor: containerSurface }}>
+      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid bg-white" style={{ borderColor: 'var(--border)' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
@@ -288,8 +283,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           ))}
         </div>
 
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: containerSurface2, borderColor: containerBorder }}>
-          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: containerBorder, color: containerMutedColor }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#f9fafb', borderColor: 'var(--border)' }}>
+          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
           {quarters.map((quarter, i) => {
@@ -299,7 +294,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
 
             return (
-              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: containerBorder }}>
+              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
                 <div
                   className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap print-show-pill"
                   style={{ background: successPathColor, color: textColor }}
@@ -312,13 +307,13 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         </div>
 
         {/* Account-Level Activities */}
-        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: containerBorder }}>
-          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: containerBorder, background: containerSurface }}>
+        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
             <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: isDark ? '#ffffff' : 'var(--primary)' }}>
               Ongoing Activities
             </div>
           </div>
-          <div className="p-2 grid gap-1" style={{ background: containerSurface2, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="p-2 grid gap-1" style={{ background: '#f9fafb', gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {(data.accountSpanning || []).map((sp, index) => {
               const bgColor = getTypeColor(sp.type);
               const textColor = getTextColor(bgColor);
@@ -524,8 +519,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
-                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: containerBorder }}>
-                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: containerBorder, background: containerSurface }}>
+                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
+                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                           style={{ background: goal.color }}
@@ -538,19 +533,19 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               {goal.number}
                             </div>
-                            <div className="text-sm font-bold mb-1" style={{ color: containerTextColor }}>
+                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
                               {goal.title}
                             </div>
                           </>
                         )}
-                        <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: containerMutedColor }}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
                           Key Initiative
                         </div>
-                        <div className="text-xs leading-tight" style={{ color: containerMutedColor }}>
+                        <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
                           {initiative.label}
                         </div>
                       </div>
-                      <div className="p-2 grid gap-1" style={{ background: containerSurface2, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                      <div className="p-2 grid gap-1" style={{ background: '#f9fafb', gridTemplateColumns: 'repeat(4, 1fr)' }}>
                         {spanningActivities.map((sp) => {
                           const bgColor = getTypeColor(sp.type);
                           const textColor = getTextColor(bgColor);
@@ -619,8 +614,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: containerBorder }}>
-                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: containerBorder, background: containerSurface }}>
+                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
+                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                         style={{ background: goal.color }}
@@ -633,24 +628,24 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           >
                             {goal.number}
                           </div>
-                          <div className="text-sm font-bold mb-1" style={{ color: containerTextColor }}>
+                          <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
                             {goal.title}
                           </div>
                         </>
                       )}
                       {spanningActivities.length === 0 && (
                         <>
-                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: containerMutedColor }}>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>
                             Key Initiative
                           </div>
-                          <div className="text-xs leading-tight" style={{ color: containerMutedColor }}>
+                          <div className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>
                             {initiative.label}
                           </div>
                         </>
                       )}
                     </div>
 
-                    <div className="relative" style={{ background: containerSurface2 }}>
+                    <div className="relative" style={{ background: '#f9fafb' }}>
                       {/* Activities container with absolute positioning */}
                       <div
                         style={{
