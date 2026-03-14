@@ -10,6 +10,7 @@ import AddActivityModal from '../components/AddActivityModal';
 import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { BackgroundColorPicker } from '../components/BackgroundColorPicker';
+import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -558,6 +559,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           className="text-3xl font-extrabold bg-transparent border-none outline-none w-full mb-4 print-hide"
           style={{ color: 'var(--text)' }}
           placeholder="Enter roadmap title..."
+        />
+
+        {/* Engagement Value Summary */}
+        <EngagementValueSummary
+          data={data}
+          fiscalConfig={fiscalConfig}
+          typeLabels={data.typeLabels || {}}
+          typeColors={data.typeColors || {}}
+          defaultTypeLabels={DEFAULT_TYPE_LABELS}
+          defaultTypeColors={TYPE_COLORS}
         />
 
         {/* Screen legend - hidden when printing */}
