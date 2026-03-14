@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { TrendingUp, Calendar, Award, BarChart3 } from 'lucide-react';
 import type { RoadmapData } from '../lib/supabase';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { calculateEngagementMetrics, getAvailableYears } from '../lib/engagement-metrics';
@@ -38,6 +38,8 @@ export function EngagementValueSummary({
     );
   }, [data, fiscalConfig, selectedYear, typeLabels, typeColors, defaultTypeLabels, defaultTypeColors]);
 
+  const topCategory = metrics.categoryCounts[0];
+
   return (
     <div
       className="rounded-xl p-6 mb-6 border print-hide"
@@ -59,7 +61,7 @@ export function EngagementValueSummary({
               Engagement Value Delivered
             </h2>
             <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              Track customer engagements and demonstrate value
+              Demonstrating customer success impact
             </p>
           </div>
         </div>
@@ -69,12 +71,11 @@ export function EngagementValueSummary({
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 transition-all"
+            className="px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer"
             style={{
               background: 'var(--surface2)',
               color: 'var(--text)',
-              border: '1px solid var(--border)',
-              focusRingColor: '#066afe'
+              border: '1px solid var(--border)'
             }}
           >
             {availableYears.map(year => (
@@ -86,72 +87,105 @@ export function EngagementValueSummary({
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <div
-          className="rounded-lg p-5 border-2"
-          style={{
-            background: 'linear-gradient(135deg, rgba(6, 106, 254, 0.05) 0%, rgba(6, 106, 254, 0.02) 100%)',
-            borderColor: '#066afe'
-          }}
-        >
-          <div className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>
-            Total Engagements
-          </div>
-          <div className="text-4xl font-extrabold" style={{ color: '#066afe' }}>
-            {metrics.totalEngagements}
-          </div>
-          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-            activities in {2000 + selectedYear}
-          </div>
-        </div>
-
-        {metrics.categoryCounts.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>
-              Engagement Breakdown
+      {metrics.categoryCounts.length > 0 ? (
+        <div className="grid gap-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div
+              className="rounded-xl p-5 border-2 shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, rgba(6, 106, 254, 0.08) 0%, rgba(6, 106, 254, 0.03) 100%)',
+                borderColor: '#066afe'
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 size={18} style={{ color: '#066afe' }} />
+                <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                  Total Engagements
+                </div>
+              </div>
+              <div className="text-5xl font-extrabold mb-1" style={{ color: '#066afe', lineHeight: 1 }}>
+                {metrics.totalEngagements}
+              </div>
+              <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                touchpoints in {2000 + selectedYear}
+              </div>
             </div>
-            <div className="grid gap-2.5">
-              {metrics.categoryCounts.map((category) => {
+
+            {topCategory && (
+              <div
+                className="rounded-xl p-5 border-2 shadow-sm relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${topCategory.color}15 0%, ${topCategory.color}08 100%)`,
+                  borderColor: topCategory.color
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Award size={18} style={{ color: topCategory.color }} />
+                  <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Top Engagement
+                  </div>
+                </div>
+                <div className="text-2xl font-extrabold mb-1" style={{ color: topCategory.color, lineHeight: 1.2 }}>
+                  {topCategory.label}
+                </div>
+                <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                  {topCategory.count} activities ({Math.round((topCategory.count / metrics.totalEngagements) * 100)}%)
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+              Engagement Distribution
+            </div>
+            <div className="grid gap-2">
+              {metrics.categoryCounts.map((category, index) => {
                 const percentage = metrics.totalEngagements > 0
-                  ? Math.round((category.count / metrics.totalEngagements) * 100)
+                  ? (category.count / metrics.totalEngagements) * 100
                   : 0;
+                const isTop = index === 0;
 
                 return (
                   <div
                     key={category.type}
-                    className="rounded-lg p-4 border transition-all hover:scale-[1.01]"
+                    className="rounded-lg p-3.5 border transition-all"
                     style={{
-                      background: 'var(--surface2)',
-                      borderColor: 'var(--border)'
+                      background: isTop ? `${category.color}08` : 'var(--surface2)',
+                      borderColor: isTop ? category.color : 'var(--border)',
+                      borderWidth: isTop ? '2px' : '1px'
                     }}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className="w-3 h-3 rounded"
+                          className="w-4 h-4 rounded shadow-sm"
                           style={{ background: category.color }}
                         />
-                        <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>
+                        <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>
                           {category.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                          {percentage}%
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{
+                          color: category.color,
+                          background: `${category.color}20`
+                        }}>
+                          {percentage.toFixed(1)}%
                         </span>
-                        <span className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>
+                        <span className="text-2xl font-extrabold min-w-[2.5rem] text-right" style={{ color: 'var(--text)' }}>
                           {category.count}
                         </span>
                       </div>
                     </div>
                     <div
-                      className="w-full h-1.5 rounded-full overflow-hidden"
+                      className="w-full h-2 rounded-full overflow-hidden shadow-inner"
                       style={{ background: 'var(--bg)' }}
                     >
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-full rounded-full transition-all duration-700 ease-out shadow-sm"
                         style={{
-                          background: category.color,
+                          background: `linear-gradient(90deg, ${category.color} 0%, ${category.color}dd 100%)`,
                           width: `${percentage}%`
                         }}
                       />
@@ -161,26 +195,25 @@ export function EngagementValueSummary({
               })}
             </div>
           </div>
-        )}
-
-        {metrics.categoryCounts.length === 0 && (
-          <div
-            className="text-center py-8 rounded-lg"
-            style={{
-              background: 'var(--surface2)',
-              color: 'var(--text-muted)'
-            }}
-          >
-            <TrendingUp size={32} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm font-medium">
-              No engagements found for {2000 + selectedYear}
-            </p>
-            <p className="text-xs mt-1">
-              Add activities to your roadmap to see engagement metrics
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div
+          className="text-center py-12 rounded-xl border"
+          style={{
+            background: 'var(--surface2)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-muted)'
+          }}
+        >
+          <TrendingUp size={40} className="mx-auto mb-3 opacity-20" />
+          <p className="text-base font-semibold mb-1">
+            No Engagements in {2000 + selectedYear}
+          </p>
+          <p className="text-sm">
+            Add activities to your roadmap to track engagement value
+          </p>
+        </div>
+      )}
     </div>
   );
 }
