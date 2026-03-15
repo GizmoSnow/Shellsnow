@@ -657,14 +657,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           defaultTypeOwners={TYPE_OWNERS}
         />
 
-        {/* Engagement Value Summary - Full Details (Collapsible) */}
+        {/* Engagement Value Summary - Minimal Breakdown Drawer */}
         <EngagementValueSummary
           data={data}
           fiscalConfig={fiscalConfig}
+          selectedYear={selectedYear}
           typeLabels={data.typeLabels || {}}
           typeColors={data.typeColors || {}}
+          typeOwners={data.typeOwners || {}}
           defaultTypeLabels={DEFAULT_TYPE_LABELS}
           defaultTypeColors={TYPE_COLORS}
+          defaultTypeOwners={TYPE_OWNERS}
         />
 
         {/* Screen legend - hidden when printing */}
