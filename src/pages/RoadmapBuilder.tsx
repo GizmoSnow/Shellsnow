@@ -99,6 +99,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showImportWorkspace, setShowImportWorkspace] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -133,6 +135,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           await saveRoadmap();
         } catch (err) {
           console.error('Auto-save failed:', err);
+          // Don't navigate away, just show error
+          setSaveError('Failed to save changes. Your work is still here.');
+          setTimeout(() => setSaveError(null), 5000);
         }
       }, 1000);
       return () => clearTimeout(timeoutId);
@@ -140,6 +145,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   }, [roadmap, title, data, fiscalConfig, customerLogoBase64, canvasStyle]);
 
   const loadRoadmap = async (retryCount = 0) => {
+    console.log('[LOAD] Loading roadmap:', { roadmapId, retryCount });
+
     const { data: roadmapData, error } = await supabase
       .from('roadmaps')
       .select('*')
@@ -147,26 +154,39 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading roadmap:', error);
+      console.error('[LOAD ERROR] Failed to load roadmap:', error);
 
-      if (retryCount < 2) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (retryCount < 3) {
+        console.log('[LOAD] Retrying...', retryCount + 1);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return loadRoadmap(retryCount + 1);
       }
 
-      alert('Failed to load roadmap. Returning to dashboard.');
-      navigate('/dashboard');
+      // Only navigate away on initial load, not on reloads
+      if (retryCount === 0 || !roadmap) {
+        alert('Failed to load roadmap. Returning to dashboard.');
+        navigate('/dashboard');
+      } else {
+        console.error('[LOAD] Keeping existing data due to load failure');
+        setSaveError('Failed to reload roadmap data');
+        setTimeout(() => setSaveError(null), 5000);
+      }
+      return;
     } else if (!roadmapData) {
-      console.error('Roadmap not found:', roadmapId);
+      console.error('[LOAD ERROR] Roadmap not found:', roadmapId);
 
-      if (retryCount < 2) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (retryCount < 3) {
+        console.log('[LOAD] Retrying...', retryCount + 1);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return loadRoadmap(retryCount + 1);
       }
 
+      // Only navigate away if this is genuinely not found
       alert('Roadmap not found. Returning to dashboard.');
       navigate('/dashboard');
+      return;
     } else {
+      console.log('[LOAD SUCCESS] Roadmap loaded:', roadmapData.id);
       setRoadmap(roadmapData);
       setTitle(roadmapData.title);
 
@@ -203,26 +223,70 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     if (!roadmap) return;
 
     try {
+      // Validate data shape before saving
+      const validateData = (data: RoadmapData) => {
+        // Check typeColors are valid strings
+        if (data.typeColors) {
+          for (const [key, value] of Object.entries(data.typeColors)) {
+            if (typeof value !== 'string' || !value || value === 'undefined' || value === 'null') {
+              console.error(`Invalid color for type ${key}:`, value);
+              return false;
+            }
+          }
+        }
+
+        // Check customActivityTypes colors are valid
+        if (data.customActivityTypes) {
+          for (const type of data.customActivityTypes) {
+            if (type.color && (typeof type.color !== 'string' || !type.color || type.color === 'undefined' || type.color === 'null')) {
+              console.error(`Invalid color for custom type ${type.key}:`, type.color);
+              return false;
+            }
+          }
+        }
+
+        return true;
+      };
+
+      if (!validateData(data)) {
+        console.error('Data validation failed. Skipping save to prevent corruption.');
+        throw new Error('Invalid data shape detected');
+      }
+
+      const payload = {
+        title,
+        data,
+        customer_logo_base64: customerLogoBase64,
+        canvas_style: canvasStyle,
+        fiscal_start_month: fiscalConfig.startMonth,
+        base_fiscal_year: fiscalConfig.baseYear,
+        roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('[SAVE] Saving roadmap:', {
+        roadmapId,
+        title,
+        typeColors: data.typeColors,
+        customActivityTypes: data.customActivityTypes?.map(t => ({ key: t.key, color: t.color })),
+        timestamp: new Date().toISOString()
+      });
+
       const { error } = await supabase
         .from('roadmaps')
-        .update({
-          title,
-          data,
-          customer_logo_base64: customerLogoBase64,
-          canvas_style: canvasStyle,
-          fiscal_start_month: fiscalConfig.startMonth,
-          base_fiscal_year: fiscalConfig.baseYear,
-          roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
-          updated_at: new Date().toISOString()
-        })
+        .update(payload)
         .eq('id', roadmapId);
 
       if (error) {
-        console.error('Error saving roadmap:', error);
+        console.error('[SAVE ERROR] Database update failed:', error);
         throw error;
       }
+
+      console.log('[SAVE SUCCESS] Roadmap saved successfully');
+      setLastSaveTime(new Date());
+      setSaveError(null);
     } catch (err) {
-      console.error('Failed to save roadmap:', err);
+      console.error('[SAVE FAILED] Exception during save:', err);
       throw err;
     }
   };
@@ -470,22 +534,48 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const updateTypeColor = async (typeKey: string, newColor: string) => {
-    const newData = { ...data };
-    const customTypeIndex = newData.customActivityTypes?.findIndex(t => t.key === typeKey);
+    console.log('[COLOR CHANGE] Starting color update:', { typeKey, newColor, currentColor: getTypeColor(typeKey) });
 
-    if (customTypeIndex !== undefined && customTypeIndex >= 0 && newData.customActivityTypes) {
-      newData.customActivityTypes[customTypeIndex] = {
-        ...newData.customActivityTypes[customTypeIndex],
-        color: newColor
-      };
-    } else {
-      if (!newData.typeColors) {
-        newData.typeColors = {};
-      }
-      newData.typeColors[typeKey] = newColor;
+    // Validate color is a valid string
+    if (!newColor || typeof newColor !== 'string' || newColor === 'undefined' || newColor === 'null') {
+      console.error('[COLOR CHANGE] Invalid color value:', newColor);
+      setSaveError('Invalid color value');
+      setTimeout(() => setSaveError(null), 3000);
+      return;
     }
 
-    setData(newData);
+    try {
+      const newData = { ...data };
+      const customTypeIndex = newData.customActivityTypes?.findIndex(t => t.key === typeKey);
+
+      if (customTypeIndex !== undefined && customTypeIndex >= 0 && newData.customActivityTypes) {
+        // Immutable update for custom activity type
+        newData.customActivityTypes = [...newData.customActivityTypes];
+        newData.customActivityTypes[customTypeIndex] = {
+          ...newData.customActivityTypes[customTypeIndex],
+          color: newColor
+        };
+        console.log('[COLOR CHANGE] Updated custom type:', newData.customActivityTypes[customTypeIndex]);
+      } else {
+        // Immutable update for type colors
+        if (!newData.typeColors) {
+          newData.typeColors = {};
+        }
+        newData.typeColors = {
+          ...newData.typeColors,
+          [typeKey]: newColor
+        };
+        console.log('[COLOR CHANGE] Updated type color:', { typeKey, color: newData.typeColors[typeKey] });
+      }
+
+      console.log('[COLOR CHANGE] Applying state update');
+      setData(newData);
+      console.log('[COLOR CHANGE] Color change complete, autosave will trigger');
+    } catch (err) {
+      console.error('[COLOR CHANGE ERROR]:', err);
+      setSaveError('Failed to update color');
+      setTimeout(() => setSaveError(null), 3000);
+    }
   };
 
   const getTypeColor = (typeKey: string) => {
@@ -670,6 +760,30 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg-app)' }}>
+      {saveError && (
+        <div
+          className="fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg border max-w-md animate-slideIn"
+          style={{
+            background: 'var(--error-bg)',
+            borderColor: 'var(--error-border)',
+            color: 'var(--error-text)'
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <X size={18} className="shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium text-sm">{saveError}</p>
+              <p className="text-xs mt-1 opacity-75">Changes will retry automatically</p>
+            </div>
+            <button
+              onClick={() => setSaveError(null)}
+              className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="border-b sticky top-0 z-50 print-hide backdrop-blur-sm" style={{ borderColor: 'var(--border-subtle)', background: 'var(--header-bg)' }}>
         {/* Top header bar */}
         <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'var(--header-bg)' }}>

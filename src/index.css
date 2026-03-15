@@ -41,6 +41,11 @@ html, body {
   --primary: #066afe;
   --primary-hover: #0554d1;
 
+  /* Error states */
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #991b1b;
+
   /* Legacy compatibility */
   --bg: #ffffff;
   --surface: #ffffff;
@@ -114,6 +119,11 @@ html, body {
   --primary: #066afe;
   --primary-hover: #0554d1;
 
+  /* Error states */
+  --error-bg: #3f1f1f;
+  --error-border: #7f2f2f;
+  --error-text: #fca5a5;
+
   /* Legacy compatibility */
   --bg: #14161f;
   --surface: #1a1d27;
@@ -156,6 +166,11 @@ html, body {
     --hover-bg: #2e3248;
     --primary: #066afe;
     --primary-hover: #0554d1;
+
+    /* Error states */
+    --error-bg: #3f1f1f;
+    --error-border: #7f2f2f;
+    --error-text: #fca5a5;
 
     /* Legacy compatibility */
     --bg: #14161f;
