@@ -679,15 +679,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 return (
                   <div
                     key={typeKey}
-                    className="inline-flex items-center gap-2 rounded-full px-3 py-2 relative group transition-all"
+                    className="inline-flex items-center gap-3 rounded-full px-4 h-9 relative group transition-all whitespace-nowrap"
                     style={{
                       background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                       border: '1px solid var(--border)'
                     }}
                   >
-                    <div className="relative">
+                    <div className="relative flex items-center">
                       <div
-                        className="w-3 h-3 rounded-full cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
+                        className="w-3.5 h-3.5 rounded-full shrink-0 cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
                         style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
                         onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
                       ></div>
@@ -697,7 +697,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                           value={getTypeColor(typeKey)}
                           onChange={(e) => updateTypeColor(typeKey, e.target.value)}
                           onBlur={() => setEditingColorKey(null)}
-                          className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
+                          className="absolute top-0 left-0 w-3.5 h-3.5 opacity-0 cursor-pointer"
                           style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
                           autoFocus
                         />
@@ -730,7 +730,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                           }
                         }}
                         autoFocus
-                        className="border border-[#0176D3] rounded px-2 py-0.5 outline-none min-w-[120px] text-xs font-medium"
+                        className="border border-[#0176D3] rounded px-2 py-1 outline-none min-w-[120px] text-xs font-medium -my-1"
                         style={{ background: 'var(--surface)', color: 'var(--text)' }}
                       />
                     ) : (
@@ -746,18 +746,19 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                     {!isDefault && (
                       <button
                         onClick={() => deleteCustomType(typeKey)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full p-1"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full p-1 -mr-1"
                         title="Delete custom type"
                       >
                         <X className="w-3 h-3 text-red-600 dark:text-red-400" />
                       </button>
                     )}
+                    {isDefault && <div className="w-0"></div>}
                   </div>
                 );
               })}
               {addingNewType ? (
                 <div
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-2"
+                  className="inline-flex items-center gap-3 rounded-full px-4 h-9 whitespace-nowrap"
                   style={{
                     background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                     border: '1px solid var(--primary)'
@@ -792,7 +793,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                   </select>
                   <button
                     onClick={confirmAddCustomType}
-                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs"
+                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs shrink-0"
                     style={{ background: '#2E844A', color: 'white' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#45C65A'}
                     onMouseLeave={(e) => e.currentTarget.style.background = '#2E844A'}
@@ -802,7 +803,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                   </button>
                   <button
                     onClick={cancelAddCustomType}
-                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs"
+                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs shrink-0"
                     style={{ background: '#AA3001', color: 'white' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#F38303'}
                     onMouseLeave={(e) => e.currentTarget.style.background = '#AA3001'}
@@ -814,7 +815,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               ) : (
                 <button
                   onClick={handleAddCustomType}
-                  className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-xs font-semibold transition-all"
+                  className="inline-flex items-center gap-2 rounded-full px-4 h-9 text-xs font-semibold transition-all whitespace-nowrap"
                   style={{
                     background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                     color: 'var(--primary)',
