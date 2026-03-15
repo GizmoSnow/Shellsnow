@@ -22,13 +22,31 @@ const SalesforceActivityAdapter: ImportAdapter = {
   sourceSystem: 'salesforce_activity', // Note: Add to SourceSystem type
 
   detect: (headers: string[]) => {
-    const headerSet = new Set(headers.map(h => h.toLowerCase().trim()));
-    // Look for unique combination that identifies this report
+    const normalized = normalizeHeaders(headers);
+    // Basic detection - quick check
     return (
-      headerSet.has('activity id') &&
-      headerSet.has('activity name') &&
-      headerSet.has('activity type')
+      normalized.has('activityid') ||
+      (normalized.has('activityname') && normalized.has('activitytype'))
     );
+  },
+
+  score: (normalizedHeaders: Set<string>) => {
+    let score = 0;
+
+    // Strong matches - unique to Activity reports
+    if (normalizedHeaders.has('activityid')) score += 10;
+    if (normalizedHeaders.has('activityname')) score += 9;
+    if (normalizedHeaders.has('activitytype')) score += 8;
+
+    // Medium matches
+    if (normalizedHeaders.has('owner')) score += 3;
+
+    // Weak matches
+    if (normalizedHeaders.has('status')) score += 1;
+    if (normalizedHeaders.has('startdate')) score += 1;
+    if (normalizedHeaders.has('enddate')) score += 1;
+
+    return score;
   },
 
   normalize: (row, batchId, roadmapId, userId) => {

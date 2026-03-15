@@ -8,7 +8,19 @@ export interface ImportAdapter {
   name: string;
   sourceSystem: SourceSystem;
   detect: (headers: string[]) => boolean;
+  score: (normalizedHeaders: Set<string>) => number;
   normalize: (row: ParsedCSVRow, batchId: string, roadmapId: string, userId: string) => NormalizedActivityCandidate | null;
+}
+
+function normalizeHeader(header: string): string {
+  return header
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_-]+/g, '');
+}
+
+function normalizeHeaders(headers: string[]): Set<string> {
+  return new Set(headers.map(normalizeHeader));
 }
 
 function parseDate(dateStr: string | undefined): string | undefined {
@@ -44,13 +56,33 @@ const OrgCSEngagementAdapter: ImportAdapter = {
   sourceSystem: 'orgcs_engagement',
 
   detect: (headers: string[]) => {
-    const headerSet = new Set(headers.map(h => h.toLowerCase().trim()));
+    const normalized = normalizeHeaders(headers);
     return (
-      headerSet.has('engagement name') ||
-      headerSet.has('engagement template name') ||
-      headerSet.has('engagement template') ||
-      headerSet.has('engagement id')
+      normalized.has('engagementname') ||
+      normalized.has('engagementtemplatename') ||
+      normalized.has('engagementid')
     );
+  },
+
+  score: (normalizedHeaders: Set<string>) => {
+    let score = 0;
+
+    // Strong matches - unique to OrgCS Engagement
+    if (normalizedHeaders.has('engagementname')) score += 10;
+    if (normalizedHeaders.has('engagementtemplatename')) score += 10;
+    if (normalizedHeaders.has('engagementtemplate')) score += 8;
+    if (normalizedHeaders.has('engagementid')) score += 8;
+
+    // Medium matches - common but supportive
+    if (normalizedHeaders.has('stage')) score += 3;
+    if (normalizedHeaders.has('engagementstatus')) score += 5;
+
+    // Weak matches - very common fields
+    if (normalizedHeaders.has('startdate')) score += 1;
+    if (normalizedHeaders.has('enddate')) score += 1;
+    if (normalizedHeaders.has('createddate')) score += 1;
+
+    return score;
   },
 
   normalize: (row: ParsedCSVRow, batchId: string, roadmapId: string, userId: string) => {
@@ -140,13 +172,32 @@ const Org62SupportAdapter: ImportAdapter = {
   sourceSystem: 'org62_support',
 
   detect: (headers: string[]) => {
-    const headerSet = new Set(headers.map(h => h.toLowerCase().trim()));
+    const normalized = normalizeHeaders(headers);
     return (
-      headerSet.has('case number') ||
-      headerSet.has('case subject') ||
-      headerSet.has('case type') ||
-      headerSet.has('case id')
+      normalized.has('casenumber') ||
+      normalized.has('casesubject') ||
+      normalized.has('caseid')
     );
+  },
+
+  score: (normalizedHeaders: Set<string>) => {
+    let score = 0;
+
+    // Strong matches - unique to Support/Case reports
+    if (normalizedHeaders.has('casenumber')) score += 10;
+    if (normalizedHeaders.has('casesubject')) score += 10;
+    if (normalizedHeaders.has('caseid')) score += 8;
+    if (normalizedHeaders.has('casetype')) score += 7;
+    if (normalizedHeaders.has('casestatus')) score += 5;
+
+    // Medium matches
+    if (normalizedHeaders.has('status')) score += 2;
+    if (normalizedHeaders.has('closeddate')) score += 3;
+
+    // Weak matches
+    if (normalizedHeaders.has('createddate')) score += 1;
+
+    return score;
   },
 
   normalize: (row: ParsedCSVRow, batchId: string, roadmapId: string, userId: string) => {
@@ -238,14 +289,39 @@ const Org62TrainingAdapter: ImportAdapter = {
   sourceSystem: 'org62_training',
 
   detect: (headers: string[]) => {
-    const headerSet = new Set(headers.map(h => h.toLowerCase().trim()));
+    const normalized = normalizeHeaders(headers);
     return (
-      headerSet.has('course') ||
-      headerSet.has('training title') ||
-      headerSet.has('module') ||
-      headerSet.has('session title') ||
-      headerSet.has('course type')
+      normalized.has('course') ||
+      normalized.has('trainingtitle') ||
+      normalized.has('coursename') ||
+      normalized.has('sessiontitle')
     );
+  },
+
+  score: (normalizedHeaders: Set<string>) => {
+    let score = 0;
+
+    // Strong matches - unique to Training reports
+    if (normalizedHeaders.has('trainingtitle')) score += 10;
+    if (normalizedHeaders.has('coursetitle')) score += 10;
+    if (normalizedHeaders.has('coursename')) score += 9;
+    if (normalizedHeaders.has('sessiontitle')) score += 9;
+    if (normalizedHeaders.has('trainingid')) score += 8;
+    if (normalizedHeaders.has('courseid')) score += 8;
+    if (normalizedHeaders.has('coursetype')) score += 7;
+
+    // Medium matches
+    if (normalizedHeaders.has('completeddate')) score += 5;
+    if (normalizedHeaders.has('completiondate')) score += 5;
+    if (normalizedHeaders.has('completionstatus')) score += 4;
+    if (normalizedHeaders.has('enrollmentdate')) score += 3;
+
+    // Weak matches - could be training-related
+    if (normalizedHeaders.has('course')) score += 3;
+    if (normalizedHeaders.has('module')) score += 2;
+    if (normalizedHeaders.has('status')) score += 1;
+
+    return score;
   },
 
   normalize: (row: ParsedCSVRow, batchId: string, roadmapId: string, userId: string) => {
@@ -344,12 +420,40 @@ export const IMPORT_ADAPTERS: ImportAdapter[] = [
 ];
 
 export function detectAdapter(headers: string[]): ImportAdapter | null {
+  const normalized = normalizeHeaders(headers);
+
+  // Score all adapters
+  const scored = IMPORT_ADAPTERS.map(adapter => ({
+    adapter,
+    score: adapter.score(normalized),
+  }));
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+
+  // Return the highest scoring adapter if it has a meaningful score
+  // Require at least score of 5 to avoid false positives
+  if (scored.length > 0 && scored[0].score >= 5) {
+    return scored[0].adapter;
+  }
+
+  // Fallback to legacy detect method if no good score
   for (const adapter of IMPORT_ADAPTERS) {
     if (adapter.detect(headers)) {
       return adapter;
     }
   }
+
   return null;
+}
+
+export function scoreAllAdapters(headers: string[]): Array<{ name: string; score: number }> {
+  const normalized = normalizeHeaders(headers);
+
+  return IMPORT_ADAPTERS.map(adapter => ({
+    name: adapter.name,
+    score: adapter.score(normalized),
+  })).sort((a, b) => b.score - a.score);
 }
 
 export function registerAdapter(adapter: ImportAdapter): void {

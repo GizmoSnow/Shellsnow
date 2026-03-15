@@ -6,8 +6,19 @@ This guide explains how to add new import sources to the roadmap builder.
 
 The import system uses a **pluggable adapter pattern** that makes it easy to add new data sources without modifying core code. Each adapter is responsible for:
 
-1. **Detecting** if a file matches its format (based on column headers)
-2. **Normalizing** raw data into standardized activity candidates
+1. **Detecting** if a file matches its format (basic header check)
+2. **Scoring** how confident it is based on column headers (reduces false positives)
+3. **Normalizing** raw data into standardized activity candidates
+
+### Smart Detection with Scoring
+
+Instead of simple keyword matching, the system uses a **scoring algorithm**:
+
+1. **Normalize headers** - Remove spaces, hyphens, underscores, lowercase
+2. **Score each adapter** - Each column match adds points based on uniqueness
+3. **Pick highest score** - Adapter with best score wins (minimum 5 points required)
+
+This prevents false positives when files have similar column names.
 
 ## Current Adapters
 
@@ -26,13 +37,32 @@ const MyCustomAdapter: ImportAdapter = {
   name: 'My Custom Report',
   sourceSystem: 'my_custom_source', // Add to SourceSystem type first
 
-  // Detection logic - should return true if headers match this format
+  // Basic detection - quick check if this might be the right format
   detect: (headers: string[]) => {
-    const headerSet = new Set(headers.map(h => h.toLowerCase().trim()));
+    const normalized = normalizeHeaders(headers);
     return (
-      headerSet.has('my_unique_column') ||
-      headerSet.has('another_unique_column')
+      normalized.has('myuniquecolumn') ||
+      normalized.has('anotheruniquecolumn')
     );
+  },
+
+  // Scoring - more sophisticated confidence rating
+  score: (normalizedHeaders: Set<string>) => {
+    let score = 0;
+
+    // Strong matches (10 points) - columns unique to this source
+    if (normalizedHeaders.has('myuniquecolumn')) score += 10;
+    if (normalizedHeaders.has('myspecificid')) score += 10;
+
+    // Medium matches (3-7 points) - supportive columns
+    if (normalizedHeaders.has('mysourcetype')) score += 5;
+    if (normalizedHeaders.has('mysourcestatus')) score += 4;
+
+    // Weak matches (1-2 points) - common fields
+    if (normalizedHeaders.has('name')) score += 1;
+    if (normalizedHeaders.has('startdate')) score += 1;
+
+    return score;
   },
 
   // Normalization logic - converts raw row to NormalizedActivityCandidate
@@ -185,10 +215,27 @@ Flags administrative/low-value items like:
 
 ## Best Practices
 
+### Scoring Strategy
+
+**Strong matches (8-10 points)**: Columns that are unique to your source
+- Examples: `engagementname`, `casenumber`, `trainingid`
+- These should strongly indicate the correct adapter
+
+**Medium matches (3-7 points)**: Supportive columns that are characteristic
+- Examples: `engagementtemplate`, `casetype`, `coursetype`
+- Help differentiate when strong matches aren't present
+
+**Weak matches (1-2 points)**: Common fields found in many sources
+- Examples: `status`, `startdate`, `createddate`
+- Only add small amounts to avoid false positives
+
+**Minimum threshold**: Require score ≥ 5 to select an adapter
+- Prevents random CSV files from being misidentified
+
 ### Be Lenient in Detection
-- Match on multiple possible column combinations
+- Match on multiple possible column variations
 - Don't require ALL columns to be present
-- Use case-insensitive matching
+- Header normalization handles spaces/hyphens/underscores automatically
 
 ### Be Strict in Normalization
 - Return `null` if required data is missing
