@@ -258,7 +258,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     setEditingTypeKey(null);
   };
 
-  const updateTypeColor = (typeKey: string, newColor: string) => {
+  const updateTypeColor = async (typeKey: string, newColor: string) => {
     const newData = { ...data };
     const customTypeIndex = newData.customActivityTypes?.findIndex(t => t.key === typeKey);
 
@@ -275,6 +275,14 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
 
     setData(newData);
+
+    // Save immediately when color changes
+    if (roadmap) {
+      await supabase
+        .from('roadmaps')
+        .update({ data: newData })
+        .eq('id', roadmapId);
+    }
   };
 
   const getTypeColor = (typeKey: string) => {
@@ -706,8 +714,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                       type="color"
                       value={getTypeColor(typeKey)}
                       onChange={(e) => updateTypeColor(typeKey, e.target.value)}
+                      onBlur={() => setEditingColorKey(null)}
                       className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
                       style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
+                      autoFocus
                     />
                   )}
                 </div>
