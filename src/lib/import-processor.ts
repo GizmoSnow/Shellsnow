@@ -1,0 +1,192 @@
+import { parseCSV, detectReportType } from './csv-parser';
+import {
+  normalizeEngagementReport,
+  normalizeSupportReport,
+  normalizeTrainingReport,
+} from './import-normalizer';
+import type { ImportResult, NormalizedActivityCandidate } from './import-types';
+import { supabase } from './supabase';
+
+export async function processImportFile(
+  file: File,
+  roadmapId: string,
+  userId: string
+): Promise<ImportResult> {
+  const batchId = crypto.randomUUID();
+  const errors: string[] = [];
+  const candidates: NormalizedActivityCandidate[] = [];
+
+  try {
+    const content = await file.text();
+    const rows = parseCSV(content);
+
+    if (rows.length === 0) {
+      errors.push('No data rows found in file');
+      return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors };
+    }
+
+    const headers = Object.keys(rows[0]);
+    const reportType = detectReportType(headers);
+
+    if (reportType === 'unknown') {
+      errors.push('Unable to detect report type from file headers');
+      return { batchId, totalRows: rows.length, parsedRows: 0, candidates: [], errors };
+    }
+
+    for (const row of rows) {
+      let candidate: NormalizedActivityCandidate | null = null;
+
+      try {
+        switch (reportType) {
+          case 'orgcs_engagement':
+            candidate = normalizeEngagementReport(row, batchId, roadmapId, userId);
+            break;
+          case 'org62_support':
+            candidate = normalizeSupportReport(row, batchId, roadmapId, userId);
+            break;
+          case 'org62_training':
+            candidate = normalizeTrainingReport(row, batchId, roadmapId, userId);
+            break;
+        }
+
+        if (candidate) {
+          candidates.push(candidate);
+        }
+      } catch (error) {
+        errors.push(`Error parsing row: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    if (candidates.length > 0) {
+      await saveCandidatesToDatabase(candidates);
+    }
+
+    return {
+      batchId,
+      totalRows: rows.length,
+      parsedRows: candidates.length,
+      candidates,
+      errors,
+    };
+  } catch (error) {
+    errors.push(`File processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors };
+  }
+}
+
+async function saveCandidatesToDatabase(candidates: NormalizedActivityCandidate[]): Promise<void> {
+  const dbRecords = candidates.map((c) => ({
+    id: c.id,
+    batch_id: c.batchId,
+    roadmap_id: c.roadmapId,
+    user_id: c.userId,
+    source_system: c.sourceSystem,
+    source_type: c.sourceType,
+    source_record_id: c.sourceRecordId,
+    raw_title: c.rawTitle,
+    raw_template: c.rawTemplate,
+    raw_stage: c.rawStage,
+    start_date: c.startDate,
+    end_date: c.endDate,
+    normalized_title: c.normalizedTitle,
+    normalized_category: c.normalizedCategory,
+    owner: c.owner,
+    activity_type: c.activityType,
+    start_month: c.startMonth,
+    end_month: c.endMonth,
+    quarters: c.quarters,
+    health: c.health,
+    status: c.status,
+    confidence: c.confidence,
+    flags: c.flags,
+    include: c.include,
+  }));
+
+  const { error } = await supabase.from('activity_import_candidates').insert(dbRecords);
+
+  if (error) {
+    throw new Error(`Failed to save candidates to database: ${error.message}`);
+  }
+}
+
+export async function loadCandidatesFromDatabase(batchId: string): Promise<NormalizedActivityCandidate[]> {
+  const { data, error } = await supabase
+    .from('activity_import_candidates')
+    .select('*')
+    .eq('batch_id', batchId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load candidates: ${error.message}`);
+  }
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    batchId: row.batch_id,
+    roadmapId: row.roadmap_id,
+    userId: row.user_id,
+    sourceSystem: row.source_system,
+    sourceType: row.source_type,
+    sourceRecordId: row.source_record_id,
+    rawTitle: row.raw_title,
+    rawTemplate: row.raw_template,
+    rawStage: row.raw_stage,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    normalizedTitle: row.normalized_title,
+    normalizedCategory: row.normalized_category,
+    owner: row.owner,
+    activityType: row.activity_type,
+    startMonth: row.start_month,
+    endMonth: row.end_month,
+    quarters: row.quarters,
+    health: row.health,
+    status: row.status,
+    confidence: row.confidence,
+    flags: row.flags,
+    include: row.include,
+    overrideTitle: row.override_title,
+    overrideStartDate: row.override_start_date,
+    overrideEndDate: row.override_end_date,
+    overrideActivityType: row.override_activity_type,
+    overrideOwner: row.override_owner,
+    overrideStatus: row.override_status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+}
+
+export async function updateCandidate(
+  id: string,
+  updates: Partial<NormalizedActivityCandidate>
+): Promise<void> {
+  const dbUpdates: Record<string, unknown> = {};
+
+  if (updates.include !== undefined) dbUpdates.include = updates.include;
+  if (updates.overrideTitle !== undefined) dbUpdates.override_title = updates.overrideTitle;
+  if (updates.overrideStartDate !== undefined) dbUpdates.override_start_date = updates.overrideStartDate;
+  if (updates.overrideEndDate !== undefined) dbUpdates.override_end_date = updates.overrideEndDate;
+  if (updates.overrideActivityType !== undefined) dbUpdates.override_activity_type = updates.overrideActivityType;
+  if (updates.overrideOwner !== undefined) dbUpdates.override_owner = updates.overrideOwner;
+  if (updates.overrideStatus !== undefined) dbUpdates.override_status = updates.overrideStatus;
+
+  const { error } = await supabase
+    .from('activity_import_candidates')
+    .update(dbUpdates)
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(`Failed to update candidate: ${error.message}`);
+  }
+}
+
+export async function deleteBatch(batchId: string): Promise<void> {
+  const { error } = await supabase
+    .from('activity_import_candidates')
+    .delete()
+    .eq('batch_id', batchId);
+
+  if (error) {
+    throw new Error(`Failed to delete batch: ${error.message}`);
+  }
+}

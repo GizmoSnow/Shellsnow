@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FileInput } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -11,6 +11,7 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
+import { ImportStagingModal } from '../components/ImportStagingModal';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -18,6 +19,7 @@ import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
+import type { NormalizedActivityCandidate } from '../lib/import-types';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -92,6 +94,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -220,6 +223,78 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setToolbarCollapsed(wasCollapsed);
     }
   };
+
+  const handleImportComplete = async (batchId: string, candidates: NormalizedActivityCandidate[]) => {
+    try {
+      const newActivities: Activity[] = [];
+
+      for (const candidate of candidates) {
+        const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
+        const finalStartDate = candidate.overrideStartDate || candidate.startDate;
+        const finalEndDate = candidate.overrideEndDate || candidate.endDate;
+        const finalOwner = candidate.overrideOwner || candidate.owner;
+        const finalStatus = candidate.overrideStatus || candidate.status;
+
+        const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
+
+        const activity: Activity = {
+          id: crypto.randomUUID(),
+          name: finalTitle,
+          type: typeKey,
+          owner: finalOwner,
+          status: finalStatus,
+          start_month: candidate.startMonth,
+          end_month: candidate.endMonth,
+        };
+
+        newActivities.push(activity);
+      }
+
+      const { error: insertError } = await supabase
+        .from('roadmap_activities')
+        .insert(
+          newActivities.map(act => ({
+            roadmap_id: roadmapId,
+            activity_id: act.id,
+            activity_name: act.name,
+            activity_type: act.type,
+            owner: act.owner,
+            status: act.status,
+            start_month: act.start_month,
+            end_month: act.end_month,
+          }))
+        );
+
+      if (insertError) throw insertError;
+
+      const { error: deleteError } = await supabase
+        .from('activity_import_candidates')
+        .delete()
+        .eq('batch_id', batchId);
+
+      if (deleteError) console.error('Failed to clean up batch:', deleteError);
+
+      await loadRoadmap();
+      setShowImportModal(false);
+      alert(`Successfully imported ${newActivities.length} activities`);
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import activities');
+    }
+  };
+
+  function mapSourceTypeToActivityType(sourceType: string): string {
+    switch (sourceType) {
+      case 'engagement':
+        return 'architect';
+      case 'support':
+        return 'specialist';
+      case 'training':
+        return 'enablement';
+      default:
+        return 'csm';
+    }
+  }
 
   const handleReset = () => {
     setData({
@@ -659,6 +734,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 Print
               </button>
               <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
+                style={{ background: 'var(--primary)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+              >
+                <FileInput size={16} />
+                Import Activities
+              </button>
+              <button
                 onClick={handleExportPng}
                 disabled={exporting}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
@@ -965,6 +1050,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         onClose={() => setShowResetConfirmation(false)}
         onConfirm={handleReset}
       />
+
+      {showImportModal && user && (
+        <ImportStagingModal
+          roadmapId={roadmapId}
+          userId={user.id}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={handleImportComplete}
+        />
+      )}
 
       <GoalsPanel
         data={data}
