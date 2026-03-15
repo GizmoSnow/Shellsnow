@@ -228,22 +228,56 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 max-h-[70vh] overflow-y-auto pr-2">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Activity Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. CSM Health Check"
-                className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                autoFocus
-              />
-            </div>
+            {/* Section 1 - Activity Definition */}
+            <div className="space-y-4">
+              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+                Activity Definition
+              </div>
 
-{!isSpanning && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Type
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {allTypeKeys.map((typeKey) => {
+                    const bgColor = getTypeColor(typeKey);
+                    const textColor = getTextColor(bgColor);
+                    const label = getTypeLabel(typeKey);
+                    return (
+                      <button
+                        key={typeKey}
+                        type="button"
+                        onClick={() => setSelectedType(typeKey)}
+                        className="cursor-pointer px-3 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+                        style={{
+                          background: bgColor,
+                          color: textColor,
+                          border: selectedType === typeKey ? '2px solid white' : '2px solid transparent',
+                          boxShadow: selectedType === typeKey ? '0 0 0 3px rgba(255, 255, 255, 0.2)' : 'none'
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Activity Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. CSM Health Check"
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                  autoFocus
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Description <span className="opacity-60">(Optional)</span>
@@ -257,264 +291,249 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                 />
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Status
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setStatus('on_track')}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                  style={{
-                    background: status === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
-                    color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
-                    border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-current"></div>
-                  On Track
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatus('at_risk')}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                  style={{
-                    background: status === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
-                    color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
-                    border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-current"></div>
-                  At Risk
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatus('blocked')}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                  style={{
-                    background: status === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
-                    color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
-                    border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-current"></div>
-                  Blocked
-                </button>
-              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Type
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {allTypeKeys.map((typeKey) => {
-                  const bgColor = getTypeColor(typeKey);
-                  const textColor = getTextColor(bgColor);
-                  const label = getTypeLabel(typeKey);
-                  return (
-                    <button
-                      key={typeKey}
-                      type="button"
-                      onClick={() => setSelectedType(typeKey)}
-                      className="cursor-pointer px-3 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-                      style={{
-                        background: bgColor,
-                        color: textColor,
-                        border: selectedType === typeKey ? '2px solid white' : '2px solid transparent',
-                        boxShadow: selectedType === typeKey ? '0 0 0 3px rgba(255, 255, 255, 0.2)' : 'none'
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+            {/* Section 2 - Timeline Placement */}
+            <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+                Timeline Placement
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Owner
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedOwner('salesforce')}
-                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{
-                    background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--button-neutral-bg)',
-                    color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
-                    border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  Salesforce
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedOwner('partner')}
-                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{
-                    background: selectedOwner === 'partner' ? '#0176D3' : 'var(--button-neutral-bg)',
-                    color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
-                    border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  Partner
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedOwner('customer')}
-                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{
-                    background: selectedOwner === 'customer' ? '#0176D3' : 'var(--button-neutral-bg)',
-                    color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
-                    border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                  }}
-                >
-                  Customer
-                </button>
+              {!isSpanning && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Quick Select Quarter
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {quarters.map((quarter, idx) => {
+                        const quarterIndex = idx;
+                        const monthRange = getQuarterMonthRange(quarterIndex);
+                        const isSelected = isQuarterSelected(quarterIndex);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => selectQuarterRange(quarterIndex)}
+                            className="px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
+                            style={{
+                              background: isSelected ? '#066afe' : 'var(--button-neutral-bg)',
+                              color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                              border: isSelected ? '2px solid #066afe' : '2px solid var(--border-subtle)'
+                            }}
+                          >
+                            <div className="font-bold">{quarter.label}</div>
+                            <div className="text-[10px] opacity-80">{monthRange}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        Start Month
+                      </label>
+                      <select
+                        value={startMonth}
+                        onChange={(e) => setStartMonth(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                        style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                      >
+                        {allMonthOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        End Month
+                      </label>
+                      <select
+                        value={endMonth}
+                        onChange={(e) => setEndMonth(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                        style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                      >
+                        {allMonthOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isSpanning}
+                    onChange={(e) => {
+                      setIsSpanning(e.target.checked);
+                      if (e.target.checked && selectedQuarters.length === 0) {
+                        setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
+                      }
+                    }}
+                    className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                    Spanning Activity
+                  </span>
+                </label>
+                <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
+                  Creates a wide pill that stretches across multiple quarters
+                </p>
               </div>
-            </div>
 
-            {!isSpanning && (
-              <>
+              {isSpanning && (
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Quick Select Quarter
+                    Select Quarters
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {quarters.map((quarter, idx) => {
-                      const quarterIndex = idx;
-                      const monthRange = getQuarterMonthRange(quarterIndex);
-                      const isSelected = isQuarterSelected(quarterIndex);
+                      const qk = `q${quarter.quarter}`;
                       return (
-                        <button
+                        <div
                           key={idx}
-                          type="button"
-                          onClick={() => selectQuarterRange(quarterIndex)}
-                          className="px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
+                          onClick={() => toggleQuarter(qk)}
+                          className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
                           style={{
-                            background: isSelected ? '#066afe' : 'var(--button-neutral-bg)',
-                            color: isSelected ? '#ffffff' : 'var(--text-primary)',
-                            border: isSelected ? '2px solid #066afe' : '2px solid var(--border-subtle)'
+                            background: selectedQuarters.includes(qk) ? '#6c63ff' : 'var(--button-neutral-bg)',
+                            color: selectedQuarters.includes(qk) ? '#ffffff' : 'var(--text-secondary)',
+                            border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid var(--border-subtle)'
                           }}
                         >
-                          <div className="font-bold">{quarter.label}</div>
-                          <div className="text-[10px] opacity-80">{monthRange}</div>
-                        </button>
+                          {quarter.label}
+                        </div>
                       );
                     })}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Start Month
-                  </label>
-                  <select
-                    value={startMonth}
-                    onChange={(e) => setStartMonth(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                  >
-                    {allMonthOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    End Month
-                  </label>
-                  <select
-                    value={endMonth}
-                    onChange={(e) => setEndMonth(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                  >
-                    {allMonthOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              </>
-            )}
-
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isSpanning}
-                  onChange={(e) => {
-                    setIsSpanning(e.target.checked);
-                    if (e.target.checked && selectedQuarters.length === 0) {
-                      setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
-                    }
-                  }}
-                  className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
-                  style={{ borderColor: 'var(--border-subtle)' }}
-                />
-                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
-                  Spanning Activity
-                </span>
-              </label>
-              <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
-                Creates a wide pill that stretches across multiple quarters
-              </p>
+              )}
             </div>
 
-            {isSpanning && (
+            {/* Section 3 - Status and Metadata */}
+            <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+                Status &amp; Metadata
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Select Quarters
+                  Status
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {quarters.map((quarter, idx) => {
-                    const qk = `q${quarter.quarter}`;
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => toggleQuarter(qk)}
-                        className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
-                        style={{
-                          background: selectedQuarters.includes(qk) ? '#6c63ff' : 'var(--button-neutral-bg)',
-                          color: selectedQuarters.includes(qk) ? '#ffffff' : 'var(--text-secondary)',
-                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid var(--border-subtle)'
-                        }}
-                      >
-                        {quarter.label}
-                      </div>
-                    );
-                  })}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStatus('on_track')}
+                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                    style={{
+                      background: status === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
+                      color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    <div className="w-2 h-2 rounded-full bg-current"></div>
+                    On Track
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('at_risk')}
+                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                    style={{
+                      background: status === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
+                      color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    <div className="w-2 h-2 rounded-full bg-current"></div>
+                    At Risk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('blocked')}
+                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                    style={{
+                      background: status === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
+                      color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    <div className="w-2 h-2 rounded-full bg-current"></div>
+                    Blocked
+                  </button>
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isCriticalPath}
-                  onChange={(e) => setIsCriticalPath(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
-                  style={{ borderColor: 'var(--border-subtle)' }}
-                />
-                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
-                  Critical Path
-                </span>
-              </label>
-              <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
-                Mark as critical path to highlight in executive and print views
-              </p>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Owner
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('salesforce')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Salesforce
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('partner')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'partner' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Partner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('customer')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'customer' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Customer
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isCriticalPath}
+                    onChange={(e) => setIsCriticalPath(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                    Critical Path
+                  </span>
+                </label>
+                <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
+                  Mark as critical path to highlight in executive and print views
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3 justify-end pt-2">

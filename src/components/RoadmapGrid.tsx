@@ -90,9 +90,25 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
       return;
     }
 
+    const targetQuarterIndex = ['q1', 'q2', 'q3', 'q4'].indexOf(targetQuarter);
+    const targetQuarterStartMonthIdx = targetQuarterIndex * 3;
+    const allMonths = getAllRoadmapMonths(fiscalConfig);
+
+    if (targetQuarterStartMonthIdx >= allMonths.length) {
+      console.error('Invalid quarter mapping');
+      return;
+    }
+
+    const targetStartMonth = String(allMonths[targetQuarterStartMonthIdx].calendarMonth);
+    const targetEndMonth = targetQuarterStartMonthIdx + 2 < allMonths.length
+      ? String(allMonths[targetQuarterStartMonthIdx + 2].calendarMonth)
+      : targetStartMonth;
+
     const newActivity: Activity = {
       ...sourceAct,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      start_month: targetStartMonth,
+      end_month: targetEndMonth
     };
 
     const newData = {
