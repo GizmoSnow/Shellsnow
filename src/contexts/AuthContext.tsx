@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isSignedOut: boolean;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -16,11 +17,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSignedOut, setIsSignedOut] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('Initial session check:', { session, error });
       setUser(session?.user ?? null);
+      setIsSignedOut(!session?.user);
       setLoading(false);
     });
 
@@ -30,15 +33,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'SIGNED_OUT') {
           setUser(null);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setIsSignedOut(true);
+        } else if (event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             setUser(session.user);
+            setIsSignedOut(false);
+          }
+        } else if (event === 'SIGNED_IN') {
+          if (session?.user) {
+            setUser(session.user);
+            setIsSignedOut(false);
           }
         } else if (event === 'INITIAL_SESSION') {
           setUser(session?.user ?? null);
-        } else {
+          setIsSignedOut(!session?.user);
+        } else if (event === 'USER_UPDATED') {
           if (session?.user) {
             setUser(session.user);
+            setIsSignedOut(false);
+          }
+        } else {
+          // For any other event, update user but don't change signed out state
+          if (session?.user) {
+            setUser(session.user);
+            setIsSignedOut(false);
           }
         }
       })();
@@ -91,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isSignedOut, signUp, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

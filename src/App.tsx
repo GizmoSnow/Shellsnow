@@ -9,7 +9,7 @@ import ResetPassword from './pages/ResetPassword';
 
 // Main router component that handles authentication and page routing
 function Router() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSignedOut } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -25,7 +25,8 @@ function Router() {
     return <ResetPassword />;
   }
 
-  if (!user && pathname !== '/login' && pathname !== '/signup') {
+  // Only redirect if user is definitively signed out (not just temporarily null during refresh)
+  if (isSignedOut && pathname !== '/login' && pathname !== '/signup') {
     navigate('/login');
     return <Login />;
   }
