@@ -63,7 +63,7 @@ export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
   {
     key: 'event',
     label: 'Event',
-    color: '#FF538A',
+    color: '#F38303',
     owner: 'salesforce'
   }
 ];
