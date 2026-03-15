@@ -77,11 +77,16 @@ export interface Activity {
   type: string;
   owner?: 'salesforce' | 'partner' | 'customer';
   position?: 'full' | 'early' | 'mid' | 'late';
-  start_month?: string;
-  end_month?: string;
-  status?: 'on_track' | 'at_risk' | 'blocked';
+  start_month?: number;
+  end_month?: number;
+  health?: 'on_track' | 'at_risk' | 'blocked';
+  status?: 'not_started' | 'in_progress' | 'completed' | 'cancelled';
+  completedDate?: string;
   description?: string;
   isCriticalPath?: boolean;
+  sourceType?: 'engagement' | 'support' | 'training' | 'manual';
+  sourceSystem?: string;
+  sourceRecordId?: string;
 }
 
 export interface SpanningActivity {
@@ -90,7 +95,12 @@ export interface SpanningActivity {
   type: string;
   owner?: 'salesforce' | 'partner' | 'customer';
   quarters: string[];
-  status?: 'on_track' | 'at_risk' | 'blocked';
+  health?: 'on_track' | 'at_risk' | 'blocked';
+  status?: 'not_started' | 'in_progress' | 'completed' | 'cancelled';
+  completedDate?: string;
   description?: string;
   isCriticalPath?: boolean;
+  sourceType?: 'engagement' | 'support' | 'training' | 'manual';
+  sourceSystem?: string;
+  sourceRecordId?: string;
 }

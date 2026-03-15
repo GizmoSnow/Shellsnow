@@ -342,16 +342,30 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     onDataChange(newData);
   };
 
-  const getStatusColor = (status?: string) => {
-    if (status === 'blocked') return '#ef4444';
-    if (status === 'at_risk') return '#eab308';
+  const getHealthColor = (health?: string) => {
+    if (health === 'blocked') return '#ef4444';
+    if (health === 'at_risk') return '#eab308';
     return '#22c55e';
   };
 
-  const getStatusLabel = (status?: string) => {
-    if (status === 'blocked') return 'Blocked';
-    if (status === 'at_risk') return 'At Risk';
+  const getHealthLabel = (health?: string) => {
+    if (health === 'blocked') return 'Blocked';
+    if (health === 'at_risk') return 'At Risk';
     return 'On Track';
+  };
+
+  const getLifecycleStatusColor = (status?: string) => {
+    if (status === 'completed') return '#22c55e';
+    if (status === 'in_progress') return '#3b82f6';
+    if (status === 'cancelled') return '#64748b';
+    return '#94a3b8';
+  };
+
+  const getLifecycleStatusLabel = (status?: string) => {
+    if (status === 'completed') return 'Completed';
+    if (status === 'in_progress') return 'In Progress';
+    if (status === 'cancelled') return 'Cancelled';
+    return 'Not Started';
   };
 
   const renderActivityPill = (
@@ -364,7 +378,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     const bgColor = getTypeColor(activity.type);
     const textColor = getTextColor(bgColor);
     const dropdownId = `${goal.id}-${initiative.id}-${quarter}-${activity.id}`;
-    const statusColor = getStatusColor(activity.status);
+    const healthColor = getHealthColor(activity.health);
 
     return (
       <div key={activity.id} className="relative">
@@ -375,8 +389,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         >
           <div
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ background: statusColor }}
-            title={getStatusLabel(activity.status)}
+            style={{ background: healthColor }}
+            title={getHealthLabel(activity.health)}
           />
           {activity.isCriticalPath && (
             <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
@@ -532,7 +546,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               const maxIdx = Math.max(...qIndexes);
               const isFirst = index === 0;
               const isLast = index === (data.accountSpanning || []).length - 1;
-              const statusColor = getStatusColor(sp.status);
+              const healthColor = getHealthColor(sp.health);
               const dropdownId = `account-spanning-${sp.id}`;
 
               return (
@@ -550,8 +564,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 >
                   <div
                     className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: statusColor }}
-                    title={getStatusLabel(sp.status)}
+                    style={{ background: healthColor }}
+                    title={getHealthLabel(sp.health)}
                   />
                   {sp.isCriticalPath && (
                     <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />

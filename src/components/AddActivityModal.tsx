@@ -40,7 +40,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
   const [startMonth, setStartMonth] = useState<string>('');
   const [endMonth, setEndMonth] = useState<string>('');
-  const [status, setStatus] = useState<'on_track' | 'at_risk' | 'blocked'>('on_track');
+  const [health, setHealth] = useState<'on_track' | 'at_risk' | 'blocked'>('on_track');
+  const [status, setStatus] = useState<'not_started' | 'in_progress' | 'completed' | 'cancelled'>('not_started');
   const [description, setDescription] = useState('');
   const [isCriticalPath, setIsCriticalPath] = useState(false);
 
@@ -53,7 +54,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setName(editingActivity.name);
         setSelectedType(editingActivity.type);
         setSelectedOwner(editingActivity.owner || 'salesforce');
-        setStatus(editingActivity.status || 'on_track');
+        setHealth(editingActivity.health || 'on_track');
+        setStatus(editingActivity.status || 'not_started');
         setDescription(editingActivity.description || '');
         setIsCriticalPath(editingActivity.isCriticalPath || false);
 
@@ -76,7 +78,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
         setStartMonth(defaultMonth);
         setEndMonth(defaultMonth);
-        setStatus('on_track');
+        setHealth('on_track');
+        setStatus('not_started');
         setDescription('');
         setIsCriticalPath(false);
       }
@@ -132,6 +135,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         type: selectedType,
         owner: selectedOwner,
         quarters: selectedQuarters,
+        health,
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
@@ -142,8 +146,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         name: name.trim(),
         type: selectedType,
         owner: selectedOwner,
-        start_month: startMonth,
-        end_month: endMonth,
+        start_month: parseInt(startMonth),
+        end_month: parseInt(endMonth),
+        health,
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
@@ -157,7 +162,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
     setSelectedQuarters([]);
     setStartMonth(defaultMonth);
     setEndMonth(defaultMonth);
-    setStatus('on_track');
+    setHealth('on_track');
+    setStatus('not_started');
     setDescription('');
     setIsCriticalPath(false);
   };
@@ -470,17 +476,73 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Status
+                  Lifecycle Status
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStatus('not_started')}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: status === 'not_started' ? '#94a3b8' : 'var(--button-neutral-bg)',
+                      color: status === 'not_started' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'not_started' ? '2px solid #94a3b8' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Not Started
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('in_progress')}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: status === 'in_progress' ? '#3b82f6' : 'var(--button-neutral-bg)',
+                      color: status === 'in_progress' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'in_progress' ? '2px solid #3b82f6' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    In Progress
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('completed')}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: status === 'completed' ? '#22c55e' : 'var(--button-neutral-bg)',
+                      color: status === 'completed' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'completed' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Completed
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('cancelled')}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: status === 'cancelled' ? '#64748b' : 'var(--button-neutral-bg)',
+                      color: status === 'cancelled' ? '#ffffff' : 'var(--text-primary)',
+                      border: status === 'cancelled' ? '2px solid #64748b' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Cancelled
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Health
                 </label>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setStatus('on_track')}
+                    onClick={() => setHealth('on_track')}
                     className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                     style={{
-                      background: status === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
-                      color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
-                      border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
+                      background: health === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
+                      color: health === 'on_track' ? '#ffffff' : 'var(--text-primary)',
+                      border: health === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
                     }}
                   >
                     <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -488,12 +550,12 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStatus('at_risk')}
+                    onClick={() => setHealth('at_risk')}
                     className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                     style={{
-                      background: status === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
-                      color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
-                      border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
+                      background: health === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
+                      color: health === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
+                      border: health === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
                     }}
                   >
                     <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -501,12 +563,12 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStatus('blocked')}
+                    onClick={() => setHealth('blocked')}
                     className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                     style={{
-                      background: status === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
-                      color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
-                      border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
+                      background: health === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
+                      color: health === 'blocked' ? '#ffffff' : 'var(--text-primary)',
+                      border: health === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
                     }}
                   >
                     <div className="w-2 h-2 rounded-full bg-current"></div>

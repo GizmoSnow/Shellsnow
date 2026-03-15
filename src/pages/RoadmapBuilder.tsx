@@ -226,12 +226,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   const handleImportComplete = async (batchId: string, candidates: NormalizedActivityCandidate[]) => {
     try {
-      const newActivities: Activity[] = [];
+      const updatedData = { ...data };
 
       for (const candidate of candidates) {
         const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
-        const finalStartDate = candidate.overrideStartDate || candidate.startDate;
-        const finalEndDate = candidate.overrideEndDate || candidate.endDate;
         const finalOwner = candidate.overrideOwner || candidate.owner;
         const finalStatus = candidate.overrideStatus || candidate.status;
 
@@ -243,29 +241,36 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           type: typeKey,
           owner: finalOwner,
           status: finalStatus,
+          health: candidate.health,
           start_month: candidate.startMonth,
           end_month: candidate.endMonth,
+          sourceType: candidate.sourceType,
+          sourceSystem: candidate.sourceSystem,
+          sourceRecordId: candidate.sourceRecordId,
         };
 
-        newActivities.push(activity);
+        if (candidate.activityType === 'spanning' && candidate.quarters) {
+          const spanningActivity: any = {
+            ...activity,
+            quarters: candidate.quarters,
+          };
+          delete spanningActivity.start_month;
+          delete spanningActivity.end_month;
+
+          if (!updatedData.accountSpanning) {
+            updatedData.accountSpanning = [];
+          }
+          updatedData.accountSpanning.push(spanningActivity);
+        } else {
+          if (updatedData.goals.length > 0 && updatedData.goals[0].initiatives.length > 0) {
+            const targetQuarter = determineQuarterFromActivity(activity);
+            updatedData.goals[0].initiatives[0].activities[targetQuarter].push(activity);
+          }
+        }
       }
 
-      const { error: insertError } = await supabase
-        .from('roadmap_activities')
-        .insert(
-          newActivities.map(act => ({
-            roadmap_id: roadmapId,
-            activity_id: act.id,
-            activity_name: act.name,
-            activity_type: act.type,
-            owner: act.owner,
-            status: act.status,
-            start_month: act.start_month,
-            end_month: act.end_month,
-          }))
-        );
-
-      if (insertError) throw insertError;
+      setData(updatedData);
+      await saveRoadmap(updatedData);
 
       const { error: deleteError } = await supabase
         .from('activity_import_candidates')
@@ -274,14 +279,25 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
       if (deleteError) console.error('Failed to clean up batch:', deleteError);
 
-      await loadRoadmap();
       setShowImportModal(false);
-      alert(`Successfully imported ${newActivities.length} activities`);
+      alert(`Successfully imported ${candidates.length} activities`);
     } catch (error) {
       console.error('Import error:', error);
       alert('Failed to import activities');
     }
   };
+
+  function determineQuarterFromActivity(activity: Activity): 'q1' | 'q2' | 'q3' | 'q4' {
+    if (!activity.start_month) return 'q1';
+
+    const allMonths = getAllRoadmapMonths(fiscalConfig);
+    const monthIndex = allMonths.findIndex(m => m.calendarMonth === activity.start_month);
+
+    if (monthIndex === -1) return 'q1';
+
+    const quarterIndex = Math.floor(monthIndex / 3);
+    return `q${quarterIndex + 1}` as 'q1' | 'q2' | 'q3' | 'q4';
+  }
 
   function mapSourceTypeToActivityType(sourceType: string): string {
     switch (sourceType) {
