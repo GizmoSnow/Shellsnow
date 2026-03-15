@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -90,6 +90,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   });
   const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
+  const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -98,6 +99,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   useEffect(() => {
     loadRoadmap();
   }, [roadmapId]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-canvas', canvasStyle);
+  }, [canvasStyle]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -160,6 +165,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setData(loadedData);
       setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
       setFiscalConfig(fiscalCfg);
+      setCanvasStyle(roadmapData.canvas_style || 'light');
     }
     setLoading(false);
   };
@@ -173,6 +179,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         title,
         data,
         customer_logo_base64: customerLogoBase64,
+        canvas_style: canvasStyle,
         fiscal_start_month: fiscalConfig.startMonth,
         base_fiscal_year: fiscalConfig.baseYear,
         roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
@@ -613,6 +620,18 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button
+                onClick={() => {
+                  const newStyle = canvasStyle === 'light' ? 'dark' : 'light';
+                  setCanvasStyle(newStyle);
+                }}
+                className="flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors text-sm font-semibold"
+                style={{ background: 'var(--button-neutral-bg)', borderColor: 'var(--border-subtle)', color: 'var(--button-neutral-text)' }}
+                title={canvasStyle === 'dark' ? 'Switch to light canvas' : 'Switch to dark canvas'}
+              >
+                <Palette size={16} />
+                {canvasStyle === 'dark' ? 'Light' : 'Dark'} Canvas
               </button>
               <button
                 onClick={() => setShowFiscalYearSettings(true)}
