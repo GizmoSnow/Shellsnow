@@ -30,7 +30,16 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
 
-export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null): Promise<void> {
+export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null, canvasStyle?: 'light' | 'dark'): Promise<void> {
+  const isDark = canvasStyle === 'dark';
+  const BG_COLOR = isDark ? '#171923' : '#FFFFFF';
+  const SURFACE_COLOR = isDark ? '#1D2130' : '#F9FAFB';
+  const BORDER_COLOR = isDark ? '#2E3248' : '#E5E7EB';
+  const TEXT_COLOR = isDark ? '#E8EAF6' : '#1F2937';
+  const TEXT_MUTED = isDark ? '#9CA3C0' : '#6B7280';
+  const HEADER_BG = data.headerColor || '#066AFE';
+
+
   const canvas = document.createElement('canvas');
   const scale = 2;
   const width = 1920 * scale;
@@ -44,7 +53,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
 
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, 1920, 1080);
 
   const MARGIN = 40;
@@ -68,7 +77,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
     }
   }
 
-  ctx.fillStyle = '#032D60';
+  ctx.fillStyle = TEXT_COLOR;
   ctx.font = 'bold 32px Arial';
   ctx.fillText(title, MARGIN, MARGIN + 35);
 
@@ -82,11 +91,8 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
   const ROW_H = 100;
   const Q_START_X = MARGIN + LEFT_COL;
 
-  ctx.fillStyle = '#032D60';
+  ctx.fillStyle = HEADER_BG;
   ctx.fillRect(MARGIN, HEADER_Y, 1920 - MARGIN * 2, HEADER_H);
-
-  ctx.fillStyle = '#0176D3';
-  ctx.fillRect(MARGIN, HEADER_Y + HEADER_H - 5, 1920 - MARGIN * 2, 5);
 
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
   const getQuarterTitle = (qkey: string) => {
@@ -104,13 +110,13 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
 
   let currentY = HEADER_Y + HEADER_H;
 
-  ctx.fillStyle = '#E8F4FD';
+  ctx.fillStyle = SURFACE_COLOR;
   ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, SP_H);
-  ctx.strokeStyle = '#D4E9F7';
+  ctx.strokeStyle = BORDER_COLOR;
   ctx.lineWidth = 1;
   ctx.strokeRect(MARGIN, currentY, 1920 - MARGIN * 2, SP_H);
 
-  ctx.fillStyle = '#0B5CAB';
+  ctx.fillStyle = TEXT_MUTED;
   ctx.font = 'bold 11px Arial';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
@@ -141,10 +147,10 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowBg = iIdx % 2 === 0 ? '#E8F4FD' : '#FFFFFF';
+        const rowBg = iIdx % 2 === 0 ? SURFACE_COLOR : BG_COLOR;
         ctx.fillStyle = rowBg;
         ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
-        ctx.strokeStyle = '#D4E9F7';
+        ctx.strokeStyle = BORDER_COLOR;
         ctx.strokeRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
 
         ctx.fillStyle = goal.color;
@@ -156,17 +162,17 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           ctx.textAlign = 'left';
           ctx.fillText(goal.number, MARGIN + 12, currentY + 15);
 
-          ctx.fillStyle = '#032D60';
+          ctx.fillStyle = TEXT_COLOR;
           ctx.font = 'bold 14px Arial';
           ctx.fillText(goal.title, MARGIN + 12, currentY + 35);
         }
 
         const iniLabelY = iIdx === 0 ? currentY + 55 : currentY + 15;
-        ctx.fillStyle = '#0B5CAB';
+        ctx.fillStyle = TEXT_MUTED;
         ctx.font = 'bold 9px Arial';
         ctx.fillText('Key Initiative', MARGIN + 12, iniLabelY);
 
-        ctx.fillStyle = '#032D60';
+        ctx.fillStyle = TEXT_COLOR;
         ctx.font = '11px Arial';
         ctx.fillText(initiative.label, MARGIN + 12, iniLabelY + 15);
 
@@ -206,10 +212,10 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
       }
 
       if (hasRegularActivities) {
-        const rowBg = iIdx % 2 === 0 ? '#E8F4FD' : '#FFFFFF';
+        const rowBg = iIdx % 2 === 0 ? SURFACE_COLOR : BG_COLOR;
         ctx.fillStyle = rowBg;
         ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
-        ctx.strokeStyle = '#D4E9F7';
+        ctx.strokeStyle = BORDER_COLOR;
         ctx.strokeRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
 
         ctx.fillStyle = goal.color;
@@ -221,17 +227,17 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           ctx.textAlign = 'left';
           ctx.fillText(goal.number, MARGIN + 12, currentY + 15);
 
-          ctx.fillStyle = '#032D60';
+          ctx.fillStyle = TEXT_COLOR;
           ctx.font = 'bold 14px Arial';
           ctx.fillText(goal.title, MARGIN + 12, currentY + 35);
         }
 
         const iniLabelY = (iIdx === 0 && spanningActivities.length === 0) ? currentY + 55 : currentY + 15;
-        ctx.fillStyle = '#0B5CAB';
+        ctx.fillStyle = TEXT_MUTED;
         ctx.font = 'bold 9px Arial';
         ctx.fillText('Key Initiative', MARGIN + 12, iniLabelY);
 
-        ctx.fillStyle = '#032D60';
+        ctx.fillStyle = TEXT_COLOR;
         ctx.font = '11px Arial';
         ctx.fillText(initiative.label, MARGIN + 12, iniLabelY + 15);
 
@@ -284,7 +290,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
     ctx.fill();
 
     const labelText = data.typeLabels?.[key] || TYPE_LABELS[key] || key;
-    ctx.fillStyle = '#032D60';
+    ctx.fillStyle = TEXT_COLOR;
     ctx.font = 'bold 11px Arial';
     ctx.fillText(labelText, lx + 22, legendY + 8);
     lx += 180;

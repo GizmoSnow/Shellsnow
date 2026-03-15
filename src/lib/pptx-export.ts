@@ -91,7 +91,8 @@ export async function exportToPptx(
   title: string,
   data: RoadmapData,
   customerLogoBase64?: string | null,
-  fiscalConfig?: FiscalYearConfig
+  fiscalConfig?: FiscalYearConfig,
+  canvasStyle?: 'light' | 'dark'
 ) {
   if (!fiscalConfig) {
     fiscalConfig = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
@@ -110,16 +111,16 @@ export async function exportToPptx(
   const SLIDE_W = 13.3;
   const SLIDE_H = 7.5;
 
-  const isDark = isDarkBackground(data.backgroundColor);
-  const BG = data.backgroundColor ? data.backgroundColor.replace('#', '') : 'FFFFFF';
-  const SURFACE = isDark ? '1A1A1A' : 'F8FBFF';
-  const SURFACE2 = isDark ? '2A2A2A' : 'E8F4FD';
-  const BORDER_COLOR = isDark ? '444444' : 'D4E9F7';
-  const TEXT_COLOR = isDark ? 'FFFFFF' : '032D60';
-  const TEXT_MUTED = isDark ? 'CCCCCC' : '0B5CAB';
-  const HEADER_BG = data.headerColor ? data.headerColor.replace('#', '') : '032D60';
+  const isDark = canvasStyle === 'dark';
+  const BG = isDark ? '171923' : 'FFFFFF';
+  const SURFACE = isDark ? '171923' : 'FFFFFF';
+  const SURFACE2 = isDark ? '1D2130' : 'F9FAFB';
+  const BORDER_COLOR = isDark ? '2E3248' : 'E5E7EB';
+  const TEXT_COLOR = isDark ? 'E8EAF6' : '1F2937';
+  const TEXT_MUTED = isDark ? '9CA3C0' : '6B7280';
+  const HEADER_BG = data.headerColor ? data.headerColor.replace('#', '') : '066AFE';
   const HEADER_TEXT = 'FFFFFF';
-  const PRIMARY = isDark ? 'FFFFFF' : '0176D3';
+  const PRIMARY = '066AFE';
 
   const LEFT_COL = 1.8;
   const Q_COUNT = 4;

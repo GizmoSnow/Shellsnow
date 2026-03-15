@@ -50,6 +50,7 @@ html, body {
   --text-muted: #6b7280;
 
   /* Roadmap-specific - Light Canvas */
+  --roadmap-surface: #ffffff;
   --roadmap-cell-bg: #ffffff;
   --roadmap-quarter-bg: #f9fafb;
   --roadmap-text-primary: #1f2937;
@@ -59,17 +60,18 @@ html, body {
 
 /* Dark Canvas Style */
 :root[data-canvas="dark"] {
-  --roadmap-cell-bg: #1a1d27;
-  --roadmap-quarter-bg: #141720;
+  --roadmap-surface: #171923;
+  --roadmap-cell-bg: #1d2130;
+  --roadmap-quarter-bg: #171923;
   --roadmap-text-primary: #e8eaf6;
-  --roadmap-text-secondary: #7b82a8;
+  --roadmap-text-secondary: #9ca3c0;
   --roadmap-border: #2e3248;
 }
 
 /* Dark mode theme tokens */
 :root[data-theme="dark"] {
   /* Background surfaces */
-  --bg-app: #0f1117;
+  --bg-app: #14161f;
   --bg-shell: #1a1d27;
   --bg-panel: #1a1d27;
   --bg-subtle: rgba(255, 255, 255, 0.05);
@@ -100,7 +102,7 @@ html, body {
   --primary-hover: #0554d1;
 
   /* Legacy compatibility */
-  --bg: #0f1117;
+  --bg: #14161f;
   --surface: #1a1d27;
   --surface2: #22263a;
   --border: #2e3248;
@@ -108,10 +110,11 @@ html, body {
   --text-muted: #7b82a8;
 
   /* Roadmap-specific - matches app dark theme by default */
-  --roadmap-cell-bg: #1a1d27;
-  --roadmap-quarter-bg: #141720;
+  --roadmap-surface: #171923;
+  --roadmap-cell-bg: #1d2130;
+  --roadmap-quarter-bg: #171923;
   --roadmap-text-primary: #e8eaf6;
-  --roadmap-text-secondary: #7b82a8;
+  --roadmap-text-secondary: #9ca3c0;
   --roadmap-border: #2e3248;
 }
 
@@ -119,7 +122,7 @@ html, body {
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     /* Background surfaces */
-    --bg-app: #0f1117;
+    --bg-app: #14161f;
     --bg-shell: #1a1d27;
     --bg-panel: #1a1d27;
     --bg-subtle: rgba(255, 255, 255, 0.05);
@@ -150,7 +153,7 @@ html, body {
     --primary-hover: #0554d1;
 
     /* Legacy compatibility */
-    --bg: #0f1117;
+    --bg: #14161f;
     --surface: #1a1d27;
     --surface2: #22263a;
     --border: #2e3248;
@@ -158,10 +161,11 @@ html, body {
     --text-muted: #7b82a8;
 
     /* Roadmap-specific - matches app dark theme by default */
-    --roadmap-cell-bg: #1a1d27;
-    --roadmap-quarter-bg: #141720;
+    --roadmap-surface: #171923;
+    --roadmap-cell-bg: #1d2130;
+    --roadmap-quarter-bg: #171923;
     --roadmap-text-primary: #e8eaf6;
-    --roadmap-text-secondary: #7b82a8;
+    --roadmap-text-secondary: #9ca3c0;
     --roadmap-border: #2e3248;
   }
 }

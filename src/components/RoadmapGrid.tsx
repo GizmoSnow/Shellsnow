@@ -457,8 +457,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   const isDark = isDarkBackground(data.backgroundColor);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--roadmap-border)', backgroundColor: data.backgroundColor || 'var(--roadmap-cell-bg)' }}>
+    <div className="overflow-x-auto p-8" style={{ background: 'var(--roadmap-surface)' }}>
+      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--roadmap-border)', backgroundColor: data.backgroundColor || 'var(--roadmap-surface)' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (

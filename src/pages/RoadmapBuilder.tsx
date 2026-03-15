@@ -195,7 +195,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const handleExportPptx = async () => {
     setExporting(true);
     try {
-      await exportToPptx(title, data, customerLogoBase64, fiscalConfig);
+      await exportToPptx(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
@@ -210,7 +210,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     setExporting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      await exportToPng(title, data, customerLogoBase64);
+      await exportToPng(title, data, customerLogoBase64, canvasStyle);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
@@ -628,10 +628,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 }}
                 className="flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors text-sm font-semibold"
                 style={{ background: 'var(--button-neutral-bg)', borderColor: 'var(--border-subtle)', color: 'var(--button-neutral-text)' }}
-                title={canvasStyle === 'dark' ? 'Switch to light canvas' : 'Switch to dark canvas'}
+                title="Toggle roadmap canvas style"
               >
                 <Palette size={16} />
-                {canvasStyle === 'dark' ? 'Light' : 'Dark'} Canvas
+                Canvas: {canvasStyle === 'dark' ? 'Dark' : 'Light'}
               </button>
               <button
                 onClick={() => setShowFiscalYearSettings(true)}
