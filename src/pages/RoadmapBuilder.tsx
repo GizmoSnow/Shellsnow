@@ -25,33 +25,30 @@ interface RoadmapBuilderProps {
 }
 
 const DEFAULT_TYPE_LABELS: Record<string, string> = {
-  csm: 'CSM-led',
+  csm: 'CSM',
   architect: 'Success Architect',
   specialist: 'Success Specialist',
-  review: 'Success Review',
+  advisory: 'Product Advisory',
+  enablement: 'Enablement',
   event: 'Event',
-  partner: 'Partner',
-  trailhead: 'Trailhead',
 };
 
 const TYPE_COLORS: Record<string, string> = {
   csm: '#45C65A',
   architect: '#0D9DDA',
-  specialist: '#0176D3',
-  review: '#5867E8',
-  event: '#FF538A',
-  partner: '#E4A201',
-  trailhead: '#AD7BEE',
+  specialist: '#5867E8',
+  advisory: '#7526E3',
+  enablement: '#06A59A',
+  event: '#F38303',
 };
 
 const TYPE_OWNERS: Record<string, ActivityOwner> = {
   csm: 'salesforce',
   architect: 'salesforce',
   specialist: 'salesforce',
-  review: 'salesforce',
+  advisory: 'salesforce',
+  enablement: 'salesforce',
   event: 'salesforce',
-  partner: 'partner',
-  trailhead: 'salesforce',
 };
 
 function determineQuarterFromMonth(activity: any, fiscalConfig: FiscalYearConfig): string {

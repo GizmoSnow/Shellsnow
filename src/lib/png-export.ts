@@ -1,23 +1,21 @@
 import { RoadmapData } from './supabase';
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#04e1cb',
-  architect: '#08abed',
-  specialist: '#022ac0',
-  review: '#aacbff',
-  event: '#ff538a',
-  partner: '#fcc003',
-  trailhead: '#d17dfe',
+  csm: '#45C65A',
+  architect: '#0D9DDA',
+  specialist: '#5867E8',
+  advisory: '#7526E3',
+  enablement: '#06A59A',
+  event: '#F38303',
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  csm: 'CSM-led',
+  csm: 'CSM',
   architect: 'Success Architect',
   specialist: 'Success Specialist',
-  review: 'Success Review',
+  advisory: 'Product Advisory',
+  enablement: 'Enablement',
   event: 'Event',
-  partner: 'Partner',
-  trailhead: 'Trailhead',
 };
 
 function getTextColor(bgColor: string): string {
