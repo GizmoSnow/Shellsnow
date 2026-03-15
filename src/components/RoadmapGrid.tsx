@@ -71,7 +71,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     return pos;
   };
 
-  const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
+  const copyQuarterActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
     const goal = data.goals.find(g => g.id === goalId);
     if (!goal) {
       console.error('Goal not found:', goalId);
@@ -135,6 +135,136 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           })
         };
       })
+    };
+
+    onDataChange(newData);
+    setCopyDropdown(null);
+  };
+
+  const copyInitiativeSpanningActivity = (goalId: string, initiativeId: string, spanningId: string, targetQuarter?: string) => {
+    const goal = data.goals.find(g => g.id === goalId);
+    if (!goal) {
+      console.error('Goal not found:', goalId);
+      return;
+    }
+
+    const initiative = goal.initiatives.find(i => i.id === initiativeId);
+    if (!initiative || !initiative.spanning) {
+      console.error('Initiative or spanning activities not found:', initiativeId);
+      return;
+    }
+
+    const sourceSpanning = initiative.spanning.find(s => s.id === spanningId);
+    if (!sourceSpanning) {
+      console.error('Source spanning activity not found:', spanningId);
+      return;
+    }
+
+    if (targetQuarter) {
+      const targetQuarterIndex = ['q1', 'q2', 'q3', 'q4'].indexOf(targetQuarter);
+      const targetQuarterStartMonthIdx = targetQuarterIndex * 3;
+      const allMonths = getAllRoadmapMonths(fiscalConfig);
+
+      if (targetQuarterStartMonthIdx >= allMonths.length) {
+        console.error('Invalid quarter mapping');
+        return;
+      }
+
+      const targetStartMonth = String(allMonths[targetQuarterStartMonthIdx].calendarMonth);
+      const targetEndMonth = targetQuarterStartMonthIdx + 2 < allMonths.length
+        ? String(allMonths[targetQuarterStartMonthIdx + 2].calendarMonth)
+        : targetStartMonth;
+
+      const newActivity: Activity = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: sourceSpanning.name,
+        type: sourceSpanning.type,
+        owner: sourceSpanning.owner,
+        status: sourceSpanning.status,
+        description: sourceSpanning.description,
+        isCriticalPath: sourceSpanning.isCriticalPath,
+        start_month: targetStartMonth,
+        end_month: targetEndMonth
+      };
+
+      const newData = {
+        ...data,
+        goals: data.goals.map(g => {
+          if (g.id !== goalId) return g;
+
+          return {
+            ...g,
+            initiatives: g.initiatives.map(i => {
+              if (i.id !== initiativeId) return i;
+
+              const updatedActivities = {
+                q1: targetQuarter === 'q1' ? [...i.activities.q1, newActivity] : [...i.activities.q1],
+                q2: targetQuarter === 'q2' ? [...i.activities.q2, newActivity] : [...i.activities.q2],
+                q3: targetQuarter === 'q3' ? [...i.activities.q3, newActivity] : [...i.activities.q3],
+                q4: targetQuarter === 'q4' ? [...i.activities.q4, newActivity] : [...i.activities.q4]
+              };
+
+              return {
+                ...i,
+                activities: updatedActivities
+              };
+            })
+          };
+        })
+      };
+
+      onDataChange(newData);
+    } else {
+      const newSpanning = {
+        ...sourceSpanning,
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      const newData = {
+        ...data,
+        goals: data.goals.map(g => {
+          if (g.id !== goalId) return g;
+
+          return {
+            ...g,
+            initiatives: g.initiatives.map(i => {
+              if (i.id !== initiativeId) return i;
+
+              return {
+                ...i,
+                spanning: [...(i.spanning || []), newSpanning]
+              };
+            })
+          };
+        })
+      };
+
+      onDataChange(newData);
+    }
+
+    setCopyDropdown(null);
+  };
+
+  const copyAccountSpanningActivity = (spanningId: string, targetQuarter?: string) => {
+    const sourceSpanning = data.accountSpanning?.find(s => s.id === spanningId);
+    if (!sourceSpanning) {
+      console.error('Source account spanning activity not found:', spanningId);
+      return;
+    }
+
+    if (targetQuarter) {
+      console.error('Cannot copy account-level spanning activity to a single quarter without goal/initiative context');
+      return;
+    }
+
+    const newSpanning = {
+      ...sourceSpanning,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    };
+
+    const newData = {
+      ...data,
+      accountSpanning: [...(data.accountSpanning || []), newSpanning]
     };
 
     onDataChange(newData);
@@ -300,7 +430,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('Quarter button clicked (non-spanning):', targetQ);
-                  copyActivity(goal.id, initiative.id, quarter, activity.id, targetQ);
+                  copyQuarterActivity(goal.id, initiative.id, quarter, activity.id, targetQ);
                 }}
                 disabled={targetQ === quarter}
                 className="w-full text-left px-2 py-1 text-xs rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -382,6 +512,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               const isFirst = index === 0;
               const isLast = index === (data.accountSpanning || []).length - 1;
               const statusColor = getStatusColor(sp.status);
+              const dropdownId = `account-spanning-${sp.id}`;
 
               return (
                 <div
@@ -430,6 +561,15 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
+                      }}
+                      className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                    >
+                      <Copy size={9} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onOpenEditModal({ isAccountLevel: true, quarter: 'spanning' }, sp);
                       }}
                       className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
@@ -446,6 +586,37 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       <X size={10} />
                     </button>
                   </div>
+                  {copyDropdown === dropdownId && (
+                    <div
+                      className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[160px]"
+                      style={{
+                        borderColor: 'var(--border-subtle)',
+                        background: 'var(--surface)',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Duplicate this activity?</div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyAccountSpanningActivity(sp.id);
+                        }}
+                        className="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                        style={{ color: 'var(--text-primary)' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        Duplicate as Account Activity
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -618,6 +789,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const minIdx = Math.min(...qIndexes);
                           const maxIdx = Math.max(...qIndexes);
                           const statusColor = getStatusColor(sp.status);
+                          const dropdownId = `spanning-${goal.id}-${initiative.id}-${sp.id}`;
 
                           return (
                             <div
@@ -643,6 +815,15 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
+                                  }}
+                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
+                                >
+                                  <Copy size={9} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' }, sp);
                                   }}
                                   className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
@@ -659,6 +840,57 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   <X size={10} />
                                 </button>
                               </div>
+                              {copyDropdown === dropdownId && (
+                                <div
+                                  className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[160px]"
+                                  style={{
+                                    borderColor: 'var(--border-subtle)',
+                                    background: 'var(--surface)',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Copy as:</div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyInitiativeSpanningActivity(goal.id, initiative.id, sp.id);
+                                    }}
+                                    className="w-full text-left px-2 py-1 text-xs rounded transition-colors mb-1"
+                                    style={{ color: 'var(--text-primary)' }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = 'transparent';
+                                    }}
+                                  >
+                                    Spanning Activity
+                                  </button>
+                                  <div className="text-xs font-semibold mt-2 mb-1" style={{ color: 'var(--text-primary)' }}>Copy to quarter:</div>
+                                  {qkeys.map((targetQ) => (
+                                    <button
+                                      key={targetQ}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        copyInitiativeSpanningActivity(goal.id, initiative.id, sp.id, targetQ);
+                                      }}
+                                      className="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                                      style={{ color: 'var(--text-primary)' }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'transparent';
+                                      }}
+                                    >
+                                      {getQuarterTitle(targetQ)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -869,7 +1101,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         console.log('Quarter button clicked:', targetQ);
-                                        copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, targetQ);
+                                        copyQuarterActivity(goal.id, initiative.id, item.quarter, item.activity.id, targetQ);
                                       }}
                                       disabled={targetQ === item.quarter}
                                       className="w-full text-left px-2 py-1 text-xs rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
