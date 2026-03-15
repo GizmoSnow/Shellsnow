@@ -215,7 +215,7 @@ export default function Dashboard() {
               Welcome back, {getFirstName()}!
             </h2>
             <p className="text-xl text-white/90">
-              Build and manage your customer success roadmaps
+              Build and manage your customer success paths
             </p>
           </div>
           <div className="flex-shrink-0">
@@ -231,8 +231,8 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Roadmaps</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Create and manage your success roadmaps</p>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Success Paths</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Create and manage your customer success paths</p>
           </div>
           <button
             onClick={createRoadmap}
@@ -242,7 +242,7 @@ export default function Dashboard() {
             onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
           >
             <Plus size={20} />
-            New Roadmap
+            New Success Path
           </button>
         </div>
 
