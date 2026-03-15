@@ -8,10 +8,16 @@ import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 import astroImage from '../assets/Newastro.png';
 import astroGif from '../assets/ASTRO_Tshirt_RunRight_SFS19_2000px.gif';
 import astroFloatingGif from '../assets/ASTRO_NoOutfitTriangle_RingFront_Shadow_SFS20_300px.gif';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 export default function Dashboard() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; roadmapId: string; roadmapTitle: string }>({
+    isOpen: false,
+    roadmapId: '',
+    roadmapTitle: ''
+  });
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -76,8 +82,6 @@ export default function Dashboard() {
   };
 
   const deleteRoadmap = async (id: string) => {
-    if (!confirm('Delete this roadmap?')) return;
-
     const { error } = await supabase
       .from('roadmaps')
       .delete()
@@ -315,7 +319,11 @@ export default function Dashboard() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteRoadmap(roadmap.id);
+                            setDeleteModal({
+                              isOpen: true,
+                              roadmapId: roadmap.id,
+                              roadmapTitle: roadmap.title
+                            });
                           }}
                           className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
                           style={{ color: 'var(--text-muted)' }}
@@ -358,6 +366,13 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, roadmapId: '', roadmapTitle: '' })}
+        onConfirm={() => deleteRoadmap(deleteModal.roadmapId)}
+        roadmapTitle={deleteModal.roadmapTitle}
+      />
     </div>
   );
 }
