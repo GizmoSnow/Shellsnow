@@ -1,4 +1,5 @@
 import { parseCSV, detectReportType } from './csv-parser';
+import { parseExcelFile, isExcelFile } from './excel-parser';
 import {
   normalizeEngagementReport,
   normalizeSupportReport,
@@ -6,6 +7,7 @@ import {
 } from './import-normalizer';
 import type { ImportResult, NormalizedActivityCandidate } from './import-types';
 import { supabase } from './supabase';
+import { detectDuplicates } from './deduplication';
 
 export async function processImportFile(
   file: File,
@@ -17,8 +19,14 @@ export async function processImportFile(
   const candidates: NormalizedActivityCandidate[] = [];
 
   try {
-    const content = await file.text();
-    const rows = parseCSV(content);
+    let rows;
+
+    if (isExcelFile(file.name)) {
+      rows = await parseExcelFile(file);
+    } else {
+      const content = await file.text();
+      rows = parseCSV(content);
+    }
 
     if (rows.length === 0) {
       errors.push('No data rows found in file');
@@ -29,7 +37,7 @@ export async function processImportFile(
     const reportType = detectReportType(headers);
 
     if (reportType === 'unknown') {
-      errors.push('Unable to detect report type from file headers');
+      errors.push('Unable to detect report type from file headers. Please ensure your file has the correct column names.');
       return { batchId, totalRows: rows.length, parsedRows: 0, candidates: [], errors };
     }
 
@@ -56,6 +64,8 @@ export async function processImportFile(
         errors.push(`Error parsing row: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
+
+    detectDuplicates(candidates);
 
     if (candidates.length > 0) {
       await saveCandidatesToDatabase(candidates);
