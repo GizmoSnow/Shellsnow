@@ -55,6 +55,32 @@ export default function Dashboard() {
               activities: { q1: [], q2: [], q3: [], q4: [] }
             }
           ]
+        },
+        {
+          id: 'g2',
+          number: 'Goal #2',
+          title: 'Customer Retention',
+          color: '#45C65A',
+          initiatives: [
+            {
+              id: 'i2',
+              label: 'Key Initiative',
+              activities: { q1: [], q2: [], q3: [], q4: [] }
+            }
+          ]
+        },
+        {
+          id: 'g3',
+          number: 'Goal #3',
+          title: 'Product Adoption',
+          color: '#F38303',
+          initiatives: [
+            {
+              id: 'i3',
+              label: 'Key Initiative',
+              activities: { q1: [], q2: [], q3: [], q4: [] }
+            }
+          ]
         }
       ]
     };
