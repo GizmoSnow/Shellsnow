@@ -1,12 +1,12 @@
 import { RoadmapData } from './supabase';
 
 const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#45C65A',
-  architect: '#0D9DDA',
-  specialist: '#5867E8',
-  advisory: '#7526E3',
-  enablement: '#06A59A',
-  event: '#F38303',
+  csm: '#45c65a',
+  architect: '#0d9dda',
+  specialist: '#5867e8',
+  advisory: '#7526e3',
+  enablement: '#06a59a',
+  event: '#f38303',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -27,17 +27,18 @@ function getTextColor(bgColor: string): string {
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
+  return luminance > 0.5 ? '#000000' : '#ffffff';
 }
 
 export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null, canvasStyle?: 'light' | 'dark'): Promise<void> {
   const isDark = canvasStyle === 'dark';
-  const BG_COLOR = isDark ? '#0A0E1A' : '#FFFFFF';
-  const SURFACE_COLOR = isDark ? '#121621' : '#F8FAFC';
-  const BORDER_COLOR = isDark ? '#1E293B' : '#E2E8F0';
-  const TEXT_COLOR = isDark ? '#F8FAFC' : '#0F172A';
-  const TEXT_MUTED = isDark ? '#94A3B8' : '#64748B';
-  const HEADER_BG = data.headerColor || '#066AFE';
+  const BG_COLOR = isDark ? '#0a0e1a' : '#ffffff';
+  const CELL_BG = isDark ? '#121621' : '#ffffff';
+  const QUARTER_BG = isDark ? '#0f1419' : '#f8fafc';
+  const BORDER_COLOR = isDark ? '#1e293b' : '#e2e8f0';
+  const TEXT_COLOR = isDark ? '#f8fafc' : '#0f172a';
+  const TEXT_MUTED = isDark ? '#94a3b8' : '#64748b';
+  const HEADER_BG = data.headerColor || '#066afe';
 
 
   const canvas = document.createElement('canvas');
@@ -57,19 +58,21 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
   ctx.fillRect(0, 0, 1920, 1080);
 
   const MARGIN = 40;
-  const LOGO_H = 50;
+  const LOGO_H = 36;
   const LOGO_GAP = 20;
   let currentLogoX = 1920 - MARGIN;
 
   const sfLogo = await loadImage('https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg');
-  const SF_W = 140;
+  const sfAspectRatio = sfLogo.naturalWidth / sfLogo.naturalHeight;
+  const SF_W = LOGO_H * sfAspectRatio;
   currentLogoX -= SF_W;
   ctx.drawImage(sfLogo, currentLogoX, MARGIN, SF_W, LOGO_H);
 
   if (customerLogoBase64) {
     try {
       const customerLogo = await loadImage(customerLogoBase64);
-      const CUSTOMER_W = 140;
+      const customerAspectRatio = customerLogo.naturalWidth / customerLogo.naturalHeight;
+      const CUSTOMER_W = LOGO_H * customerAspectRatio;
       currentLogoX -= (CUSTOMER_W + LOGO_GAP);
       ctx.drawImage(customerLogo, currentLogoX, MARGIN, CUSTOMER_W, LOGO_H);
     } catch (err) {
@@ -99,7 +102,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
     return data.quarterTitles?.[qkey as keyof typeof data.quarterTitles] || qkey.toUpperCase();
   };
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 18px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -110,7 +113,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
 
   let currentY = HEADER_Y + HEADER_H;
 
-  ctx.fillStyle = SURFACE_COLOR;
+  ctx.fillStyle = QUARTER_BG;
   ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, SP_H);
   ctx.strokeStyle = BORDER_COLOR;
   ctx.lineWidth = 1;
@@ -147,7 +150,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowBg = iIdx % 2 === 0 ? SURFACE_COLOR : BG_COLOR;
+        const rowBg = iIdx % 2 === 0 ? CELL_BG : BG_COLOR;
         ctx.fillStyle = rowBg;
         ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
         ctx.strokeStyle = BORDER_COLOR;
@@ -177,7 +180,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
         ctx.fillText(initiative.label, MARGIN + 12, iniLabelY + 15);
 
         spanningActivities.forEach((sp, spIdx) => {
-          const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#E8194B';
+          const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#e8194b';
           const textColor = getTextColor(bgColor);
           const sortedQuarters = [...(sp.quarters || [])].sort();
           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
@@ -194,7 +197,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           ctx.fill();
 
           if (sp.isCriticalPath) {
-            ctx.strokeStyle = '#FFD700';
+            ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 3;
             roundRect(ctx, pillX, pillY, spanWidth - 16, pillH, 14);
             ctx.stroke();
@@ -212,7 +215,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
       }
 
       if (hasRegularActivities) {
-        const rowBg = iIdx % 2 === 0 ? SURFACE_COLOR : BG_COLOR;
+        const rowBg = iIdx % 2 === 0 ? CELL_BG : BG_COLOR;
         ctx.fillStyle = rowBg;
         ctx.fillRect(MARGIN, currentY, 1920 - MARGIN * 2, ROW_H);
         ctx.strokeStyle = BORDER_COLOR;
@@ -248,7 +251,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           const pillPad = 5;
 
           acts.forEach((act, aIdx) => {
-            const bgColor = data.typeColors?.[act.type] || DEFAULT_TYPE_COLORS[act.type] || '#E8194B';
+            const bgColor = data.typeColors?.[act.type] || DEFAULT_TYPE_COLORS[act.type] || '#e8194b';
             const textColor = getTextColor(bgColor);
             const pillY = currentY + 10 + aIdx * (pillH + pillPad);
             if (pillY + pillH > currentY + ROW_H - 8) return;
@@ -259,7 +262,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
             ctx.fill();
 
             if (act.isCriticalPath) {
-              ctx.strokeStyle = '#FFD700';
+              ctx.strokeStyle = '#ffd700';
               ctx.lineWidth = 3;
               roundRect(ctx, cellX + 8, pillY, pillW, pillH, 12);
               ctx.stroke();
@@ -284,7 +287,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
   let lx = MARGIN;
   ctx.textAlign = 'left';
   legendTypes.forEach((key) => {
-    const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#E8194B';
+    const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#e8194b';
     ctx.fillStyle = bgColor;
     roundRect(ctx, lx, legendY, 16, 16, 4);
     ctx.fill();
