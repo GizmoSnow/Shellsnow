@@ -17,6 +17,7 @@ import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
+import { appendMetadataToDescription } from '../lib/import-metadata-formatter';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import type { NormalizedActivityCandidate } from '../lib/import-types';
@@ -247,6 +248,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           sourceType: candidate.sourceType,
           sourceSystem: candidate.sourceSystem,
           sourceRecordId: candidate.sourceRecordId,
+          description: appendMetadataToDescription(undefined, candidate),
         };
 
         if (candidate.activityType === 'spanning' && candidate.quarters) {

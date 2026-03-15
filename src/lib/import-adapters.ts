@@ -129,6 +129,20 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       'Record ID'
     ]);
 
+    const accountName = findColumn(row, [
+      'Account Name',
+      'Customer Name',
+      'Account',
+      'Customer'
+    ]);
+
+    const orgName = findColumn(row, [
+      'Org Name',
+      'Organization',
+      'Org ID',
+      'Organization Name'
+    ]);
+
     const titleNormalization = normalizeTitle(name);
     const category = mapTemplateToCategory(template);
     const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement');
@@ -163,6 +177,11 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       confidence: titleNormalization.confidence,
       flags: allFlags,
       include: true,
+      sourceAccountName: accountName,
+      sourceOrgName: orgName,
+      sourceTemplateName: template,
+      sourceStageRaw: stage,
+      sourceReportType: 'OrgCS Engagement',
     };
   }
 };
@@ -246,6 +265,20 @@ const Org62SupportAdapter: ImportAdapter = {
       'Date Resolved'
     ]));
 
+    const accountName = findColumn(row, [
+      'Account Name',
+      'Customer Name',
+      'Account',
+      'Customer'
+    ]);
+
+    const orgName = findColumn(row, [
+      'Org Name',
+      'Organization',
+      'Org ID',
+      'Organization Name'
+    ]);
+
     const titleNormalization = normalizeTitle(subject);
     const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support');
     const status = mapStatus(caseStatus, 'support') || inferStatusFromDates(createdDate, closedDate, 'support');
@@ -280,6 +313,11 @@ const Org62SupportAdapter: ImportAdapter = {
       confidence: titleNormalization.confidence,
       flags: allFlags,
       include: !isLowValue,
+      sourceAccountName: accountName,
+      sourceOrgName: orgName,
+      sourceTemplateName: caseType,
+      sourceStageRaw: caseStatus,
+      sourceReportType: 'Org62 Support',
     };
   }
 };
@@ -379,6 +417,20 @@ const Org62TrainingAdapter: ImportAdapter = {
       ? parseDate(findColumn(row, ['End Date']))
       : completedDate;
 
+    const accountName = findColumn(row, [
+      'Account Name',
+      'Customer Name',
+      'Account',
+      'Customer'
+    ]);
+
+    const orgName = findColumn(row, [
+      'Org Name',
+      'Organization',
+      'Org ID',
+      'Organization Name'
+    ]);
+
     const titleNormalization = normalizeTitle(title);
     const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'training');
     const status = mapStatus(trainingStatus, 'training') || inferStatusFromDates(startDate, endDate, 'training');
@@ -409,6 +461,11 @@ const Org62TrainingAdapter: ImportAdapter = {
       confidence: titleNormalization.confidence,
       flags: allFlags,
       include: true,
+      sourceAccountName: accountName,
+      sourceOrgName: orgName,
+      sourceTemplateName: courseType,
+      sourceStageRaw: trainingStatus,
+      sourceReportType: 'Org62 Training',
     };
   }
 };

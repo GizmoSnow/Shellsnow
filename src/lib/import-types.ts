@@ -41,6 +41,13 @@ export interface NormalizedActivityCandidate {
 
   include: boolean;
 
+  // Source metadata for multi-org context
+  sourceAccountName?: string;
+  sourceOrgName?: string;
+  sourceTemplateName?: string;
+  sourceStageRaw?: string;
+  sourceReportType?: string;
+
   overrideTitle?: string;
   overrideStartDate?: string;
   overrideEndDate?: string;
