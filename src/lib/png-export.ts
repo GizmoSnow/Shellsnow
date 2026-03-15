@@ -1,22 +1,23 @@
 import { RoadmapData } from './supabase';
+import { getTypeMetadata } from './activity-types';
 
-const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#45c65a',
-  architect: '#0d9dda',
-  specialist: '#5867e8',
-  advisory: '#7526e3',
-  enablement: '#06a59a',
-  event: '#f38303',
-};
+function getTypeColor(typeKey: string, data: RoadmapData): string {
+  if (data.typeColors?.[typeKey]) {
+    return data.typeColors[typeKey];
+  }
 
-const TYPE_LABELS: Record<string, string> = {
-  csm: 'CSM',
-  architect: 'Success Architect',
-  specialist: 'Success Specialist',
-  advisory: 'Product Advisory',
-  enablement: 'Enablement',
-  event: 'Event',
-};
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  return metadata?.color || '#6c63ff';
+}
+
+function getTypeLabel(typeKey: string, data: RoadmapData): string {
+  if (data.typeLabels?.[typeKey]) {
+    return data.typeLabels[typeKey];
+  }
+
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  return metadata?.label || typeKey;
+}
 
 function getTextColor(bgColor: string): string {
   if (bgColor.toLowerCase() === '#fcc003') {
@@ -180,7 +181,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
         ctx.fillText(initiative.label, MARGIN + 12, iniLabelY + 15);
 
         spanningActivities.forEach((sp, spIdx) => {
-          const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#e8194b';
+          const bgColor = getTypeColor(sp.type, data);
           const textColor = getTextColor(bgColor);
           const sortedQuarters = [...(sp.quarters || [])].sort();
           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
@@ -251,7 +252,7 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
           const pillPad = 5;
 
           acts.forEach((act, aIdx) => {
-            const bgColor = data.typeColors?.[act.type] || DEFAULT_TYPE_COLORS[act.type] || '#e8194b';
+            const bgColor = getTypeColor(act.type, data);
             const textColor = getTextColor(bgColor);
             const pillY = currentY + 10 + aIdx * (pillH + pillPad);
             if (pillY + pillH > currentY + ROW_H - 8) return;
@@ -282,17 +283,37 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
     });
   });
 
+  const allTypes = new Set<string>();
+
+  data.goals.forEach((goal) => {
+    goal.initiatives.forEach((initiative) => {
+      qkeys.forEach((qk) => {
+        (initiative.activities[qk] || []).forEach((act) => {
+          allTypes.add(act.type);
+        });
+      });
+
+      (initiative.spanning || []).forEach((sp) => {
+        allTypes.add(sp.type);
+      });
+    });
+  });
+
+  (data.accountSpanning || []).forEach((sp) => {
+    allTypes.add(sp.type);
+  });
+
   const legendY = 1040;
-  const legendTypes = Object.keys(DEFAULT_TYPE_COLORS);
+  const legendTypes = Array.from(allTypes).sort();
   let lx = MARGIN;
   ctx.textAlign = 'left';
   legendTypes.forEach((key) => {
-    const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#e8194b';
+    const bgColor = getTypeColor(key, data);
     ctx.fillStyle = bgColor;
     roundRect(ctx, lx, legendY, 16, 16, 4);
     ctx.fill();
 
-    const labelText = data.typeLabels?.[key] || TYPE_LABELS[key] || key;
+    const labelText = getTypeLabel(key, data);
     ctx.fillStyle = TEXT_COLOR;
     ctx.font = 'bold 11px Arial';
     ctx.fillText(labelText, lx + 22, legendY + 8);
