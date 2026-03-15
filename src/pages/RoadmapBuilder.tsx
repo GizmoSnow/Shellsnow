@@ -446,7 +446,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     <div className="min-h-screen print-container" style={{ background: 'var(--bg)' }}>
       <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border)' }}>
         {/* Top header bar */}
-        <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'var(--surface)' }}>
+        <div className="px-8 py-4 flex items-center justify-between" style={{ background: theme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'var(--surface)' }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
