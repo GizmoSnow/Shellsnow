@@ -22,7 +22,7 @@ import { appendMetadataToDescription } from '../lib/import-metadata-formatter';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import type { NormalizedActivityCandidate } from '../lib/import-types';
-import { updateCandidates, updateBatchCounts } from '../lib/import-processor';
+import { updateCandidates, updateBatchCounts, updateCandidate } from '../lib/import-processor';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -229,67 +229,120 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const handleImportComplete = async (batchId: string, candidates: NormalizedActivityCandidate[]) => {
+    const importedIds: string[] = [];
+    const failedImports: Array<{ candidate: NormalizedActivityCandidate; error: string }> = [];
+    const skippedImports: Array<{ candidate: NormalizedActivityCandidate; reason: string }> = [];
+
     try {
       const updatedData = { ...data };
-      const candidateIds = candidates.map(c => c.id);
 
       for (const candidate of candidates) {
-        const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
-        const finalOwner = candidate.overrideOwner || candidate.owner;
-        const finalStatus = candidate.overrideStatus || candidate.status;
+        try {
+          if (!candidate.include) {
+            skippedImports.push({ candidate, reason: 'Excluded by user' });
+            await updateCandidate(candidate.id, {
+              importStatus: 'ignored',
+              skipReason: 'Excluded by user',
+            });
+            continue;
+          }
 
-        const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
+          if (candidate.errors && candidate.errors.length > 0) {
+            failedImports.push({ candidate, error: candidate.errors.join('; ') });
+            continue;
+          }
 
-        const activity: Activity = {
-          id: crypto.randomUUID(),
-          name: finalTitle,
-          type: typeKey,
-          owner: finalOwner,
-          status: finalStatus,
-          health: candidate.health,
-          start_month: candidate.startMonth,
-          end_month: candidate.endMonth,
-          sourceType: candidate.sourceType,
-          sourceSystem: candidate.sourceSystem,
-          sourceRecordId: candidate.sourceRecordId,
-          description: appendMetadataToDescription(undefined, candidate),
-        };
+          if (candidate.duplicateDetection?.isDuplicate) {
+            skippedImports.push({
+              candidate,
+              reason: `Duplicate: ${candidate.duplicateDetection.matchDetails}`
+            });
+            await updateCandidate(candidate.id, {
+              importStatus: 'ignored',
+              skipReason: `Duplicate: ${candidate.duplicateDetection.matchDetails}`,
+            });
+            continue;
+          }
 
-        if (candidate.activityType === 'spanning' && candidate.quarters) {
-          const spanningActivity: any = {
-            ...activity,
-            quarters: candidate.quarters,
+          const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
+          const finalOwner = candidate.overrideOwner || candidate.owner;
+          const finalStatus = candidate.overrideStatus || candidate.status;
+
+          if (!finalTitle || !finalOwner) {
+            failedImports.push({ candidate, error: 'Missing required fields: title or owner' });
+            await updateCandidate(candidate.id, {
+              errors: ['Missing required fields'],
+            });
+            continue;
+          }
+
+          const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
+
+          const activity: Activity = {
+            id: crypto.randomUUID(),
+            name: finalTitle,
+            type: typeKey,
+            owner: finalOwner,
+            status: finalStatus,
+            health: candidate.health,
+            start_month: candidate.startMonth,
+            end_month: candidate.endMonth,
+            sourceType: candidate.sourceType,
+            sourceSystem: candidate.sourceSystem,
+            sourceRecordId: candidate.sourceRecordId,
+            description: appendMetadataToDescription(undefined, candidate),
           };
-          delete spanningActivity.start_month;
-          delete spanningActivity.end_month;
 
-          if (!updatedData.accountSpanning) {
-            updatedData.accountSpanning = [];
+          if (candidate.activityType === 'spanning' && candidate.quarters) {
+            const spanningActivity: any = {
+              ...activity,
+              quarters: candidate.quarters,
+            };
+            delete spanningActivity.start_month;
+            delete spanningActivity.end_month;
+
+            if (!updatedData.accountSpanning) {
+              updatedData.accountSpanning = [];
+            }
+            updatedData.accountSpanning.push(spanningActivity);
+          } else {
+            if (updatedData.goals.length > 0 && updatedData.goals[0].initiatives.length > 0) {
+              const targetQuarter = determineQuarterFromActivity(activity);
+              updatedData.goals[0].initiatives[0].activities[targetQuarter].push(activity);
+            }
           }
-          updatedData.accountSpanning.push(spanningActivity);
-        } else {
-          if (updatedData.goals.length > 0 && updatedData.goals[0].initiatives.length > 0) {
-            const targetQuarter = determineQuarterFromActivity(activity);
-            updatedData.goals[0].initiatives[0].activities[targetQuarter].push(activity);
-          }
+
+          importedIds.push(candidate.id);
+        } catch (error) {
+          failedImports.push({
+            candidate,
+            error: error instanceof Error ? error.message : 'Unknown error during import'
+          });
+          await updateCandidate(candidate.id, {
+            errors: [error instanceof Error ? error.message : 'Import failed'],
+          });
         }
       }
 
-      setData(updatedData);
-      await saveRoadmap(updatedData);
+      if (importedIds.length > 0) {
+        setData(updatedData);
+        await saveRoadmap(updatedData);
 
-      await updateCandidates(candidateIds, {
-        importStatus: 'imported',
-        importedAt: new Date().toISOString(),
-      });
+        await updateCandidates(importedIds, {
+          importStatus: 'imported',
+          importedAt: new Date().toISOString(),
+        });
+      }
 
       await updateBatchCounts(batchId);
 
       setShowImportModal(false);
-      alert(`Successfully imported ${candidates.length} activities`);
+
+      const summary = `Import Complete:\n${importedIds.length} imported\n${skippedImports.length} skipped\n${failedImports.length} failed`;
+      alert(summary);
     } catch (error) {
       console.error('Import error:', error);
-      alert('Failed to import activities');
+      alert(`Import partially completed:\n${importedIds.length} imported\n${failedImports.length} failed`);
     }
   };
 

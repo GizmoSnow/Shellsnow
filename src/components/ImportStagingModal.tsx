@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban } from 'lucide-react';
+import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 
@@ -41,6 +41,7 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterState>({
     sourceType: 'all',
     status: 'all',
@@ -325,13 +326,67 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                   <FileText size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="font-semibold text-blue-900 mb-2">Import Diagnostics</p>
-                    <div className="text-sm text-blue-800 space-y-1">
+                    <div className="text-sm text-blue-800 space-y-3">
                       {diagnostics.detectedAdapter && (
                         <p><strong>Detected Format:</strong> {diagnostics.detectedAdapter}</p>
                       )}
+
+                      {diagnostics.adapterScores && diagnostics.adapterScores.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Adapter Score Breakdown ({diagnostics.adapterScores.length} tested)
+                          </summary>
+                          <div className="ml-4 mt-2 space-y-1">
+                            {diagnostics.adapterScores
+                              .sort((a, b) => b.score - a.score)
+                              .map((adapter, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <div className="w-32">{adapter.adapterName}:</div>
+                                  <div className="flex-1 bg-blue-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-600"
+                                      style={{ width: `${Math.min(adapter.confidence * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                  <div className="w-16 text-right">{adapter.score}</div>
+                                </div>
+                              ))}
+                          </div>
+                        </details>
+                      )}
+
+                      {diagnostics.normalizedHeaders && diagnostics.normalizedHeaders.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Detected Headers ({diagnostics.normalizedHeaders.length})
+                          </summary>
+                          <div className="ml-4 mt-1 text-xs font-mono bg-blue-100 p-2 rounded max-h-32 overflow-y-auto">
+                            {diagnostics.rawHeaders?.join(', ')}
+                          </div>
+                        </details>
+                      )}
+
+                      {diagnostics.sampleMappedValues && Object.keys(diagnostics.sampleMappedValues).length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Sample Data (first row)
+                          </summary>
+                          <div className="ml-4 mt-2 space-y-1 text-xs max-h-48 overflow-y-auto">
+                            {Object.entries(diagnostics.sampleMappedValues).slice(0, 10).map(([key, value], idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <span className="font-semibold w-40 flex-shrink-0">{key}:</span>
+                                <span className="text-blue-700">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+
                       {diagnostics.dateFields && (
-                        <div className="mt-2">
-                          <p className="font-semibold">Training Date Mapping:</p>
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Date Field Mapping
+                          </summary>
                           <ul className="ml-4 mt-1 space-y-0.5">
                             {diagnostics.dateFields.completionDate && (
                               <li>Completion Date: {diagnostics.dateFields.completionDate}</li>
@@ -345,11 +400,11 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                             {diagnostics.dateFields.endDate && (
                               <li>End Date: {diagnostics.dateFields.endDate}</li>
                             )}
-                            <li className="font-semibold mt-1">
-                              Selected Field: {diagnostics.dateFields.selectedField}
+                            <li className="font-semibold mt-1 text-blue-900">
+                              ✓ Selected Field: {diagnostics.dateFields.selectedField}
                             </li>
                           </ul>
-                        </div>
+                        </details>
                       )}
                     </div>
                   </div>
@@ -448,6 +503,7 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
               <table className="w-full">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr className="text-left text-xs font-semibold text-gray-600 uppercase">
+                    <th className="p-3 w-8"></th>
                     <th className="p-3 w-12">
                       <input
                         type="checkbox"
@@ -464,7 +520,7 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                     <th className="p-3">Type</th>
                     <th className="p-3">Owner</th>
                     <th className="p-3">Status</th>
-                    <th className="p-3">Flags</th>
+                    <th className="p-3">Diagnostics</th>
                     <th className="p-3 w-24">Actions</th>
                   </tr>
                 </thead>
@@ -477,22 +533,47 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                     const displayActivityType = candidate.overrideActivityType || candidate.activityType;
                     const displayOwner = candidate.overrideOwner || candidate.owner;
                     const displayStatus = candidate.overrideStatus || candidate.status;
+                    const isExpanded = expandedRows.has(candidate.id);
+                    const hasErrors = candidate.errors && candidate.errors.length > 0;
+                    const hasWarnings = candidate.warnings && candidate.warnings.length > 0;
+                    const hasSkipReason = !!candidate.skipReason;
+                    const hasDuplicate = candidate.duplicateDetection?.isDuplicate;
+                    const hasDiagnostics = hasErrors || hasWarnings || hasSkipReason || hasDuplicate;
 
                     return (
-                      <tr
-                        key={candidate.id}
-                        className={`border-b hover:bg-gray-50 ${
-                          !candidate.include ? 'opacity-50' : ''
-                        } ${candidate.importStatus === 'ignored' ? 'bg-orange-50' : ''} ${candidate.importStatus === 'imported' ? 'bg-green-50' : ''}`}
-                      >
-                        <td className="p-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(candidate.id)}
-                            onChange={() => toggleSelection(candidate.id)}
-                            className="rounded"
-                          />
-                        </td>
+                      <>
+                        <tr
+                          key={candidate.id}
+                          className={`border-b hover:bg-gray-50 ${
+                            !candidate.include ? 'opacity-50' : ''
+                          } ${candidate.importStatus === 'ignored' ? 'bg-orange-50' : ''} ${candidate.importStatus === 'imported' ? 'bg-green-50' : ''} ${hasErrors ? 'bg-red-50' : ''}`}
+                        >
+                          <td className="p-3">
+                            {hasDiagnostics && (
+                              <button
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedRows);
+                                  if (isExpanded) {
+                                    newExpanded.delete(candidate.id);
+                                  } else {
+                                    newExpanded.add(candidate.id);
+                                  }
+                                  setExpandedRows(newExpanded);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                              </button>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(candidate.id)}
+                              onChange={() => toggleSelection(candidate.id)}
+                              className="rounded"
+                            />
+                          </td>
                         <td className="p-3">
                           <button
                             onClick={() => handleToggleInclude(candidate.id, candidate.include)}
@@ -598,19 +679,35 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                           )}
                         </td>
                         <td className="p-3">
-                          {candidate.flags && candidate.flags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {candidate.flags.map((flag, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs"
-                                  title={flag}
-                                >
-                                  {flag}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          <div className="flex flex-wrap gap-1">
+                            {hasErrors && (
+                              <span className="px-1.5 py-0.5 bg-red-100 text-red-800 rounded text-xs flex items-center gap-1">
+                                <XCircle size={12} />
+                                {candidate.errors!.length} error{candidate.errors!.length > 1 ? 's' : ''}
+                              </span>
+                            )}
+                            {hasWarnings && (
+                              <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs flex items-center gap-1">
+                                <AlertTriangle size={12} />
+                                {candidate.warnings!.length} warning{candidate.warnings!.length > 1 ? 's' : ''}
+                              </span>
+                            )}
+                            {hasDuplicate && (
+                              <span className="px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded text-xs flex items-center gap-1">
+                                <AlertCircle size={12} />
+                                Duplicate
+                              </span>
+                            )}
+                            {candidate.flags && candidate.flags.length > 0 && candidate.flags.map((flag, idx) => (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
+                                title={flag}
+                              >
+                                {flag}
+                              </span>
+                            ))}
+                          </div>
                         </td>
                         <td className="p-3">
                           <div className="flex gap-1">
@@ -655,6 +752,81 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                           </div>
                         </td>
                       </tr>
+
+                      {isExpanded && hasDiagnostics && (
+                        <tr key={`${candidate.id}-details`} className="bg-gray-50 border-b">
+                          <td colSpan={11} className="p-4">
+                            <div className="space-y-3 text-sm">
+                              {hasSkipReason && (
+                                <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-3">
+                                  <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <div className="font-semibold text-yellow-900">Skipped</div>
+                                    <div className="text-yellow-800 mt-1">{candidate.skipReason}</div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {hasDuplicate && (
+                                <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded p-3">
+                                  <AlertCircle size={16} className="text-orange-600 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <div className="font-semibold text-orange-900">
+                                      Duplicate Detected ({candidate.duplicateDetection!.matchType?.replace('_', ' ')})
+                                    </div>
+                                    <div className="text-orange-800 mt-1">
+                                      {candidate.duplicateDetection!.matchDetails}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {hasErrors && (
+                                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded p-3">
+                                  <XCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-red-900">Validation Errors</div>
+                                    <ul className="text-red-800 mt-1 space-y-1 ml-4">
+                                      {candidate.errors!.map((error, idx) => (
+                                        <li key={idx} className="list-disc">{error}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              )}
+
+                              {hasWarnings && (
+                                <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-3">
+                                  <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-yellow-900">Warnings</div>
+                                    <ul className="text-yellow-800 mt-1 space-y-1 ml-4">
+                                      {candidate.warnings!.map((warning, idx) => (
+                                        <li key={idx} className="list-disc">{warning}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              )}
+
+                              {candidate.validationDetails && (
+                                <details className="bg-blue-50 border border-blue-200 rounded p-3">
+                                  <summary className="font-semibold text-blue-900 cursor-pointer">
+                                    Validation Details
+                                  </summary>
+                                  <div className="text-blue-800 mt-2 text-xs space-y-1">
+                                    <div>Valid: {candidate.validationDetails.isValid ? 'Yes' : 'No'}</div>
+                                    {candidate.validationDetails.missingRequired && (
+                                      <div>Missing: {candidate.validationDetails.missingRequired.join(', ')}</div>
+                                    )}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                     );
                   })}
                 </tbody>

@@ -7,9 +7,13 @@ import { mapStatus, inferStatusFromDates } from './status-mapper';
 export interface ImportAdapter {
   name: string;
   sourceSystem: SourceSystem;
+  sourceType?: string;
   detect: (headers: string[]) => boolean;
   score: (normalizedHeaders: Set<string>) => number;
   normalize: (row: ParsedCSVRow, batchId: string, roadmapId: string, userId: string) => NormalizedActivityCandidate | null;
+  getFieldMappings?: (row: ParsedCSVRow) => Record<string, string>;
+  getRequiredFields?: () => string[];
+  getMissingFields?: (headers: string[]) => string[];
 }
 
 function normalizeHeader(header: string): string {

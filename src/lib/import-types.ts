@@ -7,6 +7,29 @@ export type Health = 'on_track' | 'at_risk' | 'blocked';
 export type Status = 'not_started' | 'in_progress' | 'completed' | 'cancelled';
 export type ImportStatus = 'pending' | 'imported' | 'ignored';
 
+export interface DuplicateDetection {
+  isDuplicate: boolean;
+  matchType?: 'source_record_id' | 'title_and_date' | 'exact_match';
+  matchedPillId?: string;
+  matchedCandidateId?: string;
+  matchDetails?: string;
+}
+
+export interface ValidationDetails {
+  isValid: boolean;
+  fieldErrors?: Record<string, string>;
+  missingRequired?: string[];
+  invalidValues?: Record<string, string>;
+}
+
+export interface AdapterScore {
+  adapterName: string;
+  score: number;
+  confidence: number;
+  matchedFields: string[];
+  missingFields: string[];
+}
+
 export interface NormalizedActivityCandidate {
   id: string;
   batchId: string;
@@ -67,6 +90,16 @@ export interface NormalizedActivityCandidate {
   initiative?: string;
   isDeleted: boolean;
 
+  // Diagnostic and error tracking
+  warnings?: string[];
+  errors?: string[];
+  skipReason?: string;
+  duplicateDetection?: DuplicateDetection;
+  validationDetails?: ValidationDetails;
+  adapterScores?: AdapterScore[];
+  detectedAdapter?: string;
+  fieldMappings?: Record<string, string>;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -77,6 +110,7 @@ export interface ParsedCSVRow {
 
 export interface ImportDiagnostics {
   detectedAdapter?: string;
+  adapterScores?: AdapterScore[];
   rawHeaders?: string[];
   normalizedHeaders?: string[];
   dateFields?: {
@@ -87,6 +121,8 @@ export interface ImportDiagnostics {
     endDate?: string;
     selectedField?: string;
   };
+  fieldMappings?: Record<string, string>;
+  sampleMappedValues?: Record<string, string>;
 }
 
 export interface ImportResult {
@@ -96,6 +132,23 @@ export interface ImportResult {
   candidates: NormalizedActivityCandidate[];
   errors: string[];
   diagnostics?: ImportDiagnostics;
+}
+
+export interface ImportSummary {
+  importedCount: number;
+  ignoredCount: number;
+  skippedCount: number;
+  failedCount: number;
+  skippedRows?: Array<{
+    rowNumber: number;
+    title: string;
+    reason: string;
+  }>;
+  failedRows?: Array<{
+    rowNumber: number;
+    title: string;
+    errors: string[];
+  }>;
 }
 
 export interface ImportBatch {
@@ -110,6 +163,9 @@ export interface ImportBatch {
   totalRows: number;
   importedCount: number;
   ignoredCount: number;
+  failedCount?: number;
+  skippedCount?: number;
+  lastImportSummary?: ImportSummary;
   createdAt: string;
   updatedAt: string;
 }

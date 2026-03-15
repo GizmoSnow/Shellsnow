@@ -1,9 +1,10 @@
 import { parseCSV, findColumn } from './csv-parser';
 import { parseExcelFile, isExcelFile } from './excel-parser';
-import { detectAdapter } from './import-adapters';
-import type { ImportResult, NormalizedActivityCandidate, ImportDiagnostics, ImportBatch } from './import-types';
+import { detectAdapter, scoreAllAdapters } from './import-adapters';
+import type { ImportResult, NormalizedActivityCandidate, ImportDiagnostics, ImportBatch, AdapterScore } from './import-types';
 import { supabase } from './supabase';
 import { detectDuplicates } from './deduplication';
+import { validateCandidate, buildWarnings, buildErrorMessages, checkForDuplicates, determineSkipReason } from './import-validation';
 
 export async function processImportFile(
   file: File,
@@ -37,7 +38,16 @@ export async function processImportFile(
       h.toLowerCase().trim().replace(/[\s_-]+/g, '')
     );
 
+    const adapterScores = scoreAllAdapters(headers);
     const adapter = detectAdapter(headers);
+
+    diagnostics.adapterScores = adapterScores.map(s => ({
+      adapterName: s.name,
+      score: s.score,
+      confidence: s.score / 20,
+      matchedFields: [],
+      missingFields: [],
+    }));
 
     if (!adapter) {
       errors.push(
@@ -49,6 +59,19 @@ export async function processImportFile(
     }
 
     diagnostics.detectedAdapter = adapter.name;
+
+    if (rows.length > 0) {
+      const sampleRow = rows[0];
+      const mappings: Record<string, string> = {};
+
+      Object.keys(sampleRow).forEach(header => {
+        if (sampleRow[header]) {
+          mappings[header] = sampleRow[header];
+        }
+      });
+
+      diagnostics.sampleMappedValues = mappings;
+    }
 
     if (adapter.sourceSystem === 'org62_training' && rows.length > 0) {
       const sampleRow = rows[0];
@@ -78,6 +101,17 @@ export async function processImportFile(
           candidate.fileName = file.name;
           candidate.importStatus = 'pending';
           candidate.isDeleted = false;
+
+          const validation = validateCandidate(candidate);
+          const warnings = buildWarnings(candidate);
+          const candidateErrors = buildErrorMessages(validation);
+
+          candidate.warnings = warnings.length > 0 ? warnings : undefined;
+          candidate.errors = candidateErrors.length > 0 ? candidateErrors : undefined;
+          candidate.validationDetails = validation;
+          candidate.detectedAdapter = adapter.name;
+          candidate.adapterScores = diagnostics.adapterScores;
+
           candidates.push(candidate);
         }
       } catch (error) {
@@ -150,6 +184,14 @@ async function saveCandidatesToDatabase(candidates: NormalizedActivityCandidate[
     goal_id: c.goalId,
     initiative: c.initiative,
     is_deleted: c.isDeleted,
+    warnings: c.warnings,
+    errors: c.errors,
+    skip_reason: c.skipReason,
+    duplicate_detection: c.duplicateDetection,
+    validation_details: c.validationDetails,
+    adapter_scores: c.adapterScores,
+    detected_adapter: c.detectedAdapter,
+    field_mappings: c.fieldMappings,
   }));
 
   const { error } = await supabase.from('activity_import_candidates').insert(dbRecords);
@@ -233,6 +275,14 @@ export async function loadCandidatesFromDatabase(batchId: string, includeDeleted
     overrideActivityType: row.override_activity_type,
     overrideOwner: row.override_owner,
     overrideStatus: row.override_status,
+    warnings: row.warnings,
+    errors: row.errors,
+    skipReason: row.skip_reason,
+    duplicateDetection: row.duplicate_detection,
+    validationDetails: row.validation_details,
+    adapterScores: row.adapter_scores,
+    detectedAdapter: row.detected_adapter,
+    fieldMappings: row.field_mappings,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
@@ -256,6 +306,11 @@ export async function updateCandidate(
   if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
   if (updates.initiative !== undefined) dbUpdates.initiative = updates.initiative;
   if (updates.isDeleted !== undefined) dbUpdates.is_deleted = updates.isDeleted;
+  if (updates.warnings !== undefined) dbUpdates.warnings = updates.warnings;
+  if (updates.errors !== undefined) dbUpdates.errors = updates.errors;
+  if (updates.skipReason !== undefined) dbUpdates.skip_reason = updates.skipReason;
+  if (updates.duplicateDetection !== undefined) dbUpdates.duplicate_detection = updates.duplicateDetection;
+  if (updates.validationDetails !== undefined) dbUpdates.validation_details = updates.validationDetails;
 
   const { error } = await supabase
     .from('activity_import_candidates')
@@ -338,6 +393,9 @@ export async function loadBatches(userId: string, roadmapId?: string): Promise<I
     totalRows: row.total_rows,
     importedCount: row.imported_count,
     ignoredCount: row.ignored_count,
+    failedCount: row.failed_count,
+    skippedCount: row.skipped_count,
+    lastImportSummary: row.last_import_summary,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
@@ -362,10 +420,37 @@ export async function updateBatchMetadata(
   }
 }
 
+export async function validateAndCheckDuplicates(
+  candidates: NormalizedActivityCandidate[],
+  roadmapId: string
+): Promise<void> {
+  for (const candidate of candidates) {
+    const validation = validateCandidate(candidate);
+    const duplicateCheck = await checkForDuplicates(candidate, roadmapId);
+
+    candidate.duplicateDetection = duplicateCheck;
+    candidate.validationDetails = validation;
+    candidate.skipReason = determineSkipReason(candidate, validation, duplicateCheck);
+
+    if (duplicateCheck.isDuplicate) {
+      candidate.include = false;
+    }
+
+    await updateCandidate(candidate.id, {
+      duplicateDetection: duplicateCheck,
+      validationDetails: validation,
+      skipReason: candidate.skipReason,
+      warnings: candidate.warnings,
+      errors: candidate.errors,
+      include: candidate.include,
+    });
+  }
+}
+
 export async function updateBatchCounts(batchId: string): Promise<void> {
   const { data, error } = await supabase
     .from('activity_import_candidates')
-    .select('import_status, is_deleted')
+    .select('import_status, is_deleted, skip_reason, errors')
     .eq('batch_id', batchId)
     .eq('is_deleted', false);
 
@@ -375,12 +460,16 @@ export async function updateBatchCounts(batchId: string): Promise<void> {
 
   const importedCount = data.filter(c => c.import_status === 'imported').length;
   const ignoredCount = data.filter(c => c.import_status === 'ignored').length;
+  const skippedCount = data.filter(c => c.skip_reason).length;
+  const failedCount = data.filter(c => c.errors && c.errors.length > 0).length;
 
   await supabase
     .from('import_batches')
     .update({
       imported_count: importedCount,
       ignored_count: ignoredCount,
+      skipped_count: skippedCount,
+      failed_count: failedCount,
     })
     .eq('id', batchId);
 }

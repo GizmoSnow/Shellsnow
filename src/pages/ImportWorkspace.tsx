@@ -166,8 +166,15 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
                           <div className="font-medium text-gray-900">
                             {batch.importedCount} of {batch.totalRows} imported
                           </div>
-                          <div className="text-gray-500 text-xs mt-1">
-                            {batch.ignoredCount} ignored · {pending} pending
+                          <div className="text-gray-500 text-xs mt-1 space-x-2">
+                            <span>{batch.ignoredCount} ignored</span>
+                            {batch.skippedCount !== undefined && batch.skippedCount > 0 && (
+                              <span>· {batch.skippedCount} skipped</span>
+                            )}
+                            {batch.failedCount !== undefined && batch.failedCount > 0 && (
+                              <span className="text-red-600">· {batch.failedCount} failed</span>
+                            )}
+                            <span>· {pending} pending</span>
                           </div>
                         </div>
                       </td>
