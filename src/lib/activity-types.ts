@@ -45,25 +45,25 @@ export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
   {
     key: 'specialist',
     label: 'Success Specialist',
-    color: '#0176D3',
+    color: '#5867E8',
     owner: 'salesforce'
   },
   {
     key: 'advisory',
     label: 'Product Advisory',
-    color: '#5867E8',
+    color: '#7526E3',
     owner: 'salesforce'
   },
   {
     key: 'enablement',
     label: 'Enablement',
-    color: '#FF538A',
+    color: '#06A59A',
     owner: 'salesforce'
   },
   {
     key: 'event',
     label: 'Event',
-    color: '#AD7BEE',
+    color: '#FF538A',
     owner: 'salesforce'
   }
 ];
