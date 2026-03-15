@@ -9,7 +9,6 @@ import GoalsPanel from '../components/GoalsPanel';
 import AddActivityModal from '../components/AddActivityModal';
 import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
-import { BackgroundColorPicker } from '../components/BackgroundColorPicker';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
 import { exportToPptx } from '../lib/pptx-export';
@@ -541,14 +540,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <BackgroundColorPicker
-                value={data.backgroundColor}
-                onChange={(color) => {
-                  const newData = { ...data, backgroundColor: color };
-                  setData(newData);
-                  saveRoadmap(title, newData);
-                }}
-              />
               <button
                 onClick={() => setShowFiscalYearSettings(true)}
                 className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
