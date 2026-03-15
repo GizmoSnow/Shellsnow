@@ -830,7 +830,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
                           const minIdx = Math.min(...qIndexes);
                           const maxIdx = Math.max(...qIndexes);
-                          const statusColor = getStatusColor(sp.status);
+                          const healthColor = getHealthColor(sp.health);
                           const dropdownId = `spanning-${goal.id}-${initiative.id}-${sp.id}`;
 
                           return (
@@ -847,8 +847,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               <div
                                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                style={{ background: statusColor }}
-                                title={getStatusLabel(sp.status)}
+                                style={{ background: healthColor }}
+                                title={getHealthLabel(sp.health)}
                               />
                               {sp.isCriticalPath && (
                                 <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
@@ -1033,7 +1033,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const isFirst = activityIndex === 0;
                           const isLast = activityIndex === activities.length - 1;
 
-                          const statusColor = getStatusColor(item.activity.status);
+                          const healthColor = getHealthColor(item.activity.health);
 
                           return (
                             <div
@@ -1063,8 +1063,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                               >
                                 <div
                                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                  style={{ background: statusColor }}
-                                  title={getStatusLabel(item.activity.status)}
+                                  style={{ background: healthColor }}
+                                  title={getHealthLabel(item.activity.health)}
                                 />
                                 {item.activity.isCriticalPath && (
                                   <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
@@ -1289,12 +1289,25 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 <div className="flex items-center gap-2 text-sm">
                   <div
                     className="w-2 h-2 rounded-full"
-                    style={{ background: getStatusColor(detailCardActivity.activity.status) }}
+                    style={{ background: getHealthColor(detailCardActivity.activity.health) }}
                   />
                   <span style={{ color: 'var(--roadmap-text-secondary)' }}>
-                    {getStatusLabel(detailCardActivity.activity.status)}
+                    {getHealthLabel(detailCardActivity.activity.health)}
                   </span>
                 </div>
+                {detailCardActivity.activity.status && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="px-2 py-0.5 rounded text-xs font-semibold"
+                      style={{
+                        background: getLifecycleStatusColor(detailCardActivity.activity.status),
+                        color: '#ffffff'
+                      }}
+                    >
+                      {getLifecycleStatusLabel(detailCardActivity.activity.status)}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {detailCardActivity.activity.start_month && detailCardActivity.activity.end_month && (
