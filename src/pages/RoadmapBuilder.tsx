@@ -123,7 +123,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [title, data, fiscalConfig, customerLogoBase64]);
+  }, [roadmap, title, data, fiscalConfig, customerLogoBase64]);
 
   const loadRoadmap = async () => {
     const { data: roadmapData, error } = await supabase
@@ -170,7 +170,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const saveRoadmap = async () => {
     if (!roadmap) return;
 
-    await supabase
+    const { error } = await supabase
       .from('roadmaps')
       .update({
         title,
@@ -182,6 +182,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         updated_at: new Date().toISOString()
       })
       .eq('id', roadmapId);
+
+    if (error) {
+      console.error('Error saving roadmap:', error);
+    }
   };
 
   const handleExportPptx = async () => {
