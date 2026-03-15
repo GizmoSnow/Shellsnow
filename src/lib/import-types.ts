@@ -63,10 +63,25 @@ export interface ParsedCSVRow {
   [key: string]: string;
 }
 
+export interface ImportDiagnostics {
+  detectedAdapter?: string;
+  rawHeaders?: string[];
+  normalizedHeaders?: string[];
+  dateFields?: {
+    completionDate?: string;
+    sessionDate?: string;
+    enrollmentDate?: string;
+    startDate?: string;
+    endDate?: string;
+    selectedField?: string;
+  };
+}
+
 export interface ImportResult {
   batchId: string;
   totalRows: number;
   parsedRows: number;
   candidates: NormalizedActivityCandidate[];
   errors: string[];
+  diagnostics?: ImportDiagnostics;
 }

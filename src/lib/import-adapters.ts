@@ -398,24 +398,31 @@ const Org62TrainingAdapter: ImportAdapter = {
       'ID'
     ]);
 
-    const completedDate = parseDate(findColumn(row, [
-      'Completed Date',
-      'Date Completed',
+    const completionDate = parseDate(findColumn(row, [
       'Completion Date',
-      'Session Date',
-      'Class Date'
+      'Completed Date',
+      'Date Completed'
     ]));
 
-    const startDate = parseDate(findColumn(row, [
+    const sessionDate = parseDate(findColumn(row, [
+      'Session Date',
+      'Class Date',
+      'Training Date'
+    ]));
+
+    const enrollmentDate = parseDate(findColumn(row, [
       'Start Date',
       'Enrollment Date',
       'Registration Date',
       'Date Enrolled'
-    ])) || completedDate;
+    ]));
 
-    const endDate = findColumn(row, ['End Date'])
-      ? parseDate(findColumn(row, ['End Date']))
-      : completedDate;
+    const explicitEndDate = parseDate(findColumn(row, ['End Date']));
+
+    const activityDate = completionDate || sessionDate || enrollmentDate || explicitEndDate;
+
+    const startDate = activityDate;
+    const endDate = activityDate;
 
     const accountName = findColumn(row, [
       'Account Name',

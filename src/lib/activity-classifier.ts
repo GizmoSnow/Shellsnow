@@ -35,12 +35,12 @@ export function classifyActivity(
 
   if (!startDate && !endDate) {
     return {
-      activityType: sourceType === 'training' ? 'standard' : 'standard',
+      activityType: 'standard',
       flags: ['MissingDates'],
     };
   }
 
-  const start = startDate ? new Date(startDate) : undefined;
+  const start = startDate ? new Date(startDate) : (endDate ? new Date(endDate) : undefined);
   const end = endDate ? new Date(endDate) : start;
 
   if (!start || !end) {

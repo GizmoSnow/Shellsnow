@@ -1,7 +1,7 @@
-import { parseCSV } from './csv-parser';
+import { parseCSV, findColumn } from './csv-parser';
 import { parseExcelFile, isExcelFile } from './excel-parser';
 import { detectAdapter } from './import-adapters';
-import type { ImportResult, NormalizedActivityCandidate } from './import-types';
+import type { ImportResult, NormalizedActivityCandidate, ImportDiagnostics } from './import-types';
 import { supabase } from './supabase';
 import { detectDuplicates } from './deduplication';
 
@@ -13,6 +13,7 @@ export async function processImportFile(
   const batchId = crypto.randomUUID();
   const errors: string[] = [];
   const candidates: NormalizedActivityCandidate[] = [];
+  const diagnostics: ImportDiagnostics = {};
 
   try {
     let rows;
@@ -26,10 +27,15 @@ export async function processImportFile(
 
     if (rows.length === 0) {
       errors.push('No data rows found in file');
-      return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors };
+      return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors, diagnostics };
     }
 
     const headers = Object.keys(rows[0]);
+    diagnostics.rawHeaders = headers;
+    diagnostics.normalizedHeaders = headers.map(h =>
+      h.toLowerCase().trim().replace(/[\s_-]+/g, '')
+    );
+
     const adapter = detectAdapter(headers);
 
     if (!adapter) {
@@ -38,7 +44,26 @@ export async function processImportFile(
         'Supported formats: OrgCS Engagement, Org62 Support, Org62 Training. ' +
         'Please ensure your file has recognizable column names.'
       );
-      return { batchId, totalRows: rows.length, parsedRows: 0, candidates: [], errors };
+      return { batchId, totalRows: rows.length, parsedRows: 0, candidates: [], errors, diagnostics };
+    }
+
+    diagnostics.detectedAdapter = adapter.name;
+
+    if (adapter.sourceSystem === 'org62_training' && rows.length > 0) {
+      const sampleRow = rows[0];
+      diagnostics.dateFields = {
+        completionDate: findColumn(sampleRow, ['Completion Date', 'Completed Date', 'Date Completed']),
+        sessionDate: findColumn(sampleRow, ['Session Date', 'Class Date', 'Training Date']),
+        enrollmentDate: findColumn(sampleRow, ['Start Date', 'Enrollment Date', 'Registration Date', 'Date Enrolled']),
+        endDate: findColumn(sampleRow, ['End Date']),
+      };
+
+      const selectedField = diagnostics.dateFields.completionDate ? 'Completion Date' :
+                           diagnostics.dateFields.sessionDate ? 'Session Date' :
+                           diagnostics.dateFields.enrollmentDate ? 'Start/Enrollment Date' :
+                           diagnostics.dateFields.endDate ? 'End Date' :
+                           'None';
+      diagnostics.dateFields.selectedField = selectedField;
     }
 
     for (const row of rows) {
@@ -65,10 +90,11 @@ export async function processImportFile(
       parsedRows: candidates.length,
       candidates,
       errors,
+      diagnostics,
     };
   } catch (error) {
     errors.push(`File processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors };
+    return { batchId, totalRows: 0, parsedRows: 0, candidates: [], errors, diagnostics };
   }
 }
 

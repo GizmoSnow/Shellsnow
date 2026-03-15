@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2 } from 'lucide-react';
-import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter } from '../lib/import-types';
+import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch } from '../lib/import-processor';
 
 interface ImportStagingModalProps {
@@ -36,6 +36,7 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
   const [candidates, setCandidates] = useState<NormalizedActivityCandidate[]>([]);
   const [batchId, setBatchId] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
+  const [diagnostics, setDiagnostics] = useState<ImportDiagnostics | undefined>();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
   const [filters, setFilters] = useState<FilterState>({
@@ -69,6 +70,10 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
 
       if (result.errors.length > 0) {
         setErrors(result.errors);
+      }
+
+      if (result.diagnostics) {
+        setDiagnostics(result.diagnostics);
       }
 
       if (result.candidates.length > 0) {
@@ -224,6 +229,44 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
 
         {step === 'review' && (
           <>
+            {diagnostics && (
+              <div className="p-4 border-b bg-blue-50">
+                <div className="flex items-start gap-2">
+                  <FileText size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-blue-900 mb-2">Import Diagnostics</p>
+                    <div className="text-sm text-blue-800 space-y-1">
+                      {diagnostics.detectedAdapter && (
+                        <p><strong>Detected Format:</strong> {diagnostics.detectedAdapter}</p>
+                      )}
+                      {diagnostics.dateFields && (
+                        <div className="mt-2">
+                          <p className="font-semibold">Training Date Mapping:</p>
+                          <ul className="ml-4 mt-1 space-y-0.5">
+                            {diagnostics.dateFields.completionDate && (
+                              <li>Completion Date: {diagnostics.dateFields.completionDate}</li>
+                            )}
+                            {diagnostics.dateFields.sessionDate && (
+                              <li>Session Date: {diagnostics.dateFields.sessionDate}</li>
+                            )}
+                            {diagnostics.dateFields.enrollmentDate && (
+                              <li>Enrollment/Start Date: {diagnostics.dateFields.enrollmentDate}</li>
+                            )}
+                            {diagnostics.dateFields.endDate && (
+                              <li>End Date: {diagnostics.dateFields.endDate}</li>
+                            )}
+                            <li className="font-semibold mt-1">
+                              Selected Field: {diagnostics.dateFields.selectedField}
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="p-4 border-b bg-gray-50">
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
