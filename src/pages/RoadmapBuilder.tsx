@@ -74,6 +74,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [addContext, setAddContext] = useState<any>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingTypeKey, setEditingTypeKey] = useState<string | null>(null);
+  const [editingTypeValue, setEditingTypeValue] = useState<string>('');
   const [editingColorKey, setEditingColorKey] = useState<string | null>(null);
   const [addingNewType, setAddingNewType] = useState(false);
   const [newTypeLabel, setNewTypeLabel] = useState('');
@@ -800,27 +801,28 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                     {editingTypeKey === typeKey ? (
                       <input
                         type="text"
-                        value={getTypeLabel(typeKey)}
-                        onChange={(e) => {
-                          const newData = { ...data };
-                          if (!newData.typeLabels) {
-                            newData.typeLabels = {};
+                        value={editingTypeValue}
+                        onChange={(e) => setEditingTypeValue(e.target.value)}
+                        onBlur={() => {
+                          if (editingTypeValue.trim()) {
+                            updateTypeLabel(typeKey, editingTypeValue.trim());
+                          } else {
+                            setEditingTypeKey(null);
                           }
-                          newData.typeLabels[typeKey] = e.target.value;
-                          setData(newData);
                         }}
-                        onBlur={() => setEditingTypeKey(null)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            setEditingTypeKey(null);
+                            e.preventDefault();
+                            if (editingTypeValue.trim()) {
+                              updateTypeLabel(typeKey, editingTypeValue.trim());
+                            } else {
+                              setEditingTypeKey(null);
+                            }
                           }
                           if (e.key === 'Escape') {
-                            const newData = { ...data };
-                            if (newData.typeLabels) {
-                              delete newData.typeLabels[typeKey];
-                            }
-                            setData(newData);
+                            e.preventDefault();
                             setEditingTypeKey(null);
+                            setEditingTypeValue('');
                           }
                         }}
                         autoFocus
@@ -829,10 +831,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                       />
                     ) : (
                       <span
-                        onClick={() => setEditingTypeKey(typeKey)}
-                        className="cursor-pointer transition-colors text-xs font-medium"
+                        onClick={() => {
+                          if (!isDefault) {
+                            setEditingTypeKey(typeKey);
+                            setEditingTypeValue(getTypeLabel(typeKey));
+                          }
+                        }}
+                        className={!isDefault ? "cursor-pointer transition-colors text-xs font-medium hover:opacity-70" : "text-xs font-medium"}
                         style={{ color: 'var(--text-primary)' }}
-                        title="Click to edit label"
+                        title={!isDefault ? "Click to edit label" : undefined}
                       >
                         {getTypeLabel(typeKey)}
                       </span>
