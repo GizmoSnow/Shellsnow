@@ -16,7 +16,7 @@ import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
-import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES } from '../lib/activity-types';
+import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
@@ -35,13 +35,13 @@ const DEFAULT_TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  csm: '#04e1cb',
-  architect: '#08abed',
-  specialist: '#022ac0',
-  review: '#aacbff',
-  event: '#ff538a',
-  partner: '#fcc003',
-  trailhead: '#d17dfe',
+  csm: '#45C65A',
+  architect: '#0D9DDA',
+  specialist: '#0176D3',
+  review: '#5867E8',
+  event: '#FF538A',
+  partner: '#E4A201',
+  trailhead: '#AD7BEE',
 };
 
 const TYPE_OWNERS: Record<string, ActivityOwner> = {
@@ -311,8 +311,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   };
 
   const generateDefaultColor = () => {
-    const colors = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return getNextAvailableColor(data.customActivityTypes, data.typeColors);
   };
 
   const handleAddCustomType = () => {
@@ -666,148 +665,169 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         />
 
         {/* Screen legend - hidden when printing */}
-        <div className="flex gap-3 mb-5 flex-wrap text-xs font-medium print-hide items-center" style={{ color: 'var(--text-muted)' }}>
-          {getAllTypeKeys().map((typeKey) => {
-            const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
-            return (
-              <div key={typeKey} className="flex items-center gap-2 relative group">
-                <div className="relative">
+        <div
+          className="rounded-xl mb-5 print-hide"
+          style={{
+            border: '1px solid var(--border)',
+            background: theme === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'var(--surface)'
+          }}
+        >
+          <div className="px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {getAllTypeKeys().map((typeKey) => {
+                const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
+                return (
                   <div
-                    className="w-3 h-3 rounded cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
-                    style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
-                    onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
-                  ></div>
-                  {editingColorKey === typeKey && (
-                    <input
-                      type="color"
-                      value={getTypeColor(typeKey)}
-                      onChange={(e) => updateTypeColor(typeKey, e.target.value)}
-                      onBlur={() => setEditingColorKey(null)}
-                      className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
-                      style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
-                      autoFocus
-                    />
-                  )}
-                </div>
-                {editingTypeKey === typeKey ? (
+                    key={typeKey}
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-2 relative group transition-all"
+                    style={{
+                      background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                      border: '1px solid var(--border)'
+                    }}
+                  >
+                    <div className="relative">
+                      <div
+                        className="w-3 h-3 rounded-full cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
+                        style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
+                        onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
+                      ></div>
+                      {editingColorKey === typeKey && (
+                        <input
+                          type="color"
+                          value={getTypeColor(typeKey)}
+                          onChange={(e) => updateTypeColor(typeKey, e.target.value)}
+                          onBlur={() => setEditingColorKey(null)}
+                          className="absolute top-0 left-0 w-3 h-3 opacity-0 cursor-pointer"
+                          style={{ width: '40px', height: '40px', marginTop: '-10px', marginLeft: '-10px' }}
+                          autoFocus
+                        />
+                      )}
+                    </div>
+                    {editingTypeKey === typeKey ? (
+                      <input
+                        type="text"
+                        value={getTypeLabel(typeKey)}
+                        onChange={(e) => {
+                          const newData = { ...data };
+                          if (!newData.typeLabels) {
+                            newData.typeLabels = {};
+                          }
+                          newData.typeLabels[typeKey] = e.target.value;
+                          setData(newData);
+                        }}
+                        onBlur={() => setEditingTypeKey(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setEditingTypeKey(null);
+                          }
+                          if (e.key === 'Escape') {
+                            const newData = { ...data };
+                            if (newData.typeLabels) {
+                              delete newData.typeLabels[typeKey];
+                            }
+                            setData(newData);
+                            setEditingTypeKey(null);
+                          }
+                        }}
+                        autoFocus
+                        className="border border-[#0176D3] rounded px-2 py-0.5 outline-none min-w-[120px] text-xs font-medium"
+                        style={{ background: 'var(--surface)', color: 'var(--text)' }}
+                      />
+                    ) : (
+                      <span
+                        onClick={() => setEditingTypeKey(typeKey)}
+                        className="cursor-pointer transition-colors text-xs font-medium"
+                        style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.9)' : 'var(--text)' }}
+                        title="Click to edit label"
+                      >
+                        {getTypeLabel(typeKey)}
+                      </span>
+                    )}
+                    {!isDefault && (
+                      <button
+                        onClick={() => deleteCustomType(typeKey)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full p-1"
+                        title="Delete custom type"
+                      >
+                        <X className="w-3 h-3 text-red-600 dark:text-red-400" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {addingNewType ? (
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-2"
+                  style={{
+                    background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    border: '1px solid var(--primary)'
+                  }}
+                >
                   <input
                     type="text"
-                    value={getTypeLabel(typeKey)}
-                    onChange={(e) => {
-                      const newData = { ...data };
-                      if (!newData.typeLabels) {
-                        newData.typeLabels = {};
-                      }
-                      newData.typeLabels[typeKey] = e.target.value;
-                      setData(newData);
-                    }}
-                    onBlur={() => setEditingTypeKey(null)}
+                    value={newTypeLabel}
+                    onChange={(e) => setNewTypeLabel(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        setEditingTypeKey(null);
+                        confirmAddCustomType();
                       }
                       if (e.key === 'Escape') {
-                        const newData = { ...data };
-                        if (newData.typeLabels) {
-                          delete newData.typeLabels[typeKey];
-                        }
-                        setData(newData);
-                        setEditingTypeKey(null);
+                        cancelAddCustomType();
                       }
                     }}
+                    placeholder="Type name..."
                     autoFocus
-                    className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none min-w-[120px]"
-                    style={{ background: 'var(--surface)', color: 'var(--text)' }}
+                    className="border-0 outline-none text-xs font-medium bg-transparent"
+                    style={{ color: 'var(--text)', minWidth: '100px' }}
                   />
-                ) : (
-                  <span
-                    onClick={() => setEditingTypeKey(typeKey)}
-                    className="cursor-pointer transition-colors"
-                    style={{ color: 'var(--text-muted)' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                    title="Click to edit"
+                  <select
+                    value={newTypeOwner}
+                    onChange={(e) => setNewTypeOwner(e.target.value as 'salesforce' | 'partner' | 'customer')}
+                    className="border-0 outline-none text-xs font-medium bg-transparent"
+                    style={{ color: 'var(--text)' }}
                   >
-                    {getTypeLabel(typeKey)}
-                  </span>
-                )}
-                {!isDefault && (
+                    <option value="salesforce">Salesforce</option>
+                    <option value="partner">Partner</option>
+                    <option value="customer">Customer</option>
+                  </select>
                   <button
-                    onClick={() => deleteCustomType(typeKey)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded p-0.5"
-                    title="Delete custom type"
+                    onClick={confirmAddCustomType}
+                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs"
+                    style={{ background: '#2E844A', color: 'white' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#45C65A'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#2E844A'}
+                    title="Confirm"
                   >
-                    <X className="w-3 h-3 text-red-600 dark:text-red-400" />
+                    ✓
                   </button>
-                )}
-              </div>
-            );
-          })}
-          {addingNewType ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={newTypeLabel}
-                onChange={(e) => setNewTypeLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    confirmAddCustomType();
-                  }
-                  if (e.key === 'Escape') {
-                    cancelAddCustomType();
-                  }
-                }}
-                placeholder="Type name..."
-                autoFocus
-                className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none text-xs"
-                style={{ background: 'var(--surface)', color: 'var(--text)', minWidth: '120px' }}
-              />
-              <select
-                value={newTypeOwner}
-                onChange={(e) => setNewTypeOwner(e.target.value as 'salesforce' | 'partner' | 'customer')}
-                className="border border-[#6c63ff] rounded px-2 py-0.5 outline-none text-xs"
-                style={{ background: 'var(--surface)', color: 'var(--text)' }}
-              >
-                <option value="salesforce">Salesforce</option>
-                <option value="partner">Partner</option>
-                <option value="customer">Customer</option>
-              </select>
-              <button
-                onClick={confirmAddCustomType}
-                className="w-6 h-6 rounded flex items-center justify-center transition-colors"
-                style={{ background: '#10b981', color: 'white' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
-                title="Confirm"
-              >
-                ✓
-              </button>
-              <button
-                onClick={cancelAddCustomType}
-                className="w-6 h-6 rounded flex items-center justify-center transition-colors"
-                style={{ background: '#ef4444', color: 'white' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
-                title="Cancel"
-              >
-                ✕
-              </button>
+                  <button
+                    onClick={cancelAddCustomType}
+                    className="w-5 h-5 rounded-full flex items-center justify-center transition-colors text-xs"
+                    style={{ background: '#AA3001', color: 'white' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#F38303'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#AA3001'}
+                    title="Cancel"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAddCustomType}
+                  className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-xs font-semibold transition-all"
+                  style={{
+                    background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    color: 'var(--primary)',
+                    border: '1px dashed var(--border)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'}
+                >
+                  + Add Type
+                </button>
+              )}
             </div>
-          ) : (
-            <button
-              onClick={handleAddCustomType}
-              className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                background: 'var(--surface2)',
-                color: 'var(--primary)',
-                border: '1px dashed var(--border)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
-            >
-              + Add Type
-            </button>
-          )}
+          </div>
         </div>
 
         <RoadmapGrid
