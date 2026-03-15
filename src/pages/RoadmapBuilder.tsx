@@ -125,7 +125,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [title, data, fiscalConfig]);
+  }, [title, data, fiscalConfig, customerLogoBase64]);
 
   const loadRoadmap = async () => {
     const { data: roadmapData, error } = await supabase
@@ -177,6 +177,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       .update({
         title,
         data,
+        customer_logo_base64: customerLogoBase64,
         fiscal_start_month: fiscalConfig.startMonth,
         base_fiscal_year: fiscalConfig.baseYear,
         roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
@@ -497,22 +498,26 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                   onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (confirm('Remove customer logo?')) {
-                      const { error } = await supabase
-                        .from('roadmaps')
-                        .update({ customer_logo_base64: null })
-                        .eq('id', roadmapId);
 
-                      if (error) {
-                        console.error('Error removing logo:', error);
-                        alert('Failed to remove logo. Please try again.');
-                      } else {
-                        setCustomerLogoBase64(null);
-                      }
+                    setCustomerLogoBase64(null);
+
+                    const { error } = await supabase
+                      .from('roadmaps')
+                      .update({ customer_logo_base64: null })
+                      .eq('id', roadmapId);
+
+                    if (error) {
+                      console.error('Error removing logo:', error);
+                      setCustomerLogoBase64(customerLogoBase64);
                     }
                   }}
-                  className="px-3 py-2 border rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
-                  style={{ borderColor: '#d1d5db', color: '#dc2626' }}
+                  className="px-3 py-2 border rounded-lg text-sm font-semibold transition-colors"
+                  style={{
+                    borderColor: 'var(--border)',
+                    color: '#dc2626',
+                    background: 'var(--surface)'
+                  }}
+                  title="Remove customer logo"
                 >
                   Remove Logo
                 </button>
