@@ -262,23 +262,25 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Success Paths</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Create and manage your customer success paths</p>
           </div>
-          <button
-            onClick={createRoadmap}
-            className="flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
-            style={{ background: '#066afe' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
-          >
-            <Plus size={20} />
-            New Success Path
-          </button>
+          {roadmaps.length > 0 && (
+            <button
+              onClick={createRoadmap}
+              className="flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
+              style={{ background: '#066afe' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#0554d1'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
+            >
+              <Plus size={20} />
+              New Success Path
+            </button>
+          )}
         </div>
 
         {roadmaps.length === 0 ? (
           <div className="text-center py-20">
             <img src={astroGif} alt="Astro" className="w-32 h-32 mx-auto mb-6 object-contain" />
-            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No roadmaps yet</h3>
-            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Create your first roadmap to get started</p>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No success paths yet</h3>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Create your first success path to get started</p>
             <button
               onClick={createRoadmap}
               className="inline-flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
@@ -287,7 +289,7 @@ export default function Dashboard() {
               onMouseLeave={(e) => e.currentTarget.style.background = '#066afe'}
             >
               <Plus size={20} />
-              Create Roadmap
+              Create Success Path
             </button>
           </div>
         ) : (
