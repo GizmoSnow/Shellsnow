@@ -80,6 +80,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
+    console.log('copyActivity called with:', { goalId, initiativeId, sourceQuarter, activityId, targetQuarter });
+
     const newData = {
       ...data,
       goals: data.goals.map(g => {
@@ -90,19 +92,30 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           initiatives: g.initiatives.map(i => {
             if (i.id !== initiativeId) return i;
 
-            const sourceAct = i.activities[sourceQuarter as keyof typeof i.activities].find(a => a.id === activityId);
-            if (!sourceAct) return i;
+            const sourceAct = i.activities[sourceQuarter as keyof typeof i.activities]?.find(a => a.id === activityId);
+            if (!sourceAct) {
+              console.log('Source activity not found!');
+              return i;
+            }
 
             const newActivity: Activity = {
               ...sourceAct,
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
             };
 
+            console.log('Creating new activity:', newActivity);
+
+            const targetActivities = [...(i.activities[targetQuarter as keyof typeof i.activities] || []), newActivity];
+
+            console.log('Target quarter activities count:', targetActivities.length);
+
             return {
               ...i,
               activities: {
-                ...i.activities,
-                [targetQuarter]: [...(i.activities[targetQuarter as keyof typeof i.activities] || []), newActivity]
+                q1: targetQuarter === 'q1' ? targetActivities : [...(i.activities.q1 || [])],
+                q2: targetQuarter === 'q2' ? targetActivities : [...(i.activities.q2 || [])],
+                q3: targetQuarter === 'q3' ? targetActivities : [...(i.activities.q3 || [])],
+                q4: targetQuarter === 'q4' ? targetActivities : [...(i.activities.q4 || [])]
               }
             };
           })
@@ -110,6 +123,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
       })
     };
 
+    console.log('New data:', newData);
     onDataChange(newData);
     setCopyDropdown(null);
   };
