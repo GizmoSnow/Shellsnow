@@ -97,7 +97,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    const typeMetadata = getTypeMetadata(selectedType, data.typeLabels, data.typeColors, data.typeOwners);
+    const typeMetadata = getTypeMetadata(selectedType, data.customActivityTypes);
     if (typeMetadata && !editingActivity) {
       setSelectedOwner(typeMetadata.owner);
     }

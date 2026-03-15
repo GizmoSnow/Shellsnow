@@ -17,6 +17,48 @@ export interface EngagementMetrics {
   selectedYear: number;
 }
 
+/**
+ * Unified color resolution function - ensures consistent colors across the entire app
+ */
+function getTypeColor(typeKey: string, data: RoadmapData, typeColors: Record<string, string>, defaultTypeColors: Record<string, string>): string {
+  // First check for user-customized colors (legacy)
+  if (typeColors?.[typeKey]) {
+    return typeColors[typeKey];
+  }
+  // Then check metadata (default or custom types)
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  if (metadata?.color) {
+    return metadata.color;
+  }
+  // Legacy fallback
+  if (defaultTypeColors?.[typeKey]) {
+    return defaultTypeColors[typeKey];
+  }
+  // Final fallback
+  return '#6c63ff';
+}
+
+/**
+ * Unified label resolution function - ensures consistent labels across the entire app
+ */
+function getTypeLabel(typeKey: string, data: RoadmapData, typeLabels: Record<string, string>, defaultTypeLabels: Record<string, string>): string {
+  // First check metadata (custom or default types)
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  if (metadata?.label) {
+    return metadata.label;
+  }
+  // Then check legacy type labels
+  if (typeLabels?.[typeKey]) {
+    return typeLabels[typeKey];
+  }
+  // Default labels
+  if (defaultTypeLabels?.[typeKey]) {
+    return defaultTypeLabels[typeKey];
+  }
+  // Fallback: capitalize the type key
+  return typeKey.charAt(0).toUpperCase() + typeKey.slice(1).replace(/_/g, ' ');
+}
+
 export function calculateEngagementMetrics(
   data: RoadmapData,
   fiscalConfig: FiscalYearConfig,
@@ -112,9 +154,9 @@ export function calculateEngagementMetrics(
   const categoryCounts: EngagementCategory[] = Object.entries(engagementCounts)
     .map(([type, count]) => ({
       type,
-      label: typeLabels[type] || defaultTypeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1),
+      label: getTypeLabel(type, data, typeLabels, defaultTypeLabels),
       count,
-      color: typeColors[type] || defaultTypeColors[type] || '#6c63ff'
+      color: getTypeColor(type, data, typeColors, defaultTypeColors)
     }))
     .sort((a, b) => b.count - a.count);
 
