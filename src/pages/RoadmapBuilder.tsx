@@ -545,19 +545,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             }}>
               <div className="flex items-center gap-2">
                 <label className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Header Color:</label>
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={data.headerColor || '#0B1D3A'}
-                    onChange={(e) => updateHeaderColor(e.target.value)}
-                    className="w-7 h-7 rounded-full border-2 cursor-pointer"
-                    style={{
-                      borderColor: 'rgba(0, 0, 0, 0.15)',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                    title="Change header background color"
-                  />
-                </div>
+                <input
+                  type="color"
+                  value={data.headerColor || '#0B1D3A'}
+                  onChange={(e) => updateHeaderColor(e.target.value)}
+                  className="w-6 h-6 rounded-full cursor-pointer"
+                  style={{
+                    border: '1px solid rgba(0, 0, 0, 0.2)',
+                    padding: 0
+                  }}
+                  title="Change header background color"
+                />
               </div>
               <div className="flex-1"></div>
               <button
