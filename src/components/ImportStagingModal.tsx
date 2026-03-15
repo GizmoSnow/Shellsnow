@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
-import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
-import { processImportFile, updateCandidate, deleteBatch } from '../lib/import-processor';
+import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 
 interface ImportStagingModalProps {
   roadmapId: string;
   userId: string;
+  batchId?: string;
   onClose: () => void;
   onImportComplete: (batchId: string, candidates: NormalizedActivityCandidate[]) => void;
 }
@@ -30,15 +31,16 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
   training: 'Training',
 };
 
-export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplete }: ImportStagingModalProps) {
-  const [step, setStep] = useState<'upload' | 'review'>('upload');
+export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId, onClose, onImportComplete }: ImportStagingModalProps) {
+  const [step, setStep] = useState<'upload' | 'review'>(existingBatchId ? 'review' : 'upload');
   const [isProcessing, setIsProcessing] = useState(false);
   const [candidates, setCandidates] = useState<NormalizedActivityCandidate[]>([]);
-  const [batchId, setBatchId] = useState<string>('');
+  const [batchId, setBatchId] = useState<string>(existingBatchId || '');
   const [errors, setErrors] = useState<string[]>([]);
   const [diagnostics, setDiagnostics] = useState<ImportDiagnostics | undefined>();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterState>({
     sourceType: 'all',
     status: 'all',
@@ -46,6 +48,27 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
     quarter: 'all',
     flaggedOnly: false,
   });
+
+  useEffect(() => {
+    if (existingBatchId) {
+      loadExistingBatch();
+    }
+  }, [existingBatchId]);
+
+  const loadExistingBatch = async () => {
+    if (!existingBatchId) return;
+
+    try {
+      setIsProcessing(true);
+      const data = await loadCandidatesFromDatabase(existingBatchId);
+      setCandidates(data);
+      setStep('review');
+    } catch (error) {
+      setErrors([error instanceof Error ? error.message : 'Failed to load batch']);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter(c => {
@@ -141,11 +164,78 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
   };
 
   const handleDelete = async (id: string) => {
-    setCandidates(prev => prev.filter(c => c.id !== id));
+    try {
+      await updateCandidate(id, { isDeleted: true });
+      setCandidates(prev => prev.filter(c => c.id !== id));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete');
+    }
+  };
+
+  const handleBulkIgnore = async () => {
+    if (selectedIds.size === 0) {
+      alert('No items selected');
+      return;
+    }
+
+    try {
+      await updateCandidates(Array.from(selectedIds), {
+        importStatus: 'ignored',
+        include: false
+      });
+      setCandidates(prev =>
+        prev.map(c => selectedIds.has(c.id)
+          ? { ...c, importStatus: 'ignored', include: false }
+          : c
+        )
+      );
+      setSelectedIds(new Set());
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to ignore items');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) {
+      alert('No items selected');
+      return;
+    }
+
+    if (!confirm(`Permanently delete ${selectedIds.size} items?`)) {
+      return;
+    }
+
+    try {
+      await updateCandidates(Array.from(selectedIds), { isDeleted: true });
+      setCandidates(prev => prev.filter(c => !selectedIds.has(c.id)));
+      setSelectedIds(new Set());
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete items');
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredCandidates.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCandidates.map(c => c.id)));
+    }
   };
 
   const handleCancel = async () => {
-    if (batchId && candidates.length > 0) {
+    if (batchId && candidates.length > 0 && !existingBatchId) {
       if (confirm('Discard this import batch?')) {
         try {
           await deleteBatch(batchId);
@@ -159,8 +249,8 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
     }
   };
 
-  const handleConfirmImport = () => {
-    const includedCandidates = candidates.filter(c => c.include);
+  const handleConfirmImport = async () => {
+    const includedCandidates = candidates.filter(c => c.include && c.importStatus !== 'imported');
     if (includedCandidates.length === 0) {
       alert('No activities selected for import');
       return;
@@ -319,6 +409,25 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
                 </label>
 
                 <div className="ml-auto flex items-center gap-2">
+                  {selectedIds.size > 0 && (
+                    <>
+                      <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                      <button
+                        onClick={handleBulkIgnore}
+                        className="px-3 py-1.5 text-sm bg-orange-50 text-orange-700 rounded hover:bg-orange-100 transition-colors flex items-center gap-1"
+                      >
+                        <Ban size={14} />
+                        Ignore Selected
+                      </button>
+                      <button
+                        onClick={handleBulkDelete}
+                        className="px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 size={14} />
+                        Delete Selected
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => handleBulkToggle(true)}
                     className="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
@@ -339,6 +448,14 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
               <table className="w-full">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr className="text-left text-xs font-semibold text-gray-600 uppercase">
+                    <th className="p-3 w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0}
+                        onChange={toggleSelectAll}
+                        className="rounded"
+                      />
+                    </th>
                     <th className="p-3 w-12"></th>
                     <th className="p-3">Source</th>
                     <th className="p-3">Raw Title</th>
@@ -366,8 +483,16 @@ export function ImportStagingModal({ roadmapId, userId, onClose, onImportComplet
                         key={candidate.id}
                         className={`border-b hover:bg-gray-50 ${
                           !candidate.include ? 'opacity-50' : ''
-                        }`}
+                        } ${candidate.importStatus === 'ignored' ? 'bg-orange-50' : ''} ${candidate.importStatus === 'imported' ? 'bg-green-50' : ''}`}
                       >
+                        <td className="p-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(candidate.id)}
+                            onChange={() => toggleSelection(candidate.id)}
+                            className="rounded"
+                          />
+                        </td>
                         <td className="p-3">
                           <button
                             onClick={() => handleToggleInclude(candidate.id, candidate.include)}

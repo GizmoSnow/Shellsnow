@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FileInput } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FileInput, FolderOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -12,6 +12,7 @@ import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
 import { ImportStagingModal } from '../components/ImportStagingModal';
+import { ImportWorkspace } from './ImportWorkspace';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -21,6 +22,7 @@ import { appendMetadataToDescription } from '../lib/import-metadata-formatter';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import type { NormalizedActivityCandidate } from '../lib/import-types';
+import { updateCandidates, updateBatchCounts } from '../lib/import-processor';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -96,6 +98,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showImportWorkspace, setShowImportWorkspace] = useState(false);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -228,6 +231,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const handleImportComplete = async (batchId: string, candidates: NormalizedActivityCandidate[]) => {
     try {
       const updatedData = { ...data };
+      const candidateIds = candidates.map(c => c.id);
 
       for (const candidate of candidates) {
         const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
@@ -274,12 +278,12 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setData(updatedData);
       await saveRoadmap(updatedData);
 
-      const { error: deleteError } = await supabase
-        .from('activity_import_candidates')
-        .delete()
-        .eq('batch_id', batchId);
+      await updateCandidates(candidateIds, {
+        importStatus: 'imported',
+        importedAt: new Date().toISOString(),
+      });
 
-      if (deleteError) console.error('Failed to clean up batch:', deleteError);
+      await updateBatchCounts(batchId);
 
       setShowImportModal(false);
       alert(`Successfully imported ${candidates.length} activities`);
@@ -583,6 +587,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     );
   }
 
+  if (showImportWorkspace && user) {
+    return (
+      <ImportWorkspace
+        roadmapId={roadmapId}
+        onBack={() => setShowImportWorkspace(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg-app)' }}>
       <div className="border-b sticky top-0 z-50 print-hide backdrop-blur-sm" style={{ borderColor: 'var(--border-subtle)', background: 'var(--header-bg)' }}>
@@ -760,6 +773,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               >
                 <FileInput size={16} />
                 Import Activities
+              </button>
+              <button
+                onClick={() => setShowImportWorkspace(true)}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
+                style={{ background: 'var(--primary)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+              >
+                <FolderOpen size={16} />
+                Import Workspace
               </button>
               <button
                 onClick={handleExportPng}

@@ -5,6 +5,7 @@ export type ActivityType = 'standard' | 'spanning' | 'quarter';
 export type Quarter = 'q1' | 'q2' | 'q3' | 'q4';
 export type Health = 'on_track' | 'at_risk' | 'blocked';
 export type Status = 'not_started' | 'in_progress' | 'completed' | 'cancelled';
+export type ImportStatus = 'pending' | 'imported' | 'ignored';
 
 export interface NormalizedActivityCandidate {
   id: string;
@@ -55,6 +56,17 @@ export interface NormalizedActivityCandidate {
   overrideOwner?: Owner;
   overrideStatus?: Status;
 
+  // Batch metadata
+  batchName?: string;
+  fileName?: string;
+
+  // Import workflow tracking
+  importStatus: ImportStatus;
+  importedAt?: string;
+  goalId?: string;
+  initiative?: string;
+  isDeleted: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -84,4 +96,20 @@ export interface ImportResult {
   candidates: NormalizedActivityCandidate[];
   errors: string[];
   diagnostics?: ImportDiagnostics;
+}
+
+export interface ImportBatch {
+  id: string;
+  userId: string;
+  roadmapId: string;
+  batchName: string;
+  fileName: string;
+  sourceSystem: SourceSystem;
+  sourceType?: SourceType;
+  notes?: string;
+  totalRows: number;
+  importedCount: number;
+  ignoredCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
