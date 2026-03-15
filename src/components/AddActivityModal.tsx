@@ -25,7 +25,7 @@ function getTextColor(bgColor: string): string {
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.55 ? '#000000' : '#ffffff';
+  return luminance > 0.7 ? '#000000' : '#ffffff';
 }
 
 function uid() {
@@ -265,6 +265,50 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Owner
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('salesforce')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Salesforce
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('partner')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'partner' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Partner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOwner('customer')}
+                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: selectedOwner === 'customer' ? '#0176D3' : 'var(--button-neutral-bg)',
+                      color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
+                      border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
+                    }}
+                  >
+                    Customer
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Activity Name
                 </label>
                 <input
@@ -308,22 +352,20 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                     <div className="grid grid-cols-2 gap-2">
                       {quarters.map((quarter, idx) => {
                         const quarterIndex = idx;
-                        const monthRange = getQuarterMonthRange(quarterIndex);
                         const isSelected = isQuarterSelected(quarterIndex);
                         return (
                           <button
                             key={idx}
                             type="button"
                             onClick={() => selectQuarterRange(quarterIndex)}
-                            className="px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
+                            className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
                             style={{
                               background: isSelected ? '#066afe' : 'var(--button-neutral-bg)',
                               color: isSelected ? '#ffffff' : 'var(--text-primary)',
                               border: isSelected ? '2px solid #066afe' : '2px solid var(--border-subtle)'
                             }}
                           >
-                            <div className="font-bold">{quarter.label}</div>
-                            <div className="text-[10px] opacity-80">{monthRange}</div>
+                            {quarter.label}
                           </button>
                         );
                       })}
@@ -469,50 +511,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   >
                     <div className="w-2 h-2 rounded-full bg-current"></div>
                     Blocked
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Owner
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOwner('salesforce')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--button-neutral-bg)',
-                      color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
-                      border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    Salesforce
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOwner('partner')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: selectedOwner === 'partner' ? '#0176D3' : 'var(--button-neutral-bg)',
-                      color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
-                      border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    Partner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOwner('customer')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: selectedOwner === 'customer' ? '#0176D3' : 'var(--button-neutral-bg)',
-                      color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
-                      border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    Customer
                   </button>
                 </div>
               </div>
