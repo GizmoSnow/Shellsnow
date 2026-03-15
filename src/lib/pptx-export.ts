@@ -335,12 +335,26 @@ export async function exportToPptx(
 
   function addLegend(slide: any, legendY?: number) {
     const y = legendY || (SLIDE_H - 0.4);
-    const allTypes = getAllTypeMetadata(data.customActivityTypes);
-    const totalItems = allTypes.length;
+
+    // Get all types with stable ordering
+    const allMetadata = getAllTypeMetadata(data.customActivityTypes);
+
+    // Separate default and custom types
+    const defaultKeys = DEFAULT_ACTIVITY_TYPES.map(t => t.key);
+    const defaultTypes = allMetadata.filter(t => defaultKeys.includes(t.key));
+    const customTypes = allMetadata.filter(t => !defaultKeys.includes(t.key));
+
+    // Sort custom types alphabetically
+    customTypes.sort((a, b) => a.label.localeCompare(b.label));
+
+    // Combine: defaults first, then custom (sorted)
+    const orderedTypes = [...defaultTypes, ...customTypes];
+
+    const totalItems = orderedTypes.length;
     const availableWidth = SLIDE_W - MARGIN_L * 2;
     const itemWidth = availableWidth / totalItems;
 
-    allTypes.forEach((typeInfo, idx) => {
+    orderedTypes.forEach((typeInfo, idx) => {
       const bgColor = getTypeColor(typeInfo.key, data);
       const lx = MARGIN_L + idx * itemWidth;
 
@@ -451,9 +465,7 @@ export async function exportToPptx(
         w: pillW,
         h: pillH,
         fill: { color: bgColor.replace('#', '') },
-        line: sp.isCriticalPath
-          ? { color: 'FFD700', width: 2 }
-          : { color: bgColor.replace('#', ''), width: 0 },
+        line: { color: bgColor.replace('#', ''), width: 0 },
         rectRadius: 0.5,
         shadow: {
           type: 'outer',
@@ -610,9 +622,7 @@ export async function exportToPptx(
             w: pillW,
             h: pillH,
             fill: { color: bgColor.replace('#', '') },
-            line: sp.isCriticalPath
-              ? { color: 'FFD700', width: 2 }
-              : { color: bgColor.replace('#', ''), width: 0 },
+            line: { color: bgColor.replace('#', ''), width: 0 },
             rectRadius: 0.5,
             shadow: {
               type: 'outer',
@@ -836,9 +846,7 @@ export async function exportToPptx(
                 w: pillW,
                 h: pillH,
                 fill: { color: bgColor.replace('#', '') },
-                line: act.isCriticalPath
-                  ? { color: 'FFD700', width: 2 }
-                  : { color: bgColor.replace('#', ''), width: 0 },
+                line: { color: bgColor.replace('#', ''), width: 0 },
                 rectRadius: 0.5,
                 shadow: {
                   type: 'outer',
