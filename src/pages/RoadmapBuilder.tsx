@@ -128,12 +128,16 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   useEffect(() => {
     if (roadmap) {
-      const timeoutId = setTimeout(() => {
-        saveRoadmap();
+      const timeoutId = setTimeout(async () => {
+        try {
+          await saveRoadmap();
+        } catch (err) {
+          console.error('Auto-save failed:', err);
+        }
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [roadmap, title, data, fiscalConfig, customerLogoBase64]);
+  }, [roadmap, title, data, fiscalConfig, customerLogoBase64, canvasStyle]);
 
   const loadRoadmap = async (retryCount = 0) => {
     const { data: roadmapData, error } = await supabase
@@ -198,22 +202,28 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const saveRoadmap = async () => {
     if (!roadmap) return;
 
-    const { error } = await supabase
-      .from('roadmaps')
-      .update({
-        title,
-        data,
-        customer_logo_base64: customerLogoBase64,
-        canvas_style: canvasStyle,
-        fiscal_start_month: fiscalConfig.startMonth,
-        base_fiscal_year: fiscalConfig.baseYear,
-        roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', roadmapId);
+    try {
+      const { error } = await supabase
+        .from('roadmaps')
+        .update({
+          title,
+          data,
+          customer_logo_base64: customerLogoBase64,
+          canvas_style: canvasStyle,
+          fiscal_start_month: fiscalConfig.startMonth,
+          base_fiscal_year: fiscalConfig.baseYear,
+          roadmap_start_quarter: fiscalConfig.roadmapStartQuarter,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', roadmapId);
 
-    if (error) {
-      console.error('Error saving roadmap:', error);
+      if (error) {
+        console.error('Error saving roadmap:', error);
+        throw error;
+      }
+    } catch (err) {
+      console.error('Failed to save roadmap:', err);
+      throw err;
     }
   };
 
@@ -476,14 +486,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
 
     setData(newData);
-
-    // Save immediately when color changes
-    if (roadmap) {
-      await supabase
-        .from('roadmaps')
-        .update({ data: newData })
-        .eq('id', roadmapId);
-    }
   };
 
   const getTypeColor = (typeKey: string) => {
