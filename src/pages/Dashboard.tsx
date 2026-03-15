@@ -64,7 +64,7 @@ export default function Dashboard() {
       .insert([
         {
           user_id: user?.id,
-          title: 'New Roadmap',
+          title: 'New Success Path',
           data: defaultData,
           fiscal_start_month: 0,
           base_fiscal_year: 26,

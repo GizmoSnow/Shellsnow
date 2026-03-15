@@ -25,7 +25,9 @@ export function calculateEngagementMetrics(
   typeColors: Record<string, string>,
   defaultTypeLabels: Record<string, string>,
   defaultTypeColors: Record<string, string>,
-  filterOwner?: ActivityOwner
+  filterOwner?: ActivityOwner,
+  typeOwners?: Record<string, ActivityOwner>,
+  defaultTypeOwners?: Record<string, ActivityOwner>
 ): EngagementMetrics {
   const allMonths = getAllRoadmapMonths(fiscalConfig);
 
@@ -40,7 +42,16 @@ export function calculateEngagementMetrics(
 
   const countActivity = (activity: Activity | SpanningActivity) => {
     if (filterOwner) {
-      const activityOwner = activity.owner || 'salesforce';
+      let activityOwner: ActivityOwner;
+
+      if (activity.owner) {
+        activityOwner = activity.owner;
+      } else {
+        const typeKey = activity.type || 'other';
+        const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+        activityOwner = typeOwners?.[typeKey] || defaultTypeOwners?.[typeKey] || metadata?.owner || 'salesforce';
+      }
+
       if (activityOwner !== filterOwner) {
         return;
       }
@@ -147,6 +158,8 @@ export function calculateSalesforceMetrics(
     typeColors,
     defaultTypeLabels,
     defaultTypeColors,
-    'salesforce'
+    'salesforce',
+    typeOwners,
+    defaultTypeOwners
   );
 }

@@ -80,26 +80,35 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
-    const newData = { ...data };
-    const goal = newData.goals.find(g => g.id === goalId);
-    if (!goal) return;
+    const newData = {
+      ...data,
+      goals: data.goals.map(g => {
+        if (g.id !== goalId) return g;
 
-    const initiative = goal.initiatives.find(i => i.id === initiativeId);
-    if (!initiative) return;
+        return {
+          ...g,
+          initiatives: g.initiatives.map(i => {
+            if (i.id !== initiativeId) return i;
 
-    const sourceAct = initiative.activities[sourceQuarter as keyof typeof initiative.activities].find(a => a.id === activityId);
-    if (!sourceAct) return;
+            const sourceAct = i.activities[sourceQuarter as keyof typeof i.activities].find(a => a.id === activityId);
+            if (!sourceAct) return i;
 
-    const newActivity: Activity = {
-      ...sourceAct,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            const newActivity: Activity = {
+              ...sourceAct,
+              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+
+            return {
+              ...i,
+              activities: {
+                ...i.activities,
+                [targetQuarter]: [...(i.activities[targetQuarter as keyof typeof i.activities] || []), newActivity]
+              }
+            };
+          })
+        };
+      })
     };
-
-    if (!initiative.activities[targetQuarter as keyof typeof initiative.activities]) {
-      initiative.activities[targetQuarter as keyof typeof initiative.activities] = [];
-    }
-
-    initiative.activities[targetQuarter as keyof typeof initiative.activities].push(newActivity);
 
     onDataChange(newData);
     setCopyDropdown(null);
