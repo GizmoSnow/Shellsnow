@@ -243,7 +243,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           </div>
         </div>
         {copyDropdown === dropdownId && (
-          <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)' }}>
+          <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
             {qkeys.map((targetQ) => (
               <button
@@ -269,7 +269,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid bg-white" style={{ borderColor: 'var(--border)' }}>
+      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--border)', backgroundColor: data.backgroundColor || '#FFFFFF' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
@@ -781,7 +781,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 </div>
                               </div>
                               {copyDropdown === dropdownId && (
-                                <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)' }}>
+                                <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                                   <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
                                   {qkeys.map((targetQ) => (
                                     <button
@@ -881,12 +881,13 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             onClick={() => setDetailCardActivity(null)}
           />
           <div
-            className="fixed z-50 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 max-w-[320px]"
+            className="fixed z-50 rounded-xl shadow-2xl p-5 max-w-[320px]"
             style={{
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              border: '1px solid var(--border)'
+              border: '1px solid var(--border)',
+              background: 'var(--surface)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
