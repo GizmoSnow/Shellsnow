@@ -15,15 +15,7 @@ interface RoadmapGridProps {
 }
 
 function getTextColor(bgColor: string): string {
-  if (bgColor.toLowerCase() === '#fcc003') {
-    return '#001e5b';
-  }
-  const hex = bgColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.55 ? '#000000' : '#ffffff';
+  return '#ffffff';
 }
 
 export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
