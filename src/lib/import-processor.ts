@@ -1,10 +1,6 @@
-import { parseCSV, detectReportType } from './csv-parser';
+import { parseCSV } from './csv-parser';
 import { parseExcelFile, isExcelFile } from './excel-parser';
-import {
-  normalizeEngagementReport,
-  normalizeSupportReport,
-  normalizeTrainingReport,
-} from './import-normalizer';
+import { detectAdapter } from './import-adapters';
 import type { ImportResult, NormalizedActivityCandidate } from './import-types';
 import { supabase } from './supabase';
 import { detectDuplicates } from './deduplication';
@@ -34,28 +30,20 @@ export async function processImportFile(
     }
 
     const headers = Object.keys(rows[0]);
-    const reportType = detectReportType(headers);
+    const adapter = detectAdapter(headers);
 
-    if (reportType === 'unknown') {
-      errors.push('Unable to detect report type from file headers. Please ensure your file has the correct column names.');
+    if (!adapter) {
+      errors.push(
+        'Unable to detect report type from file headers. ' +
+        'Supported formats: OrgCS Engagement, Org62 Support, Org62 Training. ' +
+        'Please ensure your file has recognizable column names.'
+      );
       return { batchId, totalRows: rows.length, parsedRows: 0, candidates: [], errors };
     }
 
     for (const row of rows) {
-      let candidate: NormalizedActivityCandidate | null = null;
-
       try {
-        switch (reportType) {
-          case 'orgcs_engagement':
-            candidate = normalizeEngagementReport(row, batchId, roadmapId, userId);
-            break;
-          case 'org62_support':
-            candidate = normalizeSupportReport(row, batchId, roadmapId, userId);
-            break;
-          case 'org62_training':
-            candidate = normalizeTrainingReport(row, batchId, roadmapId, userId);
-            break;
-        }
+        const candidate = adapter.normalize(row, batchId, roadmapId, userId);
 
         if (candidate) {
           candidates.push(candidate);
