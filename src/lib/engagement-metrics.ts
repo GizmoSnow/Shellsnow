@@ -24,7 +24,8 @@ export function calculateEngagementMetrics(
   typeLabels: Record<string, string>,
   typeColors: Record<string, string>,
   defaultTypeLabels: Record<string, string>,
-  defaultTypeColors: Record<string, string>
+  defaultTypeColors: Record<string, string>,
+  filterOwner?: ActivityOwner
 ): EngagementMetrics {
   const allMonths = getAllRoadmapMonths(fiscalConfig);
 
@@ -38,6 +39,13 @@ export function calculateEngagementMetrics(
   const engagementCounts: Record<string, number> = {};
 
   const countActivity = (activity: Activity | SpanningActivity) => {
+    if (filterOwner) {
+      const activityOwner = activity.owner || 'salesforce';
+      if (activityOwner !== filterOwner) {
+        return;
+      }
+    }
+
     let includeActivity = false;
 
     if ('quarters' in activity) {
@@ -131,28 +139,14 @@ export function calculateSalesforceMetrics(
   defaultTypeColors: Record<string, string>,
   defaultTypeOwners: Record<string, ActivityOwner>
 ): EngagementMetrics {
-  const allMetrics = calculateEngagementMetrics(
+  return calculateEngagementMetrics(
     data,
     fiscalConfig,
     selectedYear,
     typeLabels,
     typeColors,
     defaultTypeLabels,
-    defaultTypeColors
+    defaultTypeColors,
+    'salesforce'
   );
-
-  const salesforceCategoryCounts = allMetrics.categoryCounts.filter(category => {
-    const metadata = getTypeMetadata(category.type, data.customActivityTypes);
-    const owner = metadata?.owner || typeOwners[category.type] || defaultTypeOwners[category.type];
-
-    return owner === 'salesforce';
-  });
-
-  const totalSalesforceEngagements = salesforceCategoryCounts.reduce((sum, cat) => sum + cat.count, 0);
-
-  return {
-    totalEngagements: totalSalesforceEngagements,
-    categoryCounts: salesforceCategoryCounts,
-    selectedYear
-  };
 }
