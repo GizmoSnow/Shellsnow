@@ -457,7 +457,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--border-subtle)', backgroundColor: data.backgroundColor || '#FFFFFF' }}>
+      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--border-subtle)', backgroundColor: data.backgroundColor || 'var(--roadmap-cell-bg)' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
@@ -471,7 +471,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           ))}
         </div>
 
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#f9fafb', borderColor: 'var(--border-subtle)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: 'var(--roadmap-quarter-bg)', borderColor: 'var(--border-subtle)' }}>
           <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
@@ -496,12 +496,12 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
         {/* Account-Level Activities */}
         <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
-          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
+          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border-subtle)', background: 'var(--roadmap-cell-bg)' }}>
             <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: isDark ? '#ffffff' : 'var(--primary)' }}>
               Ongoing Activities
             </div>
           </div>
-          <div className="p-2 grid gap-1" style={{ background: '#f9fafb', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="p-2 grid gap-1" style={{ background: 'var(--roadmap-quarter-bg)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {(data.accountSpanning || []).map((sp, index) => {
               const bgColor = getTypeColor(sp.type);
               const textColor = getTextColor(bgColor);
@@ -755,7 +755,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
                     <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
-                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
+                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: 'var(--roadmap-cell-bg)' }}>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                           style={{ background: goal.color }}
@@ -780,7 +780,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           {initiative.label}
                         </div>
                       </div>
-                      <div className="p-2 grid gap-1" style={{ background: '#f9fafb', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                      <div className="p-2 grid gap-1" style={{ background: 'var(--roadmap-quarter-bg)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
                         {spanningActivities.map((sp) => {
                           const bgColor = getTypeColor(sp.type);
                           const textColor = getTextColor(bgColor);
@@ -917,7 +917,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   )}
 
                   <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
+                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: 'var(--roadmap-cell-bg)' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                         style={{ background: goal.color }}
@@ -947,7 +947,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       )}
                     </div>
 
-                    <div className="relative" style={{ background: '#f9fafb' }}>
+                    <div className="relative" style={{ background: 'var(--roadmap-quarter-bg)' }}>
                       {/* Activities container with absolute positioning */}
                       <div
                         style={{

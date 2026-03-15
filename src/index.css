@@ -48,13 +48,17 @@ html, body {
   --border: #e5e7eb;
   --text: #1f2937;
   --text-muted: #6b7280;
+
+  /* Roadmap-specific */
+  --roadmap-cell-bg: #ffffff;
+  --roadmap-quarter-bg: #f9fafb;
 }
 
 /* Dark mode theme tokens */
 :root[data-theme="dark"] {
   /* Background surfaces */
   --bg-app: #0f1117;
-  --bg-shell: rgba(0, 0, 0, 0.3);
+  --bg-shell: #1a1d27;
   --bg-panel: #1a1d27;
   --bg-subtle: rgba(255, 255, 255, 0.05);
 
@@ -75,7 +79,7 @@ html, body {
   --button-neutral-text: #e8eaf6;
 
   /* Header */
-  --header-bg: rgba(0, 0, 0, 0.3);
+  --header-bg: #1a1d27;
   --header-text: #e8eaf6;
 
   /* Interactive states */
@@ -90,6 +94,10 @@ html, body {
   --border: #2e3248;
   --text: #e8eaf6;
   --text-muted: #7b82a8;
+
+  /* Roadmap-specific */
+  --roadmap-cell-bg: #1a1d27;
+  --roadmap-quarter-bg: #141720;
 }
 
 /* System preference fallback */
@@ -97,7 +105,7 @@ html, body {
   :root:not([data-theme]) {
     /* Background surfaces */
     --bg-app: #0f1117;
-    --bg-shell: rgba(0, 0, 0, 0.3);
+    --bg-shell: #1a1d27;
     --bg-panel: #1a1d27;
     --bg-subtle: rgba(255, 255, 255, 0.05);
 
@@ -118,7 +126,7 @@ html, body {
     --button-neutral-text: #e8eaf6;
 
     /* Header */
-    --header-bg: rgba(0, 0, 0, 0.3);
+    --header-bg: #1a1d27;
     --header-text: #e8eaf6;
 
     /* Interactive states */
@@ -133,6 +141,10 @@ html, body {
     --border: #2e3248;
     --text: #e8eaf6;
     --text-muted: #7b82a8;
+
+    /* Roadmap-specific */
+    --roadmap-cell-bg: #1a1d27;
+    --roadmap-quarter-bg: #141720;
   }
 }
 

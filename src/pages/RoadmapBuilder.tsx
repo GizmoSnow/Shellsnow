@@ -484,7 +484,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg-app)' }}>
-      <div className="border-b sticky top-0 z-50 print-hide" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="border-b sticky top-0 z-50 print-hide backdrop-blur-sm" style={{ borderColor: 'var(--border-subtle)', background: 'var(--header-bg)' }}>
         {/* Top header bar */}
         <div className="px-8 py-4 flex items-center justify-between" style={{ background: 'var(--header-bg)' }}>
           <div className="flex items-center gap-4">
