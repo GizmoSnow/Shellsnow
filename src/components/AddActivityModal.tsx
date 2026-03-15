@@ -53,10 +53,13 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setName(editingActivity.name);
         setSelectedType(editingActivity.type);
         setSelectedOwner(editingActivity.owner || 'salesforce');
+        setStatus(editingActivity.status || 'on_track');
+        setDescription(editingActivity.description || '');
+        setIsCriticalPath(editingActivity.isCriticalPath || false);
+
         if ('quarters' in editingActivity) {
           setIsSpanning(true);
           setSelectedQuarters(editingActivity.quarters || []);
-          setIsCriticalPath(editingActivity.isCriticalPath || false);
         } else {
           setIsSpanning(false);
           setSelectedQuarters([]);
@@ -64,9 +67,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
           const end = ('end_month' in editingActivity && editingActivity.end_month) ? String(editingActivity.end_month) : defaultMonth;
           setStartMonth(start);
           setEndMonth(end);
-          setStatus(('status' in editingActivity && editingActivity.status) ? editingActivity.status : 'on_track');
-          setDescription(('description' in editingActivity && editingActivity.description) ? editingActivity.description : '');
-          setIsCriticalPath(editingActivity.isCriticalPath || false);
         }
       } else {
         setName('');
@@ -132,6 +132,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         type: selectedType,
         owner: selectedOwner,
         quarters: selectedQuarters,
+        status,
+        description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
       });
     } else {
@@ -241,70 +243,68 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
               />
             </div>
 
-            {!isSpanning && (
-              <>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Description <span className="opacity-60">(Optional)</span>
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add details..."
-                    rows={3}
-                    className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none"
-                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Status
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setStatus('on_track')}
-                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                      style={{
-                        background: status === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
-                        color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
-                        border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
-                      }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-current"></div>
-                      On Track
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatus('at_risk')}
-                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                      style={{
-                        background: status === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
-                        color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
-                        border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
-                      }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-current"></div>
-                      At Risk
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatus('blocked')}
-                      className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                      style={{
-                        background: status === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
-                        color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
-                        border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
-                      }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-current"></div>
-                      Blocked
-                    </button>
-                  </div>
-                </div>
-              </>
+{!isSpanning && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Description <span className="opacity-60">(Optional)</span>
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add details..."
+                  rows={3}
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                />
+              </div>
             )}
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Status
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStatus('on_track')}
+                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                  style={{
+                    background: status === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
+                    color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
+                    border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-current"></div>
+                  On Track
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('at_risk')}
+                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                  style={{
+                    background: status === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
+                    color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
+                    border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-current"></div>
+                  At Risk
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('blocked')}
+                  className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                  style={{
+                    background: status === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
+                    color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
+                    border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-current"></div>
+                  Blocked
+                </button>
+              </div>
+            </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>

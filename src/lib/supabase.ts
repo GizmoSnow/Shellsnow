@@ -90,5 +90,7 @@ export interface SpanningActivity {
   type: string;
   owner?: 'salesforce' | 'partner' | 'customer';
   quarters: string[];
+  status?: 'on_track' | 'at_risk' | 'blocked';
+  description?: string;
   isCriticalPath?: boolean;
 }
