@@ -495,7 +495,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         {/* Logo upload section and control buttons - collapsible toolbar */}
         {!toolbarCollapsed && (
           <>
-            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'white' }}>
+            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{
+              background: theme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'var(--surface)',
+              borderBottom: '1px solid var(--border)'
+            }}>
               <label className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold cursor-pointer" style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--text)' }}>
                 <Upload size={16} />
                 {uploadingLogo ? 'Uploading...' : customerLogoBase64 ? 'Change Customer Logo' : 'Upload Customer Logo'}
@@ -538,10 +541,22 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               )}
             </div>
 
-            <div className="border-b print-hide" style={{ borderColor: 'var(--border)' }}></div>
-
             {/* Control buttons section */}
-            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{ background: 'var(--surface)' }}>
+            <div className="px-8 py-4 flex items-center gap-2 print-hide" style={{
+              background: theme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'var(--surface)',
+              borderBottom: '1px solid var(--border)'
+            }}>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Header Color:</label>
+                <input
+                  type="color"
+                  value={data.headerColor || '#0B1D3A'}
+                  onChange={(e) => updateHeaderColor(e.target.value)}
+                  className="w-10 h-10 rounded-lg border cursor-pointer"
+                  style={{ borderColor: 'var(--border)' }}
+                  title="Change header background color"
+                />
+              </div>
               <div className="flex-1"></div>
               <button
                 onClick={toggleTheme}
