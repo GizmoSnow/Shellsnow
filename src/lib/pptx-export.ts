@@ -2,17 +2,27 @@ import PptxGenJS from 'pptxgenjs';
 import { RoadmapData, Activity } from './supabase';
 import { getAllRoadmapMonths, getRoadmapQuarters, FiscalYearConfig } from './fiscal-year';
 import { isDarkBackground } from './color-utils';
+import { getTypeMetadata } from './activity-types';
 
 const SALESFORCE_LOGO_BASE64 = 'data:image/png;base64,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';
 
-const DEFAULT_TYPE_COLORS: Record<string, string> = {
-  csm: '#45C65A',
-  architect: '#0D9DDA',
-  specialist: '#5867E8',
-  advisory: '#7526E3',
-  enablement: '#06A59A',
-  event: '#F38303',
-};
+function getTypeColor(typeKey: string, data: RoadmapData): string {
+  if (data.typeColors?.[typeKey]) {
+    return data.typeColors[typeKey];
+  }
+
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  return metadata?.color || '#6c63ff';
+}
+
+function getTypeLabel(typeKey: string, data: RoadmapData): string {
+  if (data.typeLabels?.[typeKey]) {
+    return data.typeLabels[typeKey];
+  }
+
+  const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
+  return metadata?.label || typeKey;
+}
 
 function getTextColor(bgColor: string): string {
   if (bgColor.toLowerCase() === '#fcc003') {
@@ -224,56 +234,16 @@ export async function exportToPptx(
   }
 
   function addQuarterHeaders(slide: any) {
-    const headerColor = data.headerColor || null;
+    const headerColor = data.headerColor || '066afe';
 
-    if (headerColor) {
-      slide.addShape(pres.ShapeType.rect, {
-        x: MARGIN_L,
-        y: START_Y,
-        w: SLIDE_W - MARGIN_L - 0.1,
-        h: HEADER_H,
-        fill: { color: headerColor.replace('#', '') },
-        line: { color: headerColor.replace('#', ''), width: 0 },
-      });
-    } else {
-      slide.addShape(pres.ShapeType.rect, {
-        x: MARGIN_L,
-        y: START_Y,
-        w: SLIDE_W - MARGIN_L - 0.1,
-        h: HEADER_H,
-        fill: { type: 'solid', color: '0B5CAB', transparency: 0 },
-      });
-
-      const gradientStops = [
-        { position: 0, color: '0B5CAB' },
-        { position: 100, color: '00B3FF' }
-      ];
-
-      for (let i = 0; i < 50; i++) {
-        const pos = i / 49;
-        const color1 = parseInt('0B5CAB', 16);
-        const color2 = parseInt('00B3FF', 16);
-        const r1 = (color1 >> 16) & 0xFF;
-        const g1 = (color1 >> 8) & 0xFF;
-        const b1 = color1 & 0xFF;
-        const r2 = (color2 >> 16) & 0xFF;
-        const g2 = (color2 >> 8) & 0xFF;
-        const b2 = color2 & 0xFF;
-        const r = Math.round(r1 + (r2 - r1) * pos);
-        const g = Math.round(g1 + (g2 - g1) * pos);
-        const b = Math.round(b1 + (b2 - b1) * pos);
-        const color = ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-
-        slide.addShape(pres.ShapeType.rect, {
-          x: MARGIN_L + (SLIDE_W - MARGIN_L - 0.1) * pos,
-          y: START_Y,
-          w: (SLIDE_W - MARGIN_L - 0.1) / 49,
-          h: HEADER_H,
-          fill: { color },
-          line: { width: 0 },
-        });
-      }
-    }
+    slide.addShape(pres.ShapeType.rect, {
+      x: MARGIN_L,
+      y: START_Y,
+      w: SLIDE_W - MARGIN_L - 0.1,
+      h: HEADER_H,
+      fill: { color: headerColor.replace('#', '') },
+      line: { color: headerColor.replace('#', ''), width: 0 },
+    });
 
     slide.addShape(pres.ShapeType.rect, {
       x: MARGIN_L,
@@ -379,7 +349,7 @@ export async function exportToPptx(
     const itemWidth = availableWidth / totalItems;
 
     legendTypes.forEach((key, idx) => {
-      const bgColor = data.typeColors?.[key] || DEFAULT_TYPE_COLORS[key] || '#E8194B';
+      const bgColor = getTypeColor(key, data);
       const lx = MARGIN_L + idx * itemWidth;
 
       slide.addShape(pres.ShapeType.ellipse, {
@@ -470,7 +440,7 @@ export async function exportToPptx(
     });
 
     accountSpanning.forEach((sp, spIdx) => {
-      const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#E8194B';
+      const bgColor = getTypeColor(sp.type, data);
       const textColor = getTextColor(bgColor);
       const sortedQuarters = [...(sp.quarters || [])].sort();
       const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
@@ -629,7 +599,7 @@ export async function exportToPptx(
         });
 
         spanningActivities.forEach((sp, spIdx) => {
-          const bgColor = data.typeColors?.[sp.type] || DEFAULT_TYPE_COLORS[sp.type] || '#E8194B';
+          const bgColor = getTypeColor(sp.type, data);
           const textColor = getTextColor(bgColor);
           const sortedQuarters = [...(sp.quarters || [])].sort();
           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
@@ -850,7 +820,7 @@ export async function exportToPptx(
         });
 
         allActivities.forEach((act, actIdx) => {
-          const bgColor = data.typeColors?.[act.type] || DEFAULT_TYPE_COLORS[act.type] || '#E8194B';
+          const bgColor = getTypeColor(act.type, data);
           const textColor = getTextColor(bgColor);
           const startMonthNum = act.start_month ? Number(act.start_month) : null;
           const endMonthNum = act.end_month ? Number(act.end_month) : null;
