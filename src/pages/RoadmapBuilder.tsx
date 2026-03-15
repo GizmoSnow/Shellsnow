@@ -486,13 +486,21 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               </label>
               {customerLogoBase64 && (
                 <button
-                  onClick={async () => {
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (confirm('Remove customer logo?')) {
-                      await supabase
+                      const { error } = await supabase
                         .from('roadmaps')
                         .update({ customer_logo_base64: null })
                         .eq('id', roadmapId);
-                      setCustomerLogoBase64(null);
+
+                      if (error) {
+                        console.error('Error removing logo:', error);
+                        alert('Failed to remove logo. Please try again.');
+                      } else {
+                        setCustomerLogoBase64(null);
+                      }
                     }
                   }}
                   className="px-3 py-2 border rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
