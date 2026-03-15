@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 import { Activity, SpanningActivity } from '../lib/supabase';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths, getRoadmapQuarters } from '../lib/fiscal-year';
-import { getQuickPickTypes } from '../lib/activity-types';
-import type { ActivityTypeMetadata } from '../lib/activity-types';
+import { getQuickPickTypes, getTypeMetadata, DEFAULT_ACTIVITY_TYPES } from '../lib/activity-types';
+import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 
 interface AddActivityModalProps {
   isOpen: boolean;
@@ -34,6 +34,7 @@ function uid() {
 export default function AddActivityModal({ isOpen, context, editingActivity, customActivityTypes, fiscalConfig, getTypeColor, getTypeLabel, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
+  const [selectedOwner, setSelectedOwner] = useState<ActivityOwner>('salesforce');
   const [isSpanning, setIsSpanning] = useState(false);
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
   const [startMonth, setStartMonth] = useState<string>('');
@@ -50,6 +51,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
       if (editingActivity) {
         setName(editingActivity.name);
         setSelectedType(editingActivity.type);
+        setSelectedOwner(editingActivity.owner || 'salesforce');
         if ('quarters' in editingActivity) {
           setIsSpanning(true);
           setSelectedQuarters(editingActivity.quarters || []);
@@ -68,6 +70,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
       } else {
         setName('');
         setSelectedType('csm');
+        setSelectedOwner('salesforce');
         setIsSpanning(context?.quarter === 'spanning');
         setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
         setStartMonth(defaultMonth);
@@ -91,6 +94,13 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    const typeMetadata = getTypeMetadata(selectedType, customActivityTypes);
+    if (typeMetadata && !editingActivity) {
+      setSelectedOwner(typeMetadata.owner);
+    }
+  }, [selectedType, customActivityTypes, editingActivity]);
 
   if (!isOpen) return null;
 
@@ -119,6 +129,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
         id: editingActivity ? editingActivity.id : uid(),
         name: name.trim(),
         type: selectedType,
+        owner: selectedOwner,
         quarters: selectedQuarters,
         isCriticalPath: isCriticalPath || undefined
       });
@@ -127,6 +138,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
         id: editingActivity ? editingActivity.id : uid(),
         name: name.trim(),
         type: selectedType,
+        owner: selectedOwner,
         start_month: startMonth,
         end_month: endMonth,
         status,
@@ -137,6 +149,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
 
     setName('');
     setSelectedType('csm');
+    setSelectedOwner('salesforce');
     setIsSpanning(false);
     setSelectedQuarters([]);
     setStartMonth(defaultMonth);
@@ -315,6 +328,50 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+                Owner
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOwner('salesforce')}
+                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--surface2)',
+                    color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text)',
+                    border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border)'
+                  }}
+                >
+                  Salesforce
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOwner('partner')}
+                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: selectedOwner === 'partner' ? '#0176D3' : 'var(--surface2)',
+                    color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text)',
+                    border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border)'
+                  }}
+                >
+                  Partner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOwner('customer')}
+                  className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: selectedOwner === 'customer' ? '#0176D3' : 'var(--surface2)',
+                    color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text)',
+                    border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border)'
+                  }}
+                >
+                  Customer
+                </button>
               </div>
             </div>
 

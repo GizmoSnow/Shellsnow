@@ -75,6 +75,7 @@ export interface Activity {
   id: string;
   name: string;
   type: string;
+  owner?: 'salesforce' | 'partner' | 'customer';
   position?: 'full' | 'early' | 'mid' | 'late';
   start_month?: string;
   end_month?: string;
@@ -87,6 +88,7 @@ export interface SpanningActivity {
   id: string;
   name: string;
   type: string;
+  owner?: 'salesforce' | 'partner' | 'customer';
   quarters: string[];
   isCriticalPath?: boolean;
 }

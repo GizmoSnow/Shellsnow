@@ -7,7 +7,7 @@ export interface ActivityTypeMetadata {
   owner: ActivityOwner;
 }
 
-export const QUICK_PICK_TYPE_KEYS = ['csm', 'architect', 'specialist', 'review', 'event'] as const;
+export const QUICK_PICK_TYPE_KEYS = ['csm', 'architect', 'specialist', 'advisory', 'enablement', 'event'] as const;
 
 // Salesforce brand-aligned color palette optimized for white text accessibility
 export const SALESFORCE_COLOR_PALETTE = [
@@ -32,7 +32,7 @@ export const SALESFORCE_COLOR_PALETTE = [
 export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
   {
     key: 'csm',
-    label: 'CSM-led',
+    label: 'CSM',
     color: '#45C65A',
     owner: 'salesforce'
   },
@@ -49,20 +49,20 @@ export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
     owner: 'salesforce'
   },
   {
-    key: 'review',
-    label: 'Success Review',
+    key: 'advisory',
+    label: 'Product Advisory',
     color: '#5867E8',
+    owner: 'salesforce'
+  },
+  {
+    key: 'enablement',
+    label: 'Enablement',
+    color: '#FF538A',
     owner: 'salesforce'
   },
   {
     key: 'event',
     label: 'Event',
-    color: '#FF538A',
-    owner: 'salesforce'
-  },
-  {
-    key: 'trailhead',
-    label: 'Trailhead',
     color: '#AD7BEE',
     owner: 'salesforce'
   }

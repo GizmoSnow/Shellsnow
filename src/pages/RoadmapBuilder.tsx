@@ -327,7 +327,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       return;
     }
 
-    const typeKey = newTypeLabel.toLowerCase().replace(/\s+/g, '_');
+    const trimmedLabel = newTypeLabel.trim();
+    const lowerLabel = trimmedLabel.toLowerCase();
+
+    if (lowerLabel === 'salesforce' || lowerLabel === 'partner' || lowerLabel === 'customer') {
+      alert('Cannot create a type named "Salesforce", "Partner", or "Customer" as these are owner values, not activity types.');
+      return;
+    }
+
+    const typeKey = trimmedLabel.toLowerCase().replace(/\s+/g, '_');
 
     if (getAllTypeKeys().includes(typeKey)) {
       alert('A type with this name already exists');
@@ -341,7 +349,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
     newData.customActivityTypes.push({
       key: typeKey,
-      label: newTypeLabel.trim(),
+      label: trimmedLabel,
       color: generateDefaultColor(),
       owner: newTypeOwner
     });
