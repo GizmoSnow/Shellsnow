@@ -80,40 +80,26 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
-    console.log('copyActivity called:', { goalId, initiativeId, sourceQuarter, activityId, targetQuarter });
     const newData = { ...data };
     const goal = newData.goals.find(g => g.id === goalId);
-    if (!goal) {
-      console.log('Goal not found:', goalId);
-      return;
-    }
+    if (!goal) return;
 
     const initiative = goal.initiatives.find(i => i.id === initiativeId);
-    if (!initiative) {
-      console.log('Initiative not found:', initiativeId);
-      return;
-    }
+    if (!initiative) return;
 
     const sourceAct = initiative.activities[sourceQuarter as keyof typeof initiative.activities].find(a => a.id === activityId);
-    if (!sourceAct) {
-      console.log('Source activity not found in quarter', sourceQuarter, 'Activities:', initiative.activities[sourceQuarter as keyof typeof initiative.activities]);
-      return;
-    }
+    if (!sourceAct) return;
 
-    console.log('Source activity found:', sourceAct);
-
-    // Create a true duplicate with all properties preserved
-    const newActivity = {
+    const newActivity: Activity = {
       ...sourceAct,
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
 
-    console.log('Creating new activity:', newActivity);
-    console.log('Target quarter before push:', initiative.activities[targetQuarter as keyof typeof initiative.activities]);
+    if (!initiative.activities[targetQuarter as keyof typeof initiative.activities]) {
+      initiative.activities[targetQuarter as keyof typeof initiative.activities] = [];
+    }
 
     initiative.activities[targetQuarter as keyof typeof initiative.activities].push(newActivity);
-
-    console.log('Target quarter after push:', initiative.activities[targetQuarter as keyof typeof initiative.activities]);
 
     onDataChange(newData);
     setCopyDropdown(null);
