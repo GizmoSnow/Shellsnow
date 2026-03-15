@@ -258,10 +258,7 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-8 py-12">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Success Paths</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Create and manage your customer success paths</p>
-          </div>
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>My Success Paths</h2>
           {roadmaps.length > 0 && (
             <button
               onClick={createRoadmap}
