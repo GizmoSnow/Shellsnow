@@ -770,7 +770,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           <div className="px-4 py-3">
             <div className="flex flex-wrap items-center gap-3">
               {getAllTypeKeys().map((typeKey) => {
-                const isDefault = DEFAULT_TYPE_LABELS.hasOwnProperty(typeKey);
+                const isDefault = DEFAULT_ACTIVITY_TYPES.some(t => t.key === typeKey);
                 return (
                   <div
                     key={typeKey}
