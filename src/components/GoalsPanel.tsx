@@ -84,16 +84,16 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
   return (
     <>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onClose}></div>
-      <div className="fixed right-0 top-0 bottom-0 w-[400px] z-50 p-6 overflow-y-auto animate-slideIn" style={{ background: 'var(--surface)', borderLeft: '1px solid var(--border)' }}>
+      <div className="fixed right-0 top-0 bottom-0 w-[400px] z-50 p-6 overflow-y-auto animate-slideIn" style={{ background: 'var(--surface)', borderLeft: '1px solid var(--border-subtle)' }}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>Edit Goals</h2>
+          <h2 className="text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>Edit Goals</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg transition-colors"
             style={{ color: 'var(--text-muted)' }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--hover-bg)';
-              e.currentTarget.style.color = 'var(--text)';
+              e.currentTarget.style.color = 'var(--text-primary)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -106,7 +106,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
 
         <div className="space-y-4">
           {data.goals.map((goal) => (
-            <div key={goal.id} className="rounded-xl p-4" style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+            <div key={goal.id} className="rounded-xl p-4" style={{ background: 'var(--surface2)', border: '1px solid var(--border-subtle)' }}>
               <div className="h-1 rounded mb-4" style={{ background: goal.color }}></div>
 
               <div className="space-y-3">
@@ -119,7 +119,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
                     value={goal.number}
                     onChange={(e) => updateGoal(goal.id, 'number', e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#066afe] transition-colors"
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
@@ -132,7 +132,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
                     value={goal.title}
                     onChange={(e) => updateGoal(goal.id, 'title', e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#066afe] transition-colors"
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
@@ -148,7 +148,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
                         className="w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110"
                         style={{
                           background: c,
-                          border: goal.color === c ? '3px solid var(--text)' : 'none'
+                          border: goal.color === c ? '3px solid var(--text-primary)' : 'none'
                         }}
                       ></div>
                     ))}
@@ -167,7 +167,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
                           value={ini.label}
                           onChange={(e) => updateInitiative(goal.id, ini.id, e.target.value)}
                           className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#066afe] transition-colors"
-                          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                          style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                         />
                         <button
                           onClick={() => deleteInitiative(goal.id, ini.id)}
@@ -180,7 +180,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
                     <button
                       onClick={() => addInitiative(goal.id)}
                       className="w-full px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1"
-                      style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      style={{ background: 'var(--surface2)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                       onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface2)'}
                     >
@@ -209,7 +209,7 @@ export default function GoalsPanel({ data, isOpen, onClose, onChange }: GoalsPan
           Add Goal
         </button>
 
-        <p className="text-xs text-center mt-4 pt-4" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
+        <p className="text-xs text-center mt-4 pt-4" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)' }}>
           Changes apply immediately to the roadmap.
         </p>
       </div>

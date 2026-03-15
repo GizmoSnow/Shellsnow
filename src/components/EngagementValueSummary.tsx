@@ -60,14 +60,14 @@ export function EngagementValueSummary({
       className="rounded-lg border print-hide mb-4"
       style={{
         background: 'var(--surface)',
-        borderColor: 'var(--border)'
+        borderColor: 'var(--border-subtle)'
       }}
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-6 py-3 flex items-center justify-between hover:opacity-80 transition-opacity"
       >
-        <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+        <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
           Salesforce engagement breakdown
         </span>
         <ChevronDown
@@ -83,7 +83,7 @@ export function EngagementValueSummary({
       {isExpanded && (
         <div
           className="px-6 pb-4 pt-1 border-t"
-          style={{ borderColor: 'var(--border)' }}
+          style={{ borderColor: 'var(--border-subtle)' }}
         >
           <div className="space-y-2">
             {metrics.categoryCounts.map((category, index) => {
@@ -109,7 +109,7 @@ export function EngagementValueSummary({
                     />
                     <span
                       className="text-sm font-medium truncate"
-                      style={{ color: 'var(--text)' }}
+                      style={{ color: 'var(--text-primary)' }}
                     >
                       {category.label}
                     </span>
@@ -133,7 +133,7 @@ export function EngagementValueSummary({
                     </span>
                     <span
                       className="text-lg font-bold tabular-nums"
-                      style={{ color: 'var(--text)', minWidth: '2.5rem', textAlign: 'right' }}
+                      style={{ color: 'var(--text-primary)', minWidth: '2.5rem', textAlign: 'right' }}
                     >
                       {category.count}
                     </span>

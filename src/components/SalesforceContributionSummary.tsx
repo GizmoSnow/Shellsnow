@@ -57,7 +57,7 @@ export function SalesforceContributionSummary({
       className="rounded-lg px-6 py-3 mb-4 border print-hide flex items-center justify-between"
       style={{
         background: 'var(--surface)',
-        borderColor: 'var(--border)'
+        borderColor: 'var(--border-subtle)'
       }}
     >
       <div className="flex items-center gap-6">
@@ -75,7 +75,7 @@ export function SalesforceContributionSummary({
           </div>
         </div>
 
-        <div className="h-8 w-px" style={{ background: 'var(--border)' }} />
+        <div className="h-8 w-px" style={{ background: 'var(--border-subtle)' }} />
 
         <div className="flex items-center gap-2">
           <div
@@ -94,7 +94,7 @@ export function SalesforceContributionSummary({
           </div>
         </div>
 
-        <div className="h-8 w-px" style={{ background: 'var(--border)' }} />
+        <div className="h-8 w-px" style={{ background: 'var(--border-subtle)' }} />
 
         <div className="flex items-center gap-2">
           <div
@@ -104,7 +104,7 @@ export function SalesforceContributionSummary({
             <Award size={16} style={{ color: '#066afe' }} />
           </div>
           <div>
-            <div className="text-lg font-bold leading-none" style={{ color: 'var(--text)' }}>
+            <div className="text-lg font-bold leading-none" style={{ color: 'var(--text-primary)' }}>
               {metrics.categoryCounts.length}
             </div>
             <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
@@ -115,7 +115,7 @@ export function SalesforceContributionSummary({
 
         {topCategory && (
           <>
-            <div className="h-8 w-px" style={{ background: 'var(--border)' }} />
+            <div className="h-8 w-px" style={{ background: 'var(--border-subtle)' }} />
 
             <div className="flex items-center gap-2">
               <div
@@ -143,8 +143,8 @@ export function SalesforceContributionSummary({
           className="px-3 py-1.5 rounded-md font-semibold text-xs focus:outline-none focus:ring-2 transition-all cursor-pointer"
           style={{
             background: 'var(--surface2)',
-            color: 'var(--text)',
-            border: '1px solid var(--border)'
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-subtle)'
           }}
         >
           {availableYears.map(year => (

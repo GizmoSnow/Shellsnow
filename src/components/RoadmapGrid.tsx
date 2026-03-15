@@ -243,8 +243,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           </div>
         </div>
         {copyDropdown === dropdownId && (
-          <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-            <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
+          <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface)' }}>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Copy to:</div>
             {qkeys.map((targetQ) => (
               <button
                 key={targetQ}
@@ -254,7 +254,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 }}
                 disabled={targetQ === quarter}
                 className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ color: 'var(--text)' }}
+                style={{ color: 'var(--text-primary)' }}
               >
                 {getQuarterTitle(targetQ)}
               </button>
@@ -269,7 +269,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--border)', backgroundColor: data.backgroundColor || '#FFFFFF' }}>
+      <div className="min-w-[900px] rounded-lg overflow-hidden border shadow-sm print-grid" style={{ borderColor: 'var(--border-subtle)', backgroundColor: data.backgroundColor || '#FFFFFF' }}>
         <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: data.headerColor || 'var(--primary)', borderColor: data.headerColor || 'var(--primary)' }}>
           <div className="p-4 border-r" style={{ borderColor: 'rgba(255,255,255,0.2)' }}></div>
           {quarters.map((quarter, i) => (
@@ -283,8 +283,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           ))}
         </div>
 
-        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#f9fafb', borderColor: 'var(--border)' }}>
-          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+        <div className="grid grid-cols-[200px_repeat(4,1fr)] border-b print-avoid-break" style={{ background: '#f9fafb', borderColor: 'var(--border-subtle)' }}>
+          <div className="p-3 border-r text-xs font-semibold uppercase tracking-wide flex items-center" style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}>
             Success Path
           </div>
           {quarters.map((quarter, i) => {
@@ -294,7 +294,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             const label = data.successPathLabels?.[quarterKey] || (i === 0 ? 'Success Path' : 'Success Path Review');
 
             return (
-              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border)' }}>
+              <div key={i} className={`p-2 flex justify-center items-center border-r ${i === 3 ? 'border-r-0' : ''}`} style={{ borderColor: 'var(--border-subtle)' }}>
                 <div
                   className="text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap print-show-pill"
                   style={{ background: successPathColor, color: textColor }}
@@ -307,8 +307,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         </div>
 
         {/* Account-Level Activities */}
-        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
+        <div className="grid grid-cols-[200px_1fr] border-b print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="p-4 border-r flex flex-col justify-center" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
             <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: isDark ? '#ffffff' : 'var(--primary)' }}>
               Ongoing Activities
             </div>
@@ -388,14 +388,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             <button
               onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'q1' })}
               className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+              style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--primary)';
                 e.currentTarget.style.background = 'var(--primary)';
                 e.currentTarget.style.color = '#ffffff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.color = 'var(--text-muted)';
               }}
@@ -434,7 +434,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           }, [] as typeof goal.initiatives);
 
           return (
-          <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--border)' }}>
+          <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--border-subtle)' }}>
             {deduplicatedInitiatives.map((initiative, iniIdx) => {
               const spanningActivities = initiative.spanning || [];
 
@@ -519,8 +519,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
-                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
+                    <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
+                      <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                           style={{ background: goal.color }}
@@ -533,7 +533,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               {goal.number}
                             </div>
-                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
+                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                               {goal.title}
                             </div>
                           </>
@@ -595,14 +595,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         <button
                           onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' })}
                           className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
+                          style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)', gridColumn: '1 / -1' }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.borderColor = 'var(--primary)';
                             e.currentTarget.style.background = 'var(--primary)';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.borderColor = 'var(--border-subtle)';
                             e.currentTarget.style.background = 'transparent';
                             e.currentTarget.style.color = 'var(--text-muted)';
                           }}
@@ -614,8 +614,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
 
-                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border)' }}>
-                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border)', background: '#ffffff' }}>
+                  <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <div className="p-4 border-r flex flex-col justify-center relative" style={{ borderColor: 'var(--border-subtle)', background: '#ffffff' }}>
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
                         style={{ background: goal.color }}
@@ -628,7 +628,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           >
                             {goal.number}
                           </div>
-                          <div className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
+                          <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                             {goal.title}
                           </div>
                         </>
@@ -781,8 +781,8 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 </div>
                               </div>
                               {copyDropdown === dropdownId && (
-                                <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-                                  <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Copy to:</div>
+                                <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface)' }}>
+                                  <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Copy to:</div>
                                   {qkeys.map((targetQ) => (
                                     <button
                                       key={targetQ}
@@ -792,7 +792,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                       }}
                                       disabled={targetQ === item.quarter}
                                       className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                                      style={{ color: 'var(--text)' }}
+                                      style={{ color: 'var(--text-primary)' }}
                                     >
                                       {getQuarterTitle(targetQ)}
                                     </button>
@@ -847,14 +847,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         <button
                           onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id })}
                           className="w-full border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
-                          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                          style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.borderColor = 'var(--primary)';
                             e.currentTarget.style.background = 'var(--primary)';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.borderColor = 'var(--border-subtle)';
                             e.currentTarget.style.background = 'transparent';
                             e.currentTarget.style.color = 'var(--text-muted)';
                           }}
@@ -886,14 +886,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border-subtle)',
               background: 'var(--surface)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-3">
               <div>
-                <div className="font-bold text-base mb-2" style={{ color: 'var(--text)' }}>
+                <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>
                   {detailCardActivity.activity.name}
                 </div>
                 <div className="flex items-center gap-2 mb-2">

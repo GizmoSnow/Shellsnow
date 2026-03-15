@@ -4,32 +4,136 @@
 @tailwind utilities;
 
 html, body {
-  background: var(--bg);
+  background: var(--bg-app);
   transition: background-color 0.2s ease;
 }
 
-:root[data-theme="dark"] {
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --surface2: #22263a;
-  --border: #2e3248;
-  --text: #e8eaf6;
-  --text-muted: #7b82a8;
-  --hover-bg: #2e3248;
+/* Light mode theme tokens (default) */
+:root {
+  /* Background surfaces */
+  --bg-app: #ffffff;
+  --bg-shell: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-subtle: #f9fafb;
+
+  /* Text colors */
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+
+  /* Icon colors */
+  --icon-primary: #1f2937;
+  --icon-muted: #6b7280;
+
+  /* Borders */
+  --border-subtle: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  /* Buttons */
+  --button-neutral-bg: #E8F4FD;
+  --button-neutral-text: #1f2937;
+
+  /* Header */
+  --header-bg: #ffffff;
+  --header-text: #1f2937;
+
+  /* Interactive states */
+  --hover-bg: #f3f4f6;
   --primary: #066afe;
   --primary-hover: #0554d1;
-}
 
-:root[data-theme="light"] {
+  /* Legacy compatibility */
   --bg: #ffffff;
   --surface: #ffffff;
   --surface2: #E8F4FD;
   --border: #e5e7eb;
   --text: #1f2937;
   --text-muted: #6b7280;
-  --hover-bg: #f3f4f6;
+}
+
+/* Dark mode theme tokens */
+:root[data-theme="dark"] {
+  /* Background surfaces */
+  --bg-app: #0f1117;
+  --bg-shell: rgba(0, 0, 0, 0.3);
+  --bg-panel: #1a1d27;
+  --bg-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Text colors */
+  --text-primary: #e8eaf6;
+  --text-secondary: #7b82a8;
+
+  /* Icon colors */
+  --icon-primary: #e8eaf6;
+  --icon-muted: #7b82a8;
+
+  /* Borders */
+  --border-subtle: #2e3248;
+  --border-strong: #3d4259;
+
+  /* Buttons */
+  --button-neutral-bg: #22263a;
+  --button-neutral-text: #e8eaf6;
+
+  /* Header */
+  --header-bg: rgba(0, 0, 0, 0.3);
+  --header-text: #e8eaf6;
+
+  /* Interactive states */
+  --hover-bg: #2e3248;
   --primary: #066afe;
   --primary-hover: #0554d1;
+
+  /* Legacy compatibility */
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --border: #2e3248;
+  --text: #e8eaf6;
+  --text-muted: #7b82a8;
+}
+
+/* System preference fallback */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* Background surfaces */
+    --bg-app: #0f1117;
+    --bg-shell: rgba(0, 0, 0, 0.3);
+    --bg-panel: #1a1d27;
+    --bg-subtle: rgba(255, 255, 255, 0.05);
+
+    /* Text colors */
+    --text-primary: #e8eaf6;
+    --text-secondary: #7b82a8;
+
+    /* Icon colors */
+    --icon-primary: #e8eaf6;
+    --icon-muted: #7b82a8;
+
+    /* Borders */
+    --border-subtle: #2e3248;
+    --border-strong: #3d4259;
+
+    /* Buttons */
+    --button-neutral-bg: #22263a;
+    --button-neutral-text: #e8eaf6;
+
+    /* Header */
+    --header-bg: rgba(0, 0, 0, 0.3);
+    --header-text: #e8eaf6;
+
+    /* Interactive states */
+    --hover-bg: #2e3248;
+    --primary: #066afe;
+    --primary-hover: #0554d1;
+
+    /* Legacy compatibility */
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3248;
+    --text: #e8eaf6;
+    --text-muted: #7b82a8;
+  }
 }
 
 @layer utilities {

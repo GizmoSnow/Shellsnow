@@ -208,9 +208,9 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
   return (
     <>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div className="rounded-2xl p-6 md:p-8 w-full max-w-[440px] my-auto animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
+        <div className="rounded-2xl p-6 md:p-8 w-full max-w-[440px] my-auto animate-modalIn" style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h3 className="text-lg md:text-xl font-extrabold" style={{ color: 'var(--text)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
+            <h3 className="text-lg md:text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
             <button
               type="button"
               onClick={onClose}
@@ -235,7 +235,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. CSM Health Check"
                 className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                 autoFocus
               />
             </div>
@@ -252,7 +252,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                     placeholder="Add details..."
                     rows={3}
                     className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none"
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
@@ -267,8 +267,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                       className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                       style={{
                         background: status === 'on_track' ? '#22c55e' : 'var(--surface2)',
-                        color: status === 'on_track' ? '#ffffff' : 'var(--text)',
-                        border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border)'
+                        color: status === 'on_track' ? '#ffffff' : 'var(--text-primary)',
+                        border: status === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
                       }}
                     >
                       <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -280,8 +280,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                       className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                       style={{
                         background: status === 'at_risk' ? '#eab308' : 'var(--surface2)',
-                        color: status === 'at_risk' ? '#ffffff' : 'var(--text)',
-                        border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border)'
+                        color: status === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
+                        border: status === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
                       }}
                     >
                       <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -293,8 +293,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                       className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
                       style={{
                         background: status === 'blocked' ? '#ef4444' : 'var(--surface2)',
-                        color: status === 'blocked' ? '#ffffff' : 'var(--text)',
-                        border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border)'
+                        color: status === 'blocked' ? '#ffffff' : 'var(--text-primary)',
+                        border: status === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
                       }}
                     >
                       <div className="w-2 h-2 rounded-full bg-current"></div>
@@ -342,8 +342,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                   className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={{
                     background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--surface2)',
-                    color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text)',
-                    border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border)'
+                    color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
+                    border: selectedOwner === 'salesforce' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
                   }}
                 >
                   Salesforce
@@ -354,8 +354,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                   className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={{
                     background: selectedOwner === 'partner' ? '#0176D3' : 'var(--surface2)',
-                    color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text)',
-                    border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border)'
+                    color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
+                    border: selectedOwner === 'partner' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
                   }}
                 >
                   Partner
@@ -366,8 +366,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                   className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={{
                     background: selectedOwner === 'customer' ? '#0176D3' : 'var(--surface2)',
-                    color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text)',
-                    border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border)'
+                    color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
+                    border: selectedOwner === 'customer' ? '2px solid #0176D3' : '2px solid var(--border-subtle)'
                   }}
                 >
                   Customer
@@ -394,8 +394,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                           className="px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
                           style={{
                             background: isSelected ? '#066afe' : 'var(--surface2)',
-                            color: isSelected ? '#ffffff' : 'var(--text)',
-                            border: isSelected ? '2px solid #066afe' : '2px solid var(--border)'
+                            color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                            border: isSelected ? '2px solid #066afe' : '2px solid var(--border-subtle)'
                           }}
                         >
                           <div className="font-bold">{quarter.label}</div>
@@ -415,7 +415,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                     value={startMonth}
                     onChange={(e) => setStartMonth(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                   >
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -432,7 +432,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                     value={endMonth}
                     onChange={(e) => setEndMonth(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                   >
                     {allMonthOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -457,7 +457,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                     }
                   }}
                   className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
-                  style={{ borderColor: 'var(--border)' }}
+                  style={{ borderColor: 'var(--border-subtle)' }}
                 />
                 <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                   Spanning Activity
@@ -484,7 +484,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                         style={{
                           background: selectedQuarters.includes(qk) ? '#6c63ff' : 'var(--surface2)',
                           color: selectedQuarters.includes(qk) ? '#ffffff' : 'var(--text-muted)',
-                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid var(--border)'
+                          border: selectedQuarters.includes(qk) ? '2px solid #6c63ff' : '2px solid var(--border-subtle)'
                         }}
                       >
                         {quarter.label}
@@ -502,7 +502,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                   checked={isCriticalPath}
                   onChange={(e) => setIsCriticalPath(e.target.checked)}
                   className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
-                  style={{ borderColor: 'var(--border)' }}
+                  style={{ borderColor: 'var(--border-subtle)' }}
                 />
                 <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                   Critical Path
@@ -518,7 +518,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, cus
                 type="button"
                 onClick={onClose}
                 className="px-5 py-2 bg-transparent rounded-lg font-semibold transition-colors"
-                style={{ color: 'var(--text)', border: '1px solid var(--text)' }}
+                style={{ color: 'var(--text-primary)', border: '1px solid var(--text-primary)' }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >

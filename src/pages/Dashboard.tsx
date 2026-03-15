@@ -125,8 +125,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div style={{ color: 'var(--text-muted)' }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-app)' }}>
+        <div style={{ color: 'var(--text-secondary)' }}>Loading...</div>
       </div>
     );
   }
@@ -155,7 +155,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen relative" style={{ background: 'var(--bg-app)' }}>
       <style>{`
         @keyframes bounce {
           0%, 100% {
@@ -231,8 +231,8 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>My Roadmaps</h2>
-            <p style={{ color: 'var(--text-muted)' }}>Create and manage your success roadmaps</p>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Roadmaps</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Create and manage your success roadmaps</p>
           </div>
           <button
             onClick={createRoadmap}
@@ -249,8 +249,8 @@ export default function Dashboard() {
         {roadmaps.length === 0 ? (
           <div className="text-center py-20">
             <img src={astroGif} alt="Astro" className="w-32 h-32 mx-auto mb-6 object-contain" />
-            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>No roadmaps yet</h3>
-            <p className="mb-6" style={{ color: 'var(--text-muted)' }}>Create your first roadmap to get started</p>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No roadmaps yet</h3>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Create your first roadmap to get started</p>
             <button
               onClick={createRoadmap}
               className="inline-flex items-center gap-2 px-5 py-3 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 shadow-lg"
@@ -311,7 +311,7 @@ export default function Dashboard() {
                             duplicateRoadmap(roadmap);
                           }}
                           className="opacity-0 group-hover:opacity-100 p-2 hover:bg-blue-500/10 hover:text-blue-600 rounded-lg transition-all"
-                          style={{ color: 'var(--text-muted)' }}
+                          style={{ color: 'var(--text-secondary)' }}
                           title="Duplicate roadmap"
                         >
                           <Copy size={16} />
@@ -326,27 +326,27 @@ export default function Dashboard() {
                             });
                           }}
                           className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#e8194b]/10 hover:text-[#e8194b] rounded-lg transition-all"
-                          style={{ color: 'var(--text-muted)' }}
+                          style={{ color: 'var(--text-secondary)' }}
                           title="Delete roadmap"
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold mb-3 line-clamp-2" style={{ color: 'var(--text)' }}>
+                    <h3 className="text-lg font-bold mb-3 line-clamp-2" style={{ color: 'var(--text-primary)' }}>
                       {roadmap.title}
                     </h3>
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: firstGoalColor }} />
                         <span>{roadmap.data.goals.length} goal{roadmap.data.goals.length !== 1 ? 's' : ''}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: firstGoalColor }} />
                         <span>{totalActivities} activit{totalActivities !== 1 ? 'ies' : 'y'}</span>
                       </div>
                     </div>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       Updated {new Date(roadmap.updated_at).toLocaleDateString()}
                     </p>
                   </div>

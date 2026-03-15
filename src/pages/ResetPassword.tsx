@@ -59,11 +59,11 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: 'var(--bg-app)' }}>
       <button
         onClick={toggleTheme}
         className="absolute top-6 right-6 p-2 rounded-lg transition-colors"
-        style={{ background: 'var(--surface)', color: 'var(--text)' }}
+        style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}
         title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -98,7 +98,7 @@ export default function ResetPassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#6c63ff] transition-colors"
-                  style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  style={{ background: 'var(--bg-app)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                   placeholder="••••••••"
                   required
                 />
@@ -113,7 +113,7 @@ export default function ResetPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#6c63ff] transition-colors"
-                  style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  style={{ background: 'var(--bg-app)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                   placeholder="••••••••"
                   required
                 />

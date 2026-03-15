@@ -22,7 +22,7 @@ export default function DeleteConfirmationModal({
     >
       <div
         className="rounded-xl shadow-2xl max-w-md w-full p-6"
-        style={{ background: 'var(--surface)' }}
+        style={{ background: 'var(--bg-panel)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4 mb-6">
@@ -33,11 +33,11 @@ export default function DeleteConfirmationModal({
             <AlertTriangle size={24} style={{ color: '#e8194b' }} />
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+            <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
               Delete Roadmap?
             </h3>
             <p style={{ color: 'var(--text-muted)' }}>
-              Are you sure you want to delete <span className="font-semibold" style={{ color: 'var(--text)' }}>"{roadmapTitle}"</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>"{roadmapTitle}"</span>? This action cannot be undone.
             </p>
           </div>
         </div>
@@ -47,8 +47,8 @@ export default function DeleteConfirmationModal({
             onClick={onClose}
             className="px-4 py-2 rounded-lg font-semibold transition-colors border"
             style={{
-              color: 'var(--text)',
-              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+              borderColor: 'var(--border-subtle)',
               background: 'transparent'
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg)'}
