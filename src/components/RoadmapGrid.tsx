@@ -80,15 +80,27 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
   };
 
   const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
+    console.log('copyActivity called:', { goalId, initiativeId, sourceQuarter, activityId, targetQuarter });
     const newData = { ...data };
     const goal = newData.goals.find(g => g.id === goalId);
-    if (!goal) return;
+    if (!goal) {
+      console.log('Goal not found:', goalId);
+      return;
+    }
 
     const initiative = goal.initiatives.find(i => i.id === initiativeId);
-    if (!initiative) return;
+    if (!initiative) {
+      console.log('Initiative not found:', initiativeId);
+      return;
+    }
 
     const sourceAct = initiative.activities[sourceQuarter as keyof typeof initiative.activities].find(a => a.id === activityId);
-    if (!sourceAct) return;
+    if (!sourceAct) {
+      console.log('Source activity not found in quarter', sourceQuarter, 'Activities:', initiative.activities[sourceQuarter as keyof typeof initiative.activities]);
+      return;
+    }
+
+    console.log('Source activity found:', sourceAct);
 
     // Create a true duplicate with all properties preserved
     const newActivity = {
@@ -96,7 +108,12 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
 
+    console.log('Creating new activity:', newActivity);
+    console.log('Target quarter before push:', initiative.activities[targetQuarter as keyof typeof initiative.activities]);
+
     initiative.activities[targetQuarter as keyof typeof initiative.activities].push(newActivity);
+
+    console.log('Target quarter after push:', initiative.activities[targetQuarter as keyof typeof initiative.activities]);
 
     onDataChange(newData);
     setCopyDropdown(null);
@@ -260,11 +277,20 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 key={targetQ}
                 onClick={(e) => {
                   e.stopPropagation();
+                  console.log('Quarter button clicked (non-spanning):', targetQ);
                   copyActivity(goal.id, initiative.id, quarter, activity.id, targetQ);
                 }}
                 disabled={targetQ === quarter}
-                className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full text-left px-2 py-1 text-xs rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={(e) => {
+                  if (targetQ !== quarter) {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
               >
                 {getQuarterTitle(targetQ)}
               </button>
@@ -820,11 +846,20 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                       key={targetQ}
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        console.log('Quarter button clicked:', targetQ);
                                         copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, targetQ);
                                       }}
                                       disabled={targetQ === item.quarter}
-                                      className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                      className="w-full text-left px-2 py-1 text-xs rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                       style={{ color: 'var(--text-primary)' }}
+                                      onMouseEnter={(e) => {
+                                        if (targetQ !== item.quarter) {
+                                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                                        }
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'transparent';
+                                      }}
                                     >
                                       {getQuarterTitle(targetQ)}
                                     </button>
