@@ -31,6 +31,15 @@ function Router() {
     return <Login />;
   }
 
+  // If user is null but not signed out, show loading state (session is refreshing)
+  if (!user && !isSignedOut && pathname !== '/login' && pathname !== '/signup') {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div style={{ color: 'var(--text-muted)' }}>Loading session...</div>
+      </div>
+    );
+  }
+
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
     navigate('/dashboard');
     return <Dashboard />;

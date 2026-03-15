@@ -79,7 +79,11 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
   };
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading session...</div>
+      </div>
+    );
   }
 
   return (
