@@ -32,11 +32,11 @@ function getTextColor(bgColor: string): string {
 
 export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null, canvasStyle?: 'light' | 'dark'): Promise<void> {
   const isDark = canvasStyle === 'dark';
-  const BG_COLOR = isDark ? '#171923' : '#FFFFFF';
-  const SURFACE_COLOR = isDark ? '#1D2130' : '#F9FAFB';
-  const BORDER_COLOR = isDark ? '#2E3248' : '#E5E7EB';
-  const TEXT_COLOR = isDark ? '#E8EAF6' : '#1F2937';
-  const TEXT_MUTED = isDark ? '#9CA3C0' : '#6B7280';
+  const BG_COLOR = isDark ? '#0A0E1A' : '#FFFFFF';
+  const SURFACE_COLOR = isDark ? '#121621' : '#F8FAFC';
+  const BORDER_COLOR = isDark ? '#1E293B' : '#E2E8F0';
+  const TEXT_COLOR = isDark ? '#F8FAFC' : '#0F172A';
+  const TEXT_MUTED = isDark ? '#94A3B8' : '#64748B';
   const HEADER_BG = data.headerColor || '#066AFE';
 
 

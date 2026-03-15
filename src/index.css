@@ -52,20 +52,22 @@ html, body {
   /* Roadmap-specific - Light Canvas */
   --roadmap-surface: #ffffff;
   --roadmap-cell-bg: #ffffff;
-  --roadmap-quarter-bg: #f9fafb;
-  --roadmap-text-primary: #1f2937;
-  --roadmap-text-secondary: #6b7280;
-  --roadmap-border: #e5e7eb;
+  --roadmap-quarter-bg: #f8fafc;
+  --roadmap-text-primary: #0f172a;
+  --roadmap-text-secondary: #64748b;
+  --roadmap-border: #e2e8f0;
+  --roadmap-border-subtle: #f1f5f9;
 }
 
-/* Dark Canvas Style */
+/* Dark Canvas Style - Premium Executive Aesthetic */
 :root[data-canvas="dark"] {
-  --roadmap-surface: #171923;
-  --roadmap-cell-bg: #1d2130;
-  --roadmap-quarter-bg: #171923;
-  --roadmap-text-primary: #e8eaf6;
-  --roadmap-text-secondary: #9ca3c0;
-  --roadmap-border: #2e3248;
+  --roadmap-surface: #0a0e1a;
+  --roadmap-cell-bg: #121621;
+  --roadmap-quarter-bg: #0f1419;
+  --roadmap-text-primary: #f8fafc;
+  --roadmap-text-secondary: #94a3b8;
+  --roadmap-border: #1e293b;
+  --roadmap-border-subtle: #151b28;
 }
 
 /* Dark mode theme tokens */
@@ -110,12 +112,13 @@ html, body {
   --text-muted: #7b82a8;
 
   /* Roadmap-specific - matches app dark theme by default */
-  --roadmap-surface: #171923;
-  --roadmap-cell-bg: #1d2130;
-  --roadmap-quarter-bg: #171923;
-  --roadmap-text-primary: #e8eaf6;
-  --roadmap-text-secondary: #9ca3c0;
-  --roadmap-border: #2e3248;
+  --roadmap-surface: #0a0e1a;
+  --roadmap-cell-bg: #121621;
+  --roadmap-quarter-bg: #0f1419;
+  --roadmap-text-primary: #f8fafc;
+  --roadmap-text-secondary: #94a3b8;
+  --roadmap-border: #1e293b;
+  --roadmap-border-subtle: #151b28;
 }
 
 /* System preference fallback */
@@ -161,12 +164,13 @@ html, body {
     --text-muted: #7b82a8;
 
     /* Roadmap-specific - matches app dark theme by default */
-    --roadmap-surface: #171923;
-    --roadmap-cell-bg: #1d2130;
-    --roadmap-quarter-bg: #171923;
-    --roadmap-text-primary: #e8eaf6;
-    --roadmap-text-secondary: #9ca3c0;
-    --roadmap-border: #2e3248;
+    --roadmap-surface: #0a0e1a;
+    --roadmap-cell-bg: #121621;
+    --roadmap-quarter-bg: #0f1419;
+    --roadmap-text-primary: #f8fafc;
+    --roadmap-text-secondary: #94a3b8;
+    --roadmap-border: #1e293b;
+    --roadmap-border-subtle: #151b28;
   }
 }
 

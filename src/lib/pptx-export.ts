@@ -112,12 +112,13 @@ export async function exportToPptx(
   const SLIDE_H = 7.5;
 
   const isDark = canvasStyle === 'dark';
-  const BG = isDark ? '171923' : 'FFFFFF';
-  const SURFACE = isDark ? '171923' : 'FFFFFF';
-  const SURFACE2 = isDark ? '1D2130' : 'F9FAFB';
-  const BORDER_COLOR = isDark ? '2E3248' : 'E5E7EB';
-  const TEXT_COLOR = isDark ? 'E8EAF6' : '1F2937';
-  const TEXT_MUTED = isDark ? '9CA3C0' : '6B7280';
+  const BG = isDark ? '0A0E1A' : 'FFFFFF';
+  const SURFACE = isDark ? '121621' : 'FFFFFF';
+  const SURFACE2 = isDark ? '0F1419' : 'F8FAFC';
+  const BORDER_COLOR = isDark ? '1E293B' : 'E2E8F0';
+  const BORDER_SUBTLE = isDark ? '151B28' : 'F1F5F9';
+  const TEXT_COLOR = isDark ? 'F8FAFC' : '0F172A';
+  const TEXT_MUTED = isDark ? '94A3B8' : '64748B';
   const HEADER_BG = data.headerColor ? data.headerColor.replace('#', '') : '066AFE';
   const HEADER_TEXT = 'FFFFFF';
   const PRIMARY = '066AFE';
