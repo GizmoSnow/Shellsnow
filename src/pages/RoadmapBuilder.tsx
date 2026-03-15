@@ -424,11 +424,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !roadmap) return;
+    if (!file || !roadmap) {
+      e.target.value = '';
+      return;
+    }
 
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
     if (!validTypes.includes(file.type)) {
       alert('Please upload a PNG, JPG, JPEG, SVG, or GIF image file');
+      e.target.value = '';
       return;
     }
 
@@ -436,27 +440,37 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
+        try {
+          const base64String = reader.result as string;
 
-        const { error: updateError } = await supabase
-          .from('roadmaps')
-          .update({ customer_logo_base64: base64String })
-          .eq('id', roadmapId);
+          const { error: updateError } = await supabase
+            .from('roadmaps')
+            .update({ customer_logo_base64: base64String })
+            .eq('id', roadmapId);
 
-        if (updateError) throw updateError;
+          if (updateError) throw updateError;
 
-        setCustomerLogoBase64(base64String);
-        setUploadingLogo(false);
+          setCustomerLogoBase64(base64String);
+          setUploadingLogo(false);
+          e.target.value = '';
+        } catch (error) {
+          console.error('Logo upload error:', error);
+          alert('Failed to upload logo');
+          setUploadingLogo(false);
+          e.target.value = '';
+        }
       };
       reader.onerror = () => {
         alert('Failed to read logo file');
         setUploadingLogo(false);
+        e.target.value = '';
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Logo upload error:', error);
       alert('Failed to upload logo');
       setUploadingLogo(false);
+      e.target.value = '';
     }
   };
 
