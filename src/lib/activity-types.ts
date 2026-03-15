@@ -41,12 +41,6 @@ export const DEFAULT_ACTIVITY_TYPES: ActivityTypeMetadata[] = [
     owner: 'salesforce'
   },
   {
-    key: 'partner',
-    label: 'Partner',
-    color: '#fcc003',
-    owner: 'partner'
-  },
-  {
     key: 'trailhead',
     label: 'Trailhead',
     color: '#d17dfe',
