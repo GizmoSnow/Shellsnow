@@ -135,7 +135,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
   }, [roadmap, title, data, fiscalConfig, customerLogoBase64]);
 
-  const loadRoadmap = async () => {
+  const loadRoadmap = async (retryCount = 0) => {
     const { data: roadmapData, error } = await supabase
       .from('roadmaps')
       .select('*')
@@ -144,8 +144,25 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
     if (error) {
       console.error('Error loading roadmap:', error);
+
+      if (retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return loadRoadmap(retryCount + 1);
+      }
+
+      alert('Failed to load roadmap. Returning to dashboard.');
       navigate('/dashboard');
-    } else if (roadmapData) {
+    } else if (!roadmapData) {
+      console.error('Roadmap not found:', roadmapId);
+
+      if (retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return loadRoadmap(retryCount + 1);
+      }
+
+      alert('Roadmap not found. Returning to dashboard.');
+      navigate('/dashboard');
+    } else {
       setRoadmap(roadmapData);
       setTitle(roadmapData.title);
 

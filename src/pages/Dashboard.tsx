@@ -102,7 +102,9 @@ export default function Dashboard() {
 
     if (error) {
       console.error('Error creating roadmap:', error);
+      alert('Failed to create roadmap. Please try again.');
     } else if (data) {
+      await new Promise(resolve => setTimeout(resolve, 300));
       navigate(`/roadmap/${data.id}`);
     }
   };
