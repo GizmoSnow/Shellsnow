@@ -81,16 +81,6 @@ async function getImageSize(url: string): Promise<{ w: number; h: number; aspect
   });
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  csm: 'CSM',
-  architect: 'Success Architect',
-  specialist: 'Success Specialist',
-  advisory: 'Product Advisory',
-  enablement: 'Enablement',
-  event: 'Event',
-  partner: 'Partner',
-  trailhead: 'Trailhead',
-};
 
 function getTodayDateString(): string {
   const today = new Date();
@@ -104,14 +94,15 @@ export async function exportToPptx(
   fiscalConfig?: FiscalYearConfig,
   canvasStyle?: 'light' | 'dark'
 ) {
-  if (!fiscalConfig) {
-    fiscalConfig = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
-  }
+  try {
+    if (!fiscalConfig) {
+      fiscalConfig = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+    }
 
-  const pres = new PptxGenJS();
-  pres.layout = 'LAYOUT_WIDE';
+    const pres = new PptxGenJS();
+    pres.layout = 'LAYOUT_WIDE';
 
-  const sfLogoDataUrl = await fetchAsDataUrl("/salesforce-logo.png");
+    const sfLogoDataUrl = await fetchAsDataUrl("/salesforce-logo.png");
   const sfLogoPptxData = normalizePptxImageData(sfLogoDataUrl);
   const sfLogoSize = await getImageSize(sfLogoDataUrl);
 
@@ -360,7 +351,7 @@ export async function exportToPptx(
         fill: { color: bgColor.replace('#', '') },
         line: { color: bgColor.replace('#', ''), width: 0 },
       });
-      const labelText = data.typeLabels?.[key] || TYPE_LABELS[key] || key;
+      const labelText = getTypeLabel(key, data);
       slide.addText(labelText, {
         x: lx + 0.11,
         y: y,
@@ -892,4 +883,8 @@ export async function exportToPptx(
     .replace(/\s+/g, '-') || 'Success-Roadmap';
 
   await pres.writeFile({ fileName: `${fileName}.pptx` });
+  } catch (error) {
+    console.error('PowerPoint export error:', error);
+    throw error;
+  }
 }
