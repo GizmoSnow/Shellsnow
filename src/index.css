@@ -49,7 +49,18 @@ html, body {
   --text: #1f2937;
   --text-muted: #6b7280;
 
-  /* Roadmap-specific - Light Canvas */
+  /* Roadmap-specific - Light Canvas (default) */
+  --roadmap-surface: #ffffff;
+  --roadmap-cell-bg: #ffffff;
+  --roadmap-quarter-bg: #f8fafc;
+  --roadmap-text-primary: #0f172a;
+  --roadmap-text-secondary: #64748b;
+  --roadmap-border: #e2e8f0;
+  --roadmap-border-subtle: #f1f5f9;
+}
+
+/* Light Canvas Style - Explicit override with higher specificity */
+:root[data-canvas="light"] {
   --roadmap-surface: #ffffff;
   --roadmap-cell-bg: #ffffff;
   --roadmap-quarter-bg: #f8fafc;
@@ -110,15 +121,6 @@ html, body {
   --border: #2e3248;
   --text: #e8eaf6;
   --text-muted: #7b82a8;
-
-  /* Roadmap-specific - matches app dark theme by default */
-  --roadmap-surface: #0a0e1a;
-  --roadmap-cell-bg: #121621;
-  --roadmap-quarter-bg: #0f1419;
-  --roadmap-text-primary: #f8fafc;
-  --roadmap-text-secondary: #94a3b8;
-  --roadmap-border: #1e293b;
-  --roadmap-border-subtle: #151b28;
 }
 
 /* System preference fallback */
@@ -162,15 +164,6 @@ html, body {
     --border: #2e3248;
     --text: #e8eaf6;
     --text-muted: #7b82a8;
-
-    /* Roadmap-specific - matches app dark theme by default */
-    --roadmap-surface: #0a0e1a;
-    --roadmap-cell-bg: #121621;
-    --roadmap-quarter-bg: #0f1419;
-    --roadmap-text-primary: #f8fafc;
-    --roadmap-text-secondary: #94a3b8;
-    --roadmap-border: #1e293b;
-    --roadmap-border-subtle: #151b28;
   }
 }
 
