@@ -79,7 +79,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     return pos;
   };
 
-  const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarters: string[]) => {
+  const copyActivity = (goalId: string, initiativeId: string, sourceQuarter: string, activityId: string, targetQuarter: string) => {
     const newData = { ...data };
     const goal = newData.goals.find(g => g.id === goalId);
     if (!goal) return;
@@ -90,13 +90,13 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
     const sourceAct = initiative.activities[sourceQuarter as keyof typeof initiative.activities].find(a => a.id === activityId);
     if (!sourceAct) return;
 
-    targetQuarters.forEach(targetQ => {
-      const newActivity = {
-        ...sourceAct,
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
-      initiative.activities[targetQ as keyof typeof initiative.activities].push(newActivity);
-    });
+    // Create a true duplicate with all properties preserved
+    const newActivity = {
+      ...sourceAct,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    };
+
+    initiative.activities[targetQuarter as keyof typeof initiative.activities].push(newActivity);
 
     onDataChange(newData);
     setCopyDropdown(null);
@@ -243,14 +243,24 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           </div>
         </div>
         {copyDropdown === dropdownId && (
-          <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface)' }}>
+          <div
+            className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[140px]"
+            style={{
+              borderColor: 'var(--border-subtle)',
+              background: 'var(--surface)',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Copy to:</div>
             {qkeys.map((targetQ) => (
               <button
                 key={targetQ}
                 onClick={(e) => {
                   e.stopPropagation();
-                  copyActivity(goal.id, initiative.id, quarter, activity.id, [targetQ]);
+                  copyActivity(goal.id, initiative.id, quarter, activity.id, targetQ);
                 }}
                 disabled={targetQ === quarter}
                 className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -323,6 +333,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               const maxIdx = Math.max(...qIndexes);
               const isFirst = index === 0;
               const isLast = index === (data.accountSpanning || []).length - 1;
+              const statusColor = getStatusColor(sp.status);
 
               return (
                 <div
@@ -336,6 +347,11 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   }}
                   title={sp.name}
                 >
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: statusColor }}
+                    title={getStatusLabel(sp.status)}
+                  />
                   {sp.isCriticalPath && (
                     <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                   )}
@@ -553,6 +569,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
                           const minIdx = Math.min(...qIndexes);
                           const maxIdx = Math.max(...qIndexes);
+                          const statusColor = getStatusColor(sp.status);
 
                           return (
                             <div
@@ -565,6 +582,11 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 gridColumnEnd: maxIdx + 2
                               }}
                             >
+                              <div
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ background: statusColor }}
+                                title={getStatusLabel(sp.status)}
+                              />
                               {sp.isCriticalPath && (
                                 <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                               )}
@@ -781,14 +803,24 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 </div>
                               </div>
                               {copyDropdown === dropdownId && (
-                                <div className="absolute top-full left-0 mt-1 border rounded-lg shadow-lg p-2 z-50 min-w-[140px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface)' }}>
+                                <div
+                                  className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[140px]"
+                                  style={{
+                                    borderColor: 'var(--border-subtle)',
+                                    background: 'var(--surface)',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Copy to:</div>
                                   {qkeys.map((targetQ) => (
                                     <button
                                       key={targetQ}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, [targetQ]);
+                                        copyActivity(goal.id, initiative.id, item.quarter, item.activity.id, targetQ);
                                       }}
                                       disabled={targetQ === item.quarter}
                                       className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -872,6 +904,14 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           );
         })}
       </div>
+
+      {/* Copy Dropdown Backdrop */}
+      {copyDropdown && (
+        <div
+          className="fixed inset-0 z-[90]"
+          onClick={() => setCopyDropdown(null)}
+        />
+      )}
 
       {/* Detail Card Modal */}
       {detailCardActivity && (
