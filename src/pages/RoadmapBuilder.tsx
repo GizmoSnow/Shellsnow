@@ -900,10 +900,11 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         isOpen={showAddModal}
         context={addContext}
         editingActivity={editingActivity}
-        customActivityTypes={data.customActivityTypes}
+        data={data}
         fiscalConfig={fiscalConfig}
         getTypeColor={getTypeColor}
         getTypeLabel={getTypeLabel}
+        getAllTypeKeys={getAllTypeKeys}
         onClose={() => {
           setShowAddModal(false);
           setEditingActivity(null);
