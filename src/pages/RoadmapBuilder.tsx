@@ -101,6 +101,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [showImportWorkspace, setShowImportWorkspace] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -162,8 +163,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         return loadRoadmap(retryCount + 1);
       }
 
-      // Only navigate away on initial load, not on reloads
-      if (retryCount === 0 || !roadmap) {
+      // Only navigate away if this is the very first load attempt AND we have no existing data
+      if (!hasLoadedOnce && !roadmap) {
         alert('Failed to load roadmap. Returning to dashboard.');
         navigate('/dashboard');
       } else {
@@ -181,9 +182,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         return loadRoadmap(retryCount + 1);
       }
 
-      // Only navigate away if this is genuinely not found
-      alert('Roadmap not found. Returning to dashboard.');
-      navigate('/dashboard');
+      // Only navigate away if this is the very first load AND roadmap truly doesn't exist
+      if (!hasLoadedOnce) {
+        alert('Roadmap not found. Returning to dashboard.');
+        navigate('/dashboard');
+      } else {
+        console.error('[LOAD] Roadmap not found on reload, keeping existing data');
+        setSaveError('Failed to reload roadmap data');
+        setTimeout(() => setSaveError(null), 5000);
+      }
       return;
     } else {
       console.log('[LOAD SUCCESS] Roadmap loaded:', roadmapData.id);
@@ -215,6 +222,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       setCustomerLogoBase64(roadmapData.customer_logo_base64 || null);
       setFiscalConfig(fiscalCfg);
       setCanvasStyle(roadmapData.canvas_style || 'light');
+      setHasLoadedOnce(true);
     }
     setLoading(false);
   };
