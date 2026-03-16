@@ -11,17 +11,13 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
-import { ImportStagingModal } from '../components/ImportStagingModal';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
-import { appendMetadataToDescription } from '../lib/import-metadata-formatter';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
-import type { NormalizedActivityCandidate } from '../lib/import-types';
-import { updateCandidates, updateBatchCounts, updateCandidate, loadCandidatesFromDatabase } from '../lib/import-processor';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -96,7 +92,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
-  const [showImportModal, setShowImportModal] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -108,25 +103,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   useEffect(() => {
     loadRoadmap();
 
-    // Check if returning from import staging
-    const params = new URLSearchParams(window.location.search);
-    const importBatchId = params.get('import-batch');
-    if (importBatchId && hasLoadedOnce) {
-      handleImportFromBatch(importBatchId);
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
   }, [roadmapId]);
 
-  const handleImportFromBatch = async (batchId: string) => {
-    try {
-      const candidates = await loadCandidatesFromDatabase(batchId);
-      const includedCandidates = candidates.filter(c => c.include !== false);
-      await handleImportComplete(batchId, includedCandidates);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to import batch');
-    }
-  };
 
   useEffect(() => {
     document.documentElement.setAttribute('data-canvas', canvasStyle);
@@ -344,207 +322,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
   };
 
-  const handleImportComplete = async (batchId: string, candidates: NormalizedActivityCandidate[]) => {
-    const importedIds: string[] = [];
-    const failedImports: Array<{ candidate: NormalizedActivityCandidate; error: string }> = [];
-    const skippedImports: Array<{ candidate: NormalizedActivityCandidate; reason: string }> = [];
-
-    try {
-      const updatedData = { ...data };
-
-      for (const candidate of candidates) {
-        try {
-          if (!candidate.include) {
-            skippedImports.push({ candidate, reason: 'Excluded by user' });
-            await updateCandidate(candidate.id, {
-              importStatus: 'ignored',
-              skipReason: 'Excluded by user',
-            });
-            continue;
-          }
-
-          if (candidate.errors && candidate.errors.length > 0) {
-            failedImports.push({ candidate, error: candidate.errors.join('; ') });
-            continue;
-          }
-
-          if (candidate.duplicateDetection?.isDuplicate) {
-            skippedImports.push({
-              candidate,
-              reason: `Duplicate: ${candidate.duplicateDetection.matchDetails}`
-            });
-            await updateCandidate(candidate.id, {
-              importStatus: 'ignored',
-              skipReason: `Duplicate: ${candidate.duplicateDetection.matchDetails}`,
-            });
-            continue;
-          }
-
-          const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
-          const finalOwner = candidate.overrideOwner || candidate.owner;
-          const finalStatus = candidate.overrideStatus || candidate.status;
-          const finalStartMonth = candidate.overrideStartMonth ?? candidate.startMonth;
-          const finalEndMonth = candidate.overrideEndMonth ?? candidate.endMonth;
-
-          if (!finalTitle || !finalOwner) {
-            failedImports.push({ candidate, error: 'Missing required fields: title or owner' });
-            await updateCandidate(candidate.id, {
-              errors: ['Missing required fields'],
-            });
-            continue;
-          }
-
-          if (finalStartMonth === undefined) {
-            failedImports.push({ candidate, error: 'Missing required field: date' });
-            await updateCandidate(candidate.id, {
-              errors: ['Missing required field: date'],
-            });
-            continue;
-          }
-
-          if (!candidate.goalId) {
-            failedImports.push({ candidate, error: 'Goal required before import' });
-            await updateCandidate(candidate.id, {
-              errors: ['Goal required before import'],
-            });
-            continue;
-          }
-
-          const targetGoal = updatedData.goals.find(g => g.id === candidate.goalId);
-          if (!targetGoal) {
-            failedImports.push({ candidate, error: 'Selected goal not found' });
-            await updateCandidate(candidate.id, {
-              errors: ['Selected goal not found'],
-            });
-            continue;
-          }
-
-          if (targetGoal.initiatives.length > 0 && !candidate.initiativeId) {
-            failedImports.push({ candidate, error: 'Initiative required for selected goal' });
-            await updateCandidate(candidate.id, {
-              errors: ['Initiative required for selected goal'],
-            });
-            continue;
-          }
-
-          const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
-
-          const activity: Activity = {
-            id: crypto.randomUUID(),
-            name: finalTitle,
-            type: typeKey,
-            owner: finalOwner,
-            status: finalStatus,
-            health: candidate.health,
-            start_month: finalStartMonth,
-            end_month: finalEndMonth,
-            sourceType: candidate.sourceType,
-            sourceSystem: candidate.sourceSystem,
-            sourceRecordId: candidate.sourceRecordId,
-            description: appendMetadataToDescription(undefined, candidate),
-          };
-
-          if (candidate.activityType === 'spanning' && candidate.quarters) {
-            const spanningActivity: any = {
-              ...activity,
-              quarters: candidate.quarters,
-            };
-            delete spanningActivity.start_month;
-            delete spanningActivity.end_month;
-
-            if (!updatedData.accountSpanning) {
-              updatedData.accountSpanning = [];
-            }
-            updatedData.accountSpanning.push(spanningActivity);
-          } else {
-            const targetQuarter = determineQuarterFromActivity(activity);
-
-            if (candidate.initiativeId) {
-              const targetInitiative = targetGoal.initiatives.find(i => i.id === candidate.initiativeId);
-              if (targetInitiative) {
-                targetInitiative.activities[targetQuarter].push(activity);
-              }
-            } else {
-              if (!targetGoal.initiatives || targetGoal.initiatives.length === 0) {
-                if (!targetGoal.initiatives) {
-                  targetGoal.initiatives = [];
-                }
-                if (targetGoal.initiatives.length === 0) {
-                  targetGoal.initiatives.push({
-                    id: crypto.randomUUID(),
-                    label: '',
-                    activities: { q1: [], q2: [], q3: [], q4: [] }
-                  });
-                }
-                targetGoal.initiatives[0].activities[targetQuarter].push(activity);
-              }
-            }
-          }
-
-          importedIds.push(candidate.id);
-        } catch (error) {
-          failedImports.push({
-            candidate,
-            error: error instanceof Error ? error.message : 'Unknown error during import'
-          });
-          await updateCandidate(candidate.id, {
-            errors: [error instanceof Error ? error.message : 'Import failed'],
-          });
-        }
-      }
-
-      if (importedIds.length > 0) {
-        setData(updatedData);
-        await saveRoadmap(updatedData);
-
-        await updateCandidates(importedIds, {
-          importStatus: 'imported',
-          importedAt: new Date().toISOString(),
-        });
-      }
-
-      await updateBatchCounts(batchId);
-
-      let summary = `Import Complete:\n${importedIds.length} imported\n${skippedImports.length} skipped\n${failedImports.length} failed`;
-
-      if (failedImports.length > 0) {
-        summary += '\n\nErrors:';
-        failedImports.forEach((failed, idx) => {
-          summary += `\n${idx + 1}. ${failed.candidate.rawTitle}: ${failed.error}`;
-        });
-      }
-
-      alert(summary);
-    } catch (error) {
-      console.error('Import error:', error);
-      alert(`Import partially completed:\n${importedIds.length} imported\n${failedImports.length} failed`);
-    }
-  };
-
-  function determineQuarterFromActivity(activity: Activity): 'q1' | 'q2' | 'q3' | 'q4' {
-    if (!activity.start_month) return 'q1';
-
-    const allMonths = getAllRoadmapMonths(fiscalConfig);
-    const monthIndex = allMonths.findIndex(m => m.calendarMonth === activity.start_month);
-
-    if (monthIndex === -1) return 'q1';
-
-    const quarterIndex = Math.floor(monthIndex / 3);
-    return `q${quarterIndex + 1}` as 'q1' | 'q2' | 'q3' | 'q4';
-  }
-
-  function mapSourceTypeToActivityType(sourceType: string): string {
-    switch (sourceType) {
-      case 'engagement':
-        return 'architect';
-      case 'support':
-        return 'specialist';
-      case 'training':
-        return 'enablement';
-      default:
-        return 'csm';
-    }
-  }
 
   const handleReset = () => {
     setData({
@@ -1026,16 +803,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 Print
               </button>
               <button
-                onClick={() => setShowImportModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
-                style={{ background: 'var(--primary)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
-              >
-                <FileInput size={16} />
-                Import Activities
-              </button>
-              <button
                 onClick={() => navigate(`/import-workspace/${roadmapId}`)}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
                 style={{ background: 'var(--primary)' }}
@@ -1353,15 +1120,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         onConfirm={handleReset}
       />
 
-      {showImportModal && user && (
-        <ImportStagingModal
-          roadmapId={roadmapId}
-          userId={user.id}
-          roadmapData={data}
-          onClose={() => setShowImportModal(false)}
-          onImportComplete={handleImportComplete}
-        />
-      )}
 
       <GoalsPanel
         data={data}

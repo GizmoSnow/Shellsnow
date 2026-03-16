@@ -6,6 +6,8 @@ import type { RoadmapData } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from '../lib/router';
 import { supabase } from '../lib/supabase';
+import { executeImport } from '../lib/import-executor';
+import type { FiscalYearConfig } from '../lib/fiscal-year';
 
 interface ImportStagingPageProps {
   roadmapId: string;
@@ -45,6 +47,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [bulkGoalId, setBulkGoalId] = useState<string>('');
+  const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({ startMonth: 1 });
   const [filters, setFilters] = useState<FilterState>({
     sourceType: 'all',
     status: 'all',
@@ -64,13 +67,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     try {
       const { data, error } = await supabase
         .from('roadmaps')
-        .select('data')
+        .select('data, fiscal_year_config')
         .eq('id', roadmapId)
         .single();
 
       if (error) throw error;
       if (data?.data) {
         setRoadmapData(data.data as RoadmapData);
+      }
+      if (data?.fiscal_year_config) {
+        setFiscalConfig(data.fiscal_year_config as FiscalYearConfig);
       }
     } catch (error) {
       console.error('Failed to load roadmap data:', error);
@@ -246,13 +252,42 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     }
   };
 
-  const handleConfirmImport = () => {
+  const handleConfirmImport = async () => {
     if (candidatesMissingGoals.length > 0) {
       alert(`Cannot import: ${candidatesMissingGoals.length} selected activities are missing goal assignments`);
       return;
     }
 
-    navigate(`/roadmap/${roadmapId}?import-batch=${batchId}`);
+    if (!confirm(`Import ${includedCandidates.length} activities to roadmap?`)) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const result = await executeImport(batchId, includedCandidates, roadmapData, fiscalConfig);
+
+      await supabase
+        .from('roadmaps')
+        .update({ data: result.updatedRoadmapData })
+        .eq('id', roadmapId);
+
+      let summary = `Import Complete:\n${result.importedCount} imported\n${result.skippedCount} skipped\n${result.failedCount} failed`;
+
+      if (result.errors.length > 0) {
+        summary += '\n\nErrors:';
+        result.errors.forEach((failed, idx) => {
+          summary += `\n${idx + 1}. ${failed.candidate.rawTitle}: ${failed.error}`;
+        });
+      }
+
+      alert(summary);
+      navigate(`/roadmap/${roadmapId}`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Import failed');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCancel = async () => {
