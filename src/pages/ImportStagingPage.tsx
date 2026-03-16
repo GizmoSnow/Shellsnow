@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 import type { RoadmapData } from '../lib/supabase';
@@ -68,7 +68,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       console.log('Loading roadmap data for ID:', roadmapId);
       const { data, error } = await supabase
         .from('roadmaps')
-        .select('data, fiscal_year_config')
+        .select('data, fiscal_start_month, base_fiscal_year, roadmap_start_quarter')
         .eq('id', roadmapId)
         .maybeSingle();
 
@@ -93,8 +93,12 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
         setRoadmapData({ goals: [] });
       }
 
-      if (data?.fiscal_year_config) {
-        setFiscalConfig(data.fiscal_year_config as FiscalYearConfig);
+      if (data?.fiscal_start_month !== undefined && data?.base_fiscal_year !== undefined) {
+        setFiscalConfig({
+          fiscalStartMonth: data.fiscal_start_month,
+          baseFiscalYear: data.base_fiscal_year,
+          roadmapStartQuarter: data.roadmap_start_quarter || 1
+        });
       }
     } catch (error) {
       console.error('Failed to load roadmap data:', error);
