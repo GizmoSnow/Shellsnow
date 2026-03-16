@@ -263,15 +263,27 @@ const Org62SupportAdapter: ImportAdapter = {
       'Opened'
     ]));
 
-    const closedDate = parseDate(findColumn(row, [
+    // Try to find both closed date and last modified date
+    const actualClosedDate = parseDate(findColumn(row, [
       'Closed Date',
       'Date Closed',
       'Resolution Date',
-      'Date Resolved',
+      'Date Resolved'
+    ]));
+
+    const lastModifiedDate = parseDate(findColumn(row, [
       'Last Modified Date',
       'Last Modified',
       'Modified Date'
     ]));
+
+    // Use whichever date is more recent, or fallback to whichever exists
+    let closedDate: Date | null = null;
+    if (actualClosedDate && lastModifiedDate) {
+      closedDate = actualClosedDate > lastModifiedDate ? actualClosedDate : lastModifiedDate;
+    } else {
+      closedDate = actualClosedDate || lastModifiedDate;
+    }
 
     const accountName = findColumn(row, [
       'Account Name',
