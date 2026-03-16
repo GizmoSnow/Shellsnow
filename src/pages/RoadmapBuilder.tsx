@@ -814,8 +814,10 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               </button>
               <button
                 onClick={() => navigate(`/import-workspace/${roadmapId}`)}
-                className="flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm font-semibold"
-                style={{ background: 'var(--button-neutral-bg)', borderColor: 'var(--border-subtle)', color: 'var(--button-neutral-text)' }}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
+                style={{ background: 'var(--primary)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
                 title="View import history and manage batches"
               >
                 <FolderOpen size={16} />
