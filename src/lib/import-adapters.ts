@@ -260,7 +260,9 @@ const Org62SupportAdapter: ImportAdapter = {
       'Date Created',
       'Open Date',
       'Date Opened',
-      'Opened'
+      'Opened',
+      'Date/Time Opened',
+      'Opened Date'
     ]));
 
     // Try to find both closed date and last modified date
