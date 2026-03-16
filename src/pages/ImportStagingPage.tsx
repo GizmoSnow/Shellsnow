@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 import type { RoadmapData } from '../lib/supabase';
@@ -43,8 +43,6 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   const [roadmapData, setRoadmapData] = useState<RoadmapData>({ goals: [] });
   const [errors, setErrors] = useState<string[]>([]);
   const [diagnostics, setDiagnostics] = useState<ImportDiagnostics | undefined>();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [bulkGoalId, setBulkGoalId] = useState<string>('');
   const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({ startMonth: 1 });
@@ -67,24 +65,40 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   const loadRoadmapData = async () => {
     try {
+      console.log('Loading roadmap data for ID:', roadmapId);
       const { data, error } = await supabase
         .from('roadmaps')
         .select('data, fiscal_year_config')
         .eq('id', roadmapId)
-        .single();
+        .maybeSingle();
+
+      console.log('Supabase response:', { data, error });
 
       if (error) throw error;
+
+      if (!data) {
+        console.error('No roadmap found with ID:', roadmapId);
+        setErrors(['Roadmap not found']);
+        return;
+      }
+
       if (data?.data) {
         const roadmapData = data.data as RoadmapData;
         console.log('Loaded roadmap data:', roadmapData);
+        console.log('Goals count:', roadmapData.goals?.length || 0);
         console.log('Goals:', roadmapData.goals);
         setRoadmapData(roadmapData);
+      } else {
+        console.warn('Roadmap has no data field');
+        setRoadmapData({ goals: [] });
       }
+
       if (data?.fiscal_year_config) {
         setFiscalConfig(data.fiscal_year_config as FiscalYearConfig);
       }
     } catch (error) {
       console.error('Failed to load roadmap data:', error);
+      setErrors([error instanceof Error ? error.message : 'Failed to load roadmap']);
     }
   };
 
@@ -184,46 +198,15 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     }
   };
 
-  const handleEdit = (candidate: NormalizedActivityCandidate) => {
-    setEditingId(candidate.id);
-    setEditForm({
-      overrideTitle: candidate.overrideTitle || candidate.normalizedTitle,
-      overrideStartDate: candidate.overrideStartDate || candidate.startDate,
-      overrideEndDate: candidate.overrideEndDate || candidate.endDate,
-      overrideActivityType: candidate.overrideActivityType || candidate.activityType,
-      overrideOwner: candidate.overrideOwner || candidate.owner,
-      overrideStatus: candidate.overrideStatus || candidate.status,
-      destinationGoalId: candidate.destinationGoalId,
-      destinationInitiativeId: candidate.destinationInitiativeId,
-    });
-  };
-
-  const handleSaveEdit = async (id: string) => {
+  const handleUpdateField = async (candidateId: string, field: keyof NormalizedActivityCandidate, value: any) => {
     try {
-      await updateCandidate(id, editForm);
+      const update = { [field]: value || undefined };
+      await updateCandidate(candidateId, update);
       setCandidates(prev =>
-        prev.map(c => (c.id === id ? { ...c, ...editForm } : c))
-      );
-      setEditingId(null);
-      setEditForm({});
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({});
-  };
-
-  const handleQuickGoalAssign = async (candidateId: string, goalId: string) => {
-    try {
-      await updateCandidate(candidateId, { destinationGoalId: goalId || undefined });
-      setCandidates(prev =>
-        prev.map(c => (c.id === candidateId ? { ...c, destinationGoalId: goalId || undefined } : c))
+        prev.map(c => (c.id === candidateId ? { ...c, ...update } : c))
       );
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to assign goal');
+      alert(error instanceof Error ? error.message : `Failed to update ${field}`);
     }
   };
 
@@ -537,23 +520,20 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Include</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Raw Title</th>
-                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Normalized Title</th>
-                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
+                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Goal</th>
-                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase w-20">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {filteredCandidates.map(candidate => {
-                      const isEditing = editingId === candidate.id;
                       const isExpanded = expandedRows.has(candidate.id);
                       const hasWarnings = candidate.flags && candidate.flags.length > 0;
                       const hasErrors = candidate.errors && candidate.errors.length > 0;
                       const displayTitle = candidate.overrideTitle || candidate.normalizedTitle;
                       const displayStartDate = candidate.overrideStartDate || candidate.startDate;
                       const displayEndDate = candidate.overrideEndDate || candidate.endDate;
-                      const goalId = isEditing ? editForm.destinationGoalId : candidate.destinationGoalId;
-                      const selectedGoal = roadmapData.goals.find(g => g.id === goalId);
 
                       return (
                         <>
@@ -588,102 +568,45 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                             </td>
                             <td className="p-3 text-sm text-gray-600">{candidate.rawTitle}</td>
                             <td className="p-3">
-                              {isEditing ? (
-                                <input
-                                  type="text"
-                                  value={editForm.overrideTitle || ''}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, overrideTitle: e.target.value }))}
-                                  className="w-full px-2 py-1 border rounded text-sm"
-                                />
-                              ) : (
-                                <span className="text-sm font-medium">{displayTitle}</span>
-                              )}
-                            </td>
-                            <td className="p-3 text-sm">
-                              {isEditing ? (
-                                <div className="flex gap-1 flex-col">
-                                  <input
-                                    type="date"
-                                    value={editForm.overrideStartDate || ''}
-                                    onChange={(e) => setEditForm(prev => ({ ...prev, overrideStartDate: e.target.value }))}
-                                    className="px-2 py-1 border rounded text-xs"
-                                  />
-                                  <input
-                                    type="date"
-                                    value={editForm.overrideEndDate || ''}
-                                    onChange={(e) => setEditForm(prev => ({ ...prev, overrideEndDate: e.target.value }))}
-                                    className="px-2 py-1 border rounded text-xs"
-                                  />
-                                </div>
-                              ) : (
-                                <>
-                                  {displayStartDate && <div>{displayStartDate}</div>}
-                                  {displayEndDate && displayEndDate !== displayStartDate && (
-                                    <div className="text-gray-500">to {displayEndDate}</div>
-                                  )}
-                                </>
-                              )}
+                              <input
+                                type="text"
+                                value={displayTitle}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideTitle', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                                placeholder="Enter title..."
+                              />
                             </td>
                             <td className="p-3">
-                              {isEditing ? (
-                                <select
-                                  value={editForm.destinationGoalId || ''}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, destinationGoalId: e.target.value || undefined }))}
-                                  className="w-full px-2 py-1 border rounded text-sm"
-                                >
-                                  <option value="">
-                                    {roadmapData.goals.length === 0 ? 'No goals available' : 'Select goal...'}
-                                  </option>
-                                  {roadmapData.goals.map(goal => (
-                                    <option key={goal.id} value={goal.id}>
-                                      {goal.number} – {goal.title}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <select
-                                  value={candidate.destinationGoalId || ''}
-                                  onChange={(e) => handleQuickGoalAssign(candidate.id, e.target.value)}
-                                  className={`w-full px-2 py-1 border rounded text-sm ${!candidate.destinationGoalId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
-                                >
-                                  <option value="" className="text-red-600">
-                                    {roadmapData.goals.length === 0 ? 'No goals available' : 'Required - Select goal...'}
-                                  </option>
-                                  {roadmapData.goals.map(goal => (
-                                    <option key={goal.id} value={goal.id}>
-                                      {goal.number} – {goal.title}
-                                    </option>
-                                  ))}
-                                </select>
-                              )}
+                              <input
+                                type="date"
+                                value={displayStartDate || ''}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideStartDate', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-xs hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                              />
                             </td>
                             <td className="p-3">
-                              {isEditing ? (
-                                <div className="flex gap-1">
-                                  <button
-                                    onClick={() => handleSaveEdit(candidate.id)}
-                                    className="p-1 text-green-600 hover:bg-green-50 rounded"
-                                    title="Save"
-                                  >
-                                    <Check size={16} />
-                                  </button>
-                                  <button
-                                    onClick={handleCancelEdit}
-                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                    title="Cancel"
-                                  >
-                                    <XCircle size={16} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => handleEdit(candidate)}
-                                  className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                  title="Edit"
-                                >
-                                  <Edit2 size={16} />
-                                </button>
-                              )}
+                              <input
+                                type="date"
+                                value={displayEndDate || ''}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideEndDate', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-xs hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                              />
+                            </td>
+                            <td className="p-3">
+                              <select
+                                value={candidate.destinationGoalId || ''}
+                                onChange={(e) => handleUpdateField(candidate.id, 'destinationGoalId', e.target.value)}
+                                className={`w-full px-2 py-1 border rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none ${!candidate.destinationGoalId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
+                              >
+                                <option value="" className="text-red-600">
+                                  {roadmapData.goals.length === 0 ? 'No goals available' : 'Required - Select goal...'}
+                                </option>
+                                {roadmapData.goals.map(goal => (
+                                  <option key={goal.id} value={goal.id}>
+                                    {goal.number} – {goal.title}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                           </tr>
                           {isExpanded && (
