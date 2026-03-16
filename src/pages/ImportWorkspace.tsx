@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from '../lib/router';
 import { loadBatches, deleteBatch } from '../lib/import-processor';
 import type { ImportBatch } from '../lib/import-types';
 import { ArrowLeft, FileText, Trash2, CreditCard as Edit } from 'lucide-react';
-import { ImportStagingModal } from '../components/ImportStagingModal';
 
 interface ImportWorkspaceProps {
   roadmapId: string;
-  onBack: () => void;
 }
 
-export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
+export function ImportWorkspace({ roadmapId }: ImportWorkspaceProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBatchList();
@@ -48,10 +47,6 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
     }
   };
 
-  const handleImportComplete = async (batchId: string, candidates: any[]) => {
-    setSelectedBatchId(null);
-    await loadBatchList();
-  };
 
   const getStatusBadge = (batch: ImportBatch) => {
     const pending = batch.totalRows - batch.importedCount - batch.ignoredCount;
@@ -91,7 +86,7 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <button
-            onClick={onBack}
+            onClick={() => navigate(`/roadmap/${roadmapId}`)}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -188,7 +183,7 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => setSelectedBatchId(batch.id)}
+                            onClick={() => navigate(`/import-staging/${roadmapId}/${batch.id}`)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Review batch"
                           >
@@ -211,16 +206,6 @@ export function ImportWorkspace({ roadmapId, onBack }: ImportWorkspaceProps) {
           </div>
         )}
       </div>
-
-      {selectedBatchId && (
-        <ImportStagingModal
-          roadmapId={roadmapId}
-          userId={user.id}
-          batchId={selectedBatchId}
-          onClose={() => setSelectedBatchId(null)}
-          onImportComplete={handleImportComplete}
-        />
-      )}
     </div>
   );
 }

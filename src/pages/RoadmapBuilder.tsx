@@ -12,7 +12,6 @@ import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
 import { ImportStagingModal } from '../components/ImportStagingModal';
-import { ImportWorkspace } from './ImportWorkspace';
 import { exportToPptx } from '../lib/pptx-export';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
@@ -22,7 +21,7 @@ import { appendMetadataToDescription } from '../lib/import-metadata-formatter';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
 import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
 import type { NormalizedActivityCandidate } from '../lib/import-types';
-import { updateCandidates, updateBatchCounts, updateCandidate } from '../lib/import-processor';
+import { updateCandidates, updateBatchCounts, updateCandidate, loadCandidatesFromDatabase } from '../lib/import-processor';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -98,7 +97,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showImportWorkspace, setShowImportWorkspace] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -109,7 +107,26 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
   useEffect(() => {
     loadRoadmap();
+
+    // Check if returning from import staging
+    const params = new URLSearchParams(window.location.search);
+    const importBatchId = params.get('import-batch');
+    if (importBatchId && hasLoadedOnce) {
+      handleImportFromBatch(importBatchId);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [roadmapId]);
+
+  const handleImportFromBatch = async (batchId: string) => {
+    try {
+      const candidates = await loadCandidatesFromDatabase(batchId);
+      const includedCandidates = candidates.filter(c => c.include !== false);
+      await handleImportComplete(batchId, includedCandidates);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to import batch');
+    }
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute('data-canvas', canvasStyle);
@@ -816,15 +833,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     );
   }
 
-  if (showImportWorkspace && user) {
-    return (
-      <ImportWorkspace
-        roadmapId={roadmapId}
-        onBack={() => setShowImportWorkspace(false)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen print-container" style={{ background: 'var(--bg-app)' }}>
       {saveError && (
@@ -1028,7 +1036,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 Import Activities
               </button>
               <button
-                onClick={() => setShowImportWorkspace(true)}
+                onClick={() => navigate(`/import-workspace/${roadmapId}`)}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
                 style={{ background: 'var(--primary)' }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
