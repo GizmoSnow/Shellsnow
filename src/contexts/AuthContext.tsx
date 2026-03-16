@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSignedOut, setIsSignedOut] = useState(false);
 
   useEffect(() => {
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('Initial session check:', { session, error });
       setUser(session?.user ?? null);
@@ -27,42 +28,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      (async () => {
-        console.log('Auth state change:', { event, session });
+      console.log('Auth state change:', { event, session });
 
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setIsSignedOut(true);
-        } else if (event === 'TOKEN_REFRESHED') {
-          if (session?.user) {
-            setUser(session.user);
-            setIsSignedOut(false);
-          }
-        } else if (event === 'SIGNED_IN') {
-          if (session?.user) {
-            setUser(session.user);
-            setIsSignedOut(false);
-          }
-        } else if (event === 'INITIAL_SESSION') {
-          setUser(session?.user ?? null);
-          setIsSignedOut(!session?.user);
-        } else if (event === 'USER_UPDATED') {
-          if (session?.user) {
-            setUser(session.user);
-            setIsSignedOut(false);
-          }
-        } else {
-          // For any other event, update user but don't change signed out state
-          if (session?.user) {
-            setUser(session.user);
-            setIsSignedOut(false);
-          }
-        }
-      })();
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsSignedOut(true);
+      } else if (session?.user) {
+        // For any event with a valid session, update user and clear signed out flag
+        setUser(session.user);
+        setIsSignedOut(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Refresh session when page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page visible, refreshing session');
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            setUser(session.user);
+            setIsSignedOut(false);
+          } else if (!session) {
+            setUser(null);
+            setIsSignedOut(true);
+          }
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {

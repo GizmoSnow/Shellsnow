@@ -437,7 +437,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
       setShowImportModal(false);
 
-      const summary = `Import Complete:\n${importedIds.length} imported\n${skippedImports.length} skipped\n${failedImports.length} failed`;
+      let summary = `Import Complete:\n${importedIds.length} imported\n${skippedImports.length} skipped\n${failedImports.length} failed`;
+
+      if (failedImports.length > 0) {
+        summary += '\n\nErrors:';
+        failedImports.forEach((failed, idx) => {
+          summary += `\n${idx + 1}. ${failed.candidate.rawTitle}: ${failed.error}`;
+        });
+      }
+
       alert(summary);
     } catch (error) {
       console.error('Import error:', error);
