@@ -259,14 +259,18 @@ const Org62SupportAdapter: ImportAdapter = {
       'Created Date',
       'Date Created',
       'Open Date',
-      'Date Opened'
+      'Date Opened',
+      'Opened'
     ]));
 
     const closedDate = parseDate(findColumn(row, [
       'Closed Date',
       'Date Closed',
       'Resolution Date',
-      'Date Resolved'
+      'Date Resolved',
+      'Last Modified Date',
+      'Last Modified',
+      'Modified Date'
     ]));
 
     const accountName = findColumn(row, [
@@ -283,9 +287,20 @@ const Org62SupportAdapter: ImportAdapter = {
       'Organization Name'
     ]);
 
+    // Check for "Closed" flag (boolean field)
+    const closedFlag = findColumn(row, ['Closed', 'Is Closed', 'Case Closed']);
+    const isClosed = closedFlag?.toLowerCase() === 'true' || closedFlag?.toLowerCase() === 'yes' || closedFlag === '1';
+
     const titleNormalization = normalizeTitle(subject);
     const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support');
-    const status = mapStatus(caseStatus, 'support') || inferStatusFromDates(createdDate, closedDate, 'support');
+
+    // If we have a closed flag, use it to determine status, otherwise fall back to normal logic
+    let status = mapStatus(caseStatus, 'support') || inferStatusFromDates(createdDate, closedDate, 'support');
+    if (isClosed && !status) {
+      status = 'completed';
+    } else if (!isClosed && !status && createdDate) {
+      status = 'in_progress';
+    }
 
     const allFlags = [...titleNormalization.flags, ...classification.flags];
 
