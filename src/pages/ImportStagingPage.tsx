@@ -8,6 +8,9 @@ import { useNavigate } from '../lib/router';
 import { supabase } from '../lib/supabase';
 import { executeImport } from '../lib/import-executor';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
+import ImportConfirmModal from '../components/ImportConfirmModal';
+import ImportProcessingModal from '../components/ImportProcessingModal';
+import ImportErrorModal from '../components/ImportErrorModal';
 
 interface ImportStagingPageProps {
   roadmapId: string;
@@ -53,6 +56,15 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     quarter: 'all',
     flaggedOnly: false,
   });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    importedCount: number;
+    skippedCount: number;
+    failedCount: number;
+    errors: Array<{ candidate: { rawTitle: string }; error: string }>;
+  } | null>(null);
 
   useEffect(() => {
     loadRoadmapData();
@@ -244,17 +256,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     }
   };
 
+  const handleInitiateImport = () => {
+    setShowConfirmModal(true);
+  };
+
   const handleConfirmImport = async () => {
-    if (candidatesMissingGoals.length > 0) {
-      alert(`Cannot import: ${candidatesMissingGoals.length} selected activities are missing goal assignments`);
-      return;
-    }
-
-    if (!confirm(`Import ${includedCandidates.length} activities to roadmap?`)) {
-      return;
-    }
-
-    setIsProcessing(true);
+    setShowConfirmModal(false);
+    setShowProcessingModal(true);
 
     try {
       const result = await executeImport(batchId, includedCandidates, roadmapData, fiscalConfig);
@@ -264,21 +272,21 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
         .update({ data: result.updatedRoadmapData })
         .eq('id', roadmapId);
 
-      let summary = `Import Complete:\n${result.importedCount} imported\n${result.skippedCount} skipped\n${result.failedCount} failed`;
-
-      if (result.errors.length > 0) {
-        summary += '\n\nErrors:';
-        result.errors.forEach((failed, idx) => {
-          summary += `\n${idx + 1}. ${failed.candidate.rawTitle}: ${failed.error}`;
-        });
-      }
-
-      alert(summary);
-      navigate(`/roadmap/${roadmapId}`);
+      setImportResult(result);
+      setShowProcessingModal(false);
+      setShowResultModal(true);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Import failed');
-    } finally {
-      setIsProcessing(false);
+      setShowProcessingModal(false);
+      setImportResult({
+        importedCount: 0,
+        skippedCount: 0,
+        failedCount: 1,
+        errors: [{
+          candidate: { rawTitle: 'Import Error' },
+          error: error instanceof Error ? error.message : 'Import failed'
+        }]
+      });
+      setShowResultModal(true);
     }
   };
 
@@ -675,10 +683,10 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                   Cancel
                 </button>
                 <button
-                  onClick={handleConfirmImport}
+                  onClick={handleInitiateImport}
                   className="px-4 py-2 bg-[#0176D3] text-white rounded-lg hover:bg-[#0176D3]/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={candidatesMissingGoals.length > 0 || includedCandidates.length === 0}
-                  title={candidatesMissingGoals.length > 0 ? 'All selected activities must have goal assignments' : ''}
+                  disabled={includedCandidates.length === 0}
+                  title={includedCandidates.length === 0 ? 'No activities selected for import' : ''}
                 >
                   <Check size={20} />
                   Import {candidatesWithGoals.length} Activities
@@ -688,6 +696,46 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
           </>
         )}
       </div>
+
+      <ImportConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmImport}
+        activityCount={includedCandidates.length}
+        missingGoalsCount={candidatesMissingGoals.length}
+      />
+
+      <ImportProcessingModal
+        isOpen={showProcessingModal}
+        activityCount={includedCandidates.length}
+      />
+
+      <ImportErrorModal
+        isOpen={showResultModal}
+        onClose={() => {
+          setShowResultModal(false);
+          if (importResult && importResult.importedCount > 0) {
+            navigate(`/roadmap/${roadmapId}`);
+          }
+        }}
+        importedCount={importResult?.importedCount ?? 0}
+        skippedCount={importResult?.skippedCount ?? 0}
+        failedCount={importResult?.failedCount ?? 0}
+        errors={importResult?.errors ?? []}
+        onReturnToStaging={async () => {
+          setShowResultModal(false);
+          try {
+            const data = await loadCandidatesFromDatabase(batchId);
+            setCandidates(data);
+          } catch (error) {
+            console.error('Failed to reload candidates:', error);
+          }
+        }}
+        onNavigateToRoadmap={() => {
+          setShowResultModal(false);
+          navigate(`/roadmap/${roadmapId}`);
+        }}
+      />
     </div>
   );
 }
