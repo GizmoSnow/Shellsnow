@@ -75,7 +75,10 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
       if (error) throw error;
       if (data?.data) {
-        setRoadmapData(data.data as RoadmapData);
+        const roadmapData = data.data as RoadmapData;
+        console.log('Loaded roadmap data:', roadmapData);
+        console.log('Goals:', roadmapData.goals);
+        setRoadmapData(roadmapData);
       }
       if (data?.fiscal_year_config) {
         setFiscalConfig(data.fiscal_year_config as FiscalYearConfig);
@@ -504,9 +507,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                     onChange={(e) => setBulkGoalId(e.target.value)}
                     className="px-3 py-1.5 border rounded text-sm"
                   >
-                    <option value="">Select goal...</option>
+                    <option value="">
+                      {roadmapData.goals.length === 0 ? 'No goals available' : 'Select goal...'}
+                    </option>
                     {roadmapData.goals.map(goal => (
-                      <option key={goal.id} value={goal.id}>{goal.title}</option>
+                      <option key={goal.id} value={goal.id}>
+                        {goal.number} – {goal.title}
+                      </option>
                     ))}
                   </select>
                   <button
@@ -624,9 +631,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                   onChange={(e) => setEditForm(prev => ({ ...prev, destinationGoalId: e.target.value || undefined }))}
                                   className="w-full px-2 py-1 border rounded text-sm"
                                 >
-                                  <option value="">Select goal...</option>
+                                  <option value="">
+                                    {roadmapData.goals.length === 0 ? 'No goals available' : 'Select goal...'}
+                                  </option>
                                   {roadmapData.goals.map(goal => (
-                                    <option key={goal.id} value={goal.id}>{goal.title}</option>
+                                    <option key={goal.id} value={goal.id}>
+                                      {goal.number} – {goal.title}
+                                    </option>
                                   ))}
                                 </select>
                               ) : (
@@ -635,9 +646,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                   onChange={(e) => handleQuickGoalAssign(candidate.id, e.target.value)}
                                   className={`w-full px-2 py-1 border rounded text-sm ${!candidate.destinationGoalId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
                                 >
-                                  <option value="" className="text-red-600">Required - Select goal...</option>
+                                  <option value="" className="text-red-600">
+                                    {roadmapData.goals.length === 0 ? 'No goals available' : 'Required - Select goal...'}
+                                  </option>
                                   {roadmapData.goals.map(goal => (
-                                    <option key={goal.id} value={goal.id}>{goal.title}</option>
+                                    <option key={goal.id} value={goal.id}>
+                                      {goal.number} – {goal.title}
+                                    </option>
                                   ))}
                                 </select>
                               )}
