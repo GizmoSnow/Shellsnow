@@ -75,6 +75,8 @@ export interface NormalizedActivityCandidate {
   overrideTitle?: string;
   overrideStartDate?: string;
   overrideEndDate?: string;
+  overrideStartMonth?: number;
+  overrideEndMonth?: number;
   overrideActivityType?: ActivityType;
   overrideOwner?: Owner;
   overrideStatus?: Status;

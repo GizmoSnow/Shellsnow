@@ -153,9 +153,22 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
 
   const handleSaveEdit = async (id: string) => {
     try {
-      await updateCandidate(id, editForm);
+      // Calculate month values from override dates if provided
+      const updates: any = { ...editForm };
+
+      if (editForm.overrideStartDate) {
+        const startDate = new Date(editForm.overrideStartDate);
+        updates.overrideStartMonth = startDate.getMonth();
+      }
+
+      if (editForm.overrideEndDate) {
+        const endDate = new Date(editForm.overrideEndDate);
+        updates.overrideEndMonth = endDate.getMonth();
+      }
+
+      await updateCandidate(id, updates);
       setCandidates(prev =>
-        prev.map(c => (c.id === id ? { ...c, ...editForm } : c))
+        prev.map(c => (c.id === id ? { ...c, ...updates } : c))
       );
       setEditingId(null);
       setEditForm({});

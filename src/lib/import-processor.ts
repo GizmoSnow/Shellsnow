@@ -272,6 +272,8 @@ export async function loadCandidatesFromDatabase(batchId: string, includeDeleted
     overrideTitle: row.override_title,
     overrideStartDate: row.override_start_date,
     overrideEndDate: row.override_end_date,
+    overrideStartMonth: row.override_start_month,
+    overrideEndMonth: row.override_end_month,
     overrideActivityType: row.override_activity_type,
     overrideOwner: row.override_owner,
     overrideStatus: row.override_status,
@@ -298,6 +300,8 @@ export async function updateCandidate(
   if (updates.overrideTitle !== undefined) dbUpdates.override_title = updates.overrideTitle;
   if (updates.overrideStartDate !== undefined) dbUpdates.override_start_date = updates.overrideStartDate;
   if (updates.overrideEndDate !== undefined) dbUpdates.override_end_date = updates.overrideEndDate;
+  if (updates.overrideStartMonth !== undefined) dbUpdates.override_start_month = updates.overrideStartMonth;
+  if (updates.overrideEndMonth !== undefined) dbUpdates.override_end_month = updates.overrideEndMonth;
   if (updates.overrideActivityType !== undefined) dbUpdates.override_activity_type = updates.overrideActivityType;
   if (updates.overrideOwner !== undefined) dbUpdates.override_owner = updates.overrideOwner;
   if (updates.overrideStatus !== undefined) dbUpdates.override_status = updates.overrideStatus;

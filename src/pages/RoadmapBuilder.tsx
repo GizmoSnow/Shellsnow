@@ -366,11 +366,21 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
           const finalOwner = candidate.overrideOwner || candidate.owner;
           const finalStatus = candidate.overrideStatus || candidate.status;
+          const finalStartMonth = candidate.overrideStartMonth ?? candidate.startMonth;
+          const finalEndMonth = candidate.overrideEndMonth ?? candidate.endMonth;
 
           if (!finalTitle || !finalOwner) {
             failedImports.push({ candidate, error: 'Missing required fields: title or owner' });
             await updateCandidate(candidate.id, {
               errors: ['Missing required fields'],
+            });
+            continue;
+          }
+
+          if (finalStartMonth === undefined) {
+            failedImports.push({ candidate, error: 'Missing required field: date' });
+            await updateCandidate(candidate.id, {
+              errors: ['Missing required field: date'],
             });
             continue;
           }
@@ -384,8 +394,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             owner: finalOwner,
             status: finalStatus,
             health: candidate.health,
-            start_month: candidate.startMonth,
-            end_month: candidate.endMonth,
+            start_month: finalStartMonth,
+            end_month: finalEndMonth,
             sourceType: candidate.sourceType,
             sourceSystem: candidate.sourceSystem,
             sourceRecordId: candidate.sourceRecordId,
@@ -435,8 +445,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
       await updateBatchCounts(batchId);
 
-      setShowImportModal(false);
-
       let summary = `Import Complete:\n${importedIds.length} imported\n${skippedImports.length} skipped\n${failedImports.length} failed`;
 
       if (failedImports.length > 0) {
@@ -447,6 +455,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }
 
       alert(summary);
+      setShowImportModal(false);
     } catch (error) {
       console.error('Import error:', error);
       alert(`Import partially completed:\n${importedIds.length} imported\n${failedImports.length} failed`);
