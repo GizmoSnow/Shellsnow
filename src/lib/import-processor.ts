@@ -268,6 +268,8 @@ export async function loadCandidatesFromDatabase(batchId: string, includeDeleted
     importedAt: row.imported_at,
     goalId: row.goal_id,
     initiativeId: row.initiative_id,
+    destinationGoalId: row.goal_id,
+    destinationInitiativeId: row.initiative_id,
     isDeleted: row.is_deleted,
     overrideTitle: row.override_title,
     overrideStartDate: row.override_start_date,
@@ -309,6 +311,8 @@ export async function updateCandidate(
   if (updates.importedAt !== undefined) dbUpdates.imported_at = updates.importedAt;
   if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
   if (updates.initiativeId !== undefined) dbUpdates.initiative_id = updates.initiativeId;
+  if (updates.destinationGoalId !== undefined) dbUpdates.goal_id = updates.destinationGoalId;
+  if (updates.destinationInitiativeId !== undefined) dbUpdates.initiative_id = updates.destinationInitiativeId;
   if (updates.isDeleted !== undefined) dbUpdates.is_deleted = updates.isDeleted;
   if (updates.warnings !== undefined) dbUpdates.warnings = updates.warnings;
   if (updates.errors !== undefined) dbUpdates.errors = updates.errors;
@@ -337,6 +341,8 @@ export async function updateCandidates(
   if (updates.importedAt !== undefined) dbUpdates.imported_at = updates.importedAt;
   if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
   if (updates.initiativeId !== undefined) dbUpdates.initiative_id = updates.initiativeId;
+  if (updates.destinationGoalId !== undefined) dbUpdates.goal_id = updates.destinationGoalId;
+  if (updates.destinationInitiativeId !== undefined) dbUpdates.initiative_id = updates.destinationInitiativeId;
   if (updates.isDeleted !== undefined) dbUpdates.is_deleted = updates.isDeleted;
 
   const { error } = await supabase

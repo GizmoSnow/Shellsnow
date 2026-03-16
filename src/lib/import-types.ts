@@ -90,6 +90,8 @@ export interface NormalizedActivityCandidate {
   importedAt?: string;
   goalId?: string;
   initiativeId?: string;
+  destinationGoalId?: string;
+  destinationInitiativeId?: string;
   isDeleted: boolean;
 
   // Diagnostic and error tracking
