@@ -498,7 +498,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }
 
       alert(summary);
-      setShowImportModal(false);
     } catch (error) {
       console.error('Import error:', error);
       alert(`Import partially completed:\n${importedIds.length} imported\n${failedImports.length} failed`);
