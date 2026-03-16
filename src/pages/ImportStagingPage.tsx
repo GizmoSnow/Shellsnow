@@ -43,8 +43,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   const [diagnostics, setDiagnostics] = useState<ImportDiagnostics | undefined>();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<NormalizedActivityCandidate>>({});
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [bulkGoalId, setBulkGoalId] = useState<string>('');
   const [filters, setFilters] = useState<FilterState>({
     sourceType: 'all',
     status: 'all',
@@ -205,8 +205,19 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     setEditForm({});
   };
 
+  const handleQuickGoalAssign = async (candidateId: string, goalId: string) => {
+    try {
+      await updateCandidate(candidateId, { destinationGoalId: goalId || undefined });
+      setCandidates(prev =>
+        prev.map(c => (c.id === candidateId ? { ...c, destinationGoalId: goalId || undefined } : c))
+      );
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to assign goal');
+    }
+  };
+
   const handleBulkAssignGoal = async () => {
-    if (!editForm.destinationGoalId) {
+    if (!bulkGoalId) {
       alert('Please select a goal');
       return;
     }
@@ -214,8 +225,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     try {
       const updates = includedCandidates.map(c =>
         updateCandidate(c.id, {
-          destinationGoalId: editForm.destinationGoalId,
-          destinationInitiativeId: editForm.destinationInitiativeId,
+          destinationGoalId: bulkGoalId,
         })
       );
       await Promise.all(updates);
@@ -224,13 +234,12 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
           includedCandidates.find(ic => ic.id === c.id)
             ? {
                 ...c,
-                destinationGoalId: editForm.destinationGoalId,
-                destinationInitiativeId: editForm.destinationInitiativeId,
+                destinationGoalId: bulkGoalId,
               }
             : c
         )
       );
-      setEditForm({});
+      setBulkGoalId('');
       alert(`Assigned goal to ${includedCandidates.length} activities`);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to bulk assign');
@@ -450,8 +459,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                 </div>
                 <div className="flex items-center gap-3">
                   <select
-                    value={editForm.destinationGoalId || ''}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, destinationGoalId: e.target.value || undefined }))}
+                    value={bulkGoalId}
+                    onChange={(e) => setBulkGoalId(e.target.value)}
                     className="px-3 py-1.5 border rounded text-sm"
                   >
                     <option value="">Select goal...</option>
@@ -461,10 +470,10 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                   </select>
                   <button
                     onClick={handleBulkAssignGoal}
-                    disabled={!editForm.destinationGoalId}
+                    disabled={!bulkGoalId || includedCandidates.length === 0}
                     className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Assign to Selected
+                    Assign to {includedCandidates.length} Selected
                   </button>
                 </div>
               </div>
@@ -580,9 +589,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                   ))}
                                 </select>
                               ) : (
-                                <span className={`text-sm ${!goalId ? 'text-red-600 font-semibold' : 'text-gray-900'}`}>
-                                  {goalId ? selectedGoal?.title : 'Required'}
-                                </span>
+                                <select
+                                  value={candidate.destinationGoalId || ''}
+                                  onChange={(e) => handleQuickGoalAssign(candidate.id, e.target.value)}
+                                  className={`w-full px-2 py-1 border rounded text-sm ${!candidate.destinationGoalId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
+                                >
+                                  <option value="" className="text-red-600">Required - Select goal...</option>
+                                  {roadmapData.goals.map(goal => (
+                                    <option key={goal.id} value={goal.id}>{goal.title}</option>
+                                  ))}
+                                </select>
                               )}
                             </td>
                             <td className="p-3">
