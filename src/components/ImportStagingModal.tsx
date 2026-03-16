@@ -34,7 +34,7 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
 };
 
 export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId, roadmapData, onClose, onImportComplete }: ImportStagingModalProps) {
-  const [step, setStep] = useState<'upload' | 'review'>(existingBatchId ? 'review' : 'upload');
+  const [step, setStep] = useState<'upload' | 'summary' | 'review'>(existingBatchId ? 'review' : 'upload');
   const [isProcessing, setIsProcessing] = useState(false);
   const [candidates, setCandidates] = useState<NormalizedActivityCandidate[]>([]);
   const [batchId, setBatchId] = useState<string>(existingBatchId || '');
@@ -105,7 +105,7 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
       if (result.candidates.length > 0) {
         setBatchId(result.batchId);
         setCandidates(result.candidates);
-        setStep('review');
+        setStep('summary');
       } else {
         setErrors(prev => [...prev, 'No valid activities found in file']);
       }
@@ -332,6 +332,233 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {step === 'summary' && diagnostics && (
+          <div className="p-8 flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Check className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-900">Parsed Successfully</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-700">{candidates.length}</p>
+                </div>
+
+                {candidates.filter(c => c.flags && c.flags.length > 0).length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-900">Warnings</span>
+                    </div>
+                    <p className="text-2xl font-bold text-yellow-700">
+                      {candidates.filter(c => c.flags && c.flags.length > 0).length}
+                    </p>
+                  </div>
+                )}
+
+                {candidates.filter(c => c.errors && c.errors.length > 0).length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <XCircle className="w-5 h-5 text-red-600" />
+                      <span className="text-sm font-medium text-red-900">Errors</span>
+                    </div>
+                    <p className="text-2xl font-bold text-red-700">
+                      {candidates.filter(c => c.errors && c.errors.length > 0).length}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Diagnostics Panel */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-blue-900 mb-4 text-lg">Import Diagnostics</h3>
+                    <div className="space-y-4 text-sm text-blue-800">
+                      {diagnostics.detectedAdapter && (
+                        <div>
+                          <strong>Detected Format:</strong> {diagnostics.detectedAdapter}
+                        </div>
+                      )}
+
+                      {diagnostics.adapterScores && diagnostics.adapterScores.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Adapter Score Breakdown ({diagnostics.adapterScores.length} tested)
+                          </summary>
+                          <div className="ml-4 mt-2 space-y-1">
+                            {diagnostics.adapterScores
+                              .sort((a, b) => b.score - a.score)
+                              .map((adapter, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <div className="w-32">{adapter.adapterName}:</div>
+                                  <div className="flex-1 bg-blue-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-600"
+                                      style={{ width: `${Math.min(adapter.confidence * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                  <div className="w-16 text-right">{adapter.score}</div>
+                                </div>
+                              ))}
+                          </div>
+                        </details>
+                      )}
+
+                      {diagnostics.normalizedHeaders && diagnostics.normalizedHeaders.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Detected Headers ({diagnostics.normalizedHeaders.length})
+                          </summary>
+                          <div className="ml-4 mt-1 text-xs font-mono bg-blue-100 p-2 rounded max-h-32 overflow-y-auto">
+                            {diagnostics.rawHeaders?.join(', ')}
+                          </div>
+                        </details>
+                      )}
+
+                      {diagnostics.sampleMappedValues && Object.keys(diagnostics.sampleMappedValues).length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900">
+                            Sample Data (first row)
+                          </summary>
+                          <div className="ml-4 mt-2 space-y-1 text-xs max-h-48 overflow-y-auto">
+                            {Object.entries(diagnostics.sampleMappedValues).slice(0, 10).map(([key, value], idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <span className="font-semibold w-40 flex-shrink-0">{key}:</span>
+                                <span className="text-blue-700">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+
+                      {diagnostics.warnings && diagnostics.warnings.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="font-semibold cursor-pointer hover:text-blue-900 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            Processing Warnings ({diagnostics.warnings.length})
+                          </summary>
+                          <ul className="ml-4 mt-2 space-y-1 text-xs list-disc list-inside">
+                            {diagnostics.warnings.map((warning, idx) => (
+                              <li key={idx} className="text-yellow-700">{warning}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+
+                      {diagnostics.errors && diagnostics.errors.length > 0 && (
+                        <details className="mt-2 bg-red-50 border border-red-200 rounded p-3">
+                          <summary className="font-semibold cursor-pointer hover:text-red-900 flex items-center gap-2">
+                            <XCircle className="w-4 h-4" />
+                            Processing Errors ({diagnostics.errors.length})
+                          </summary>
+                          <ul className="ml-4 mt-2 space-y-1 text-xs list-disc list-inside">
+                            {diagnostics.errors.map((error, idx) => (
+                              <li key={idx} className="text-red-700">{error}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Summary */}
+              {candidates.filter(c => c.flags && c.flags.length > 0).length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-yellow-900 mb-2 text-lg">
+                        Activity Warnings ({candidates.filter(c => c.flags && c.flags.length > 0).length})
+                      </h3>
+                      <p className="text-sm text-yellow-800 mb-3">
+                        Some activities have warnings. You can review and fix these in the staging area.
+                      </p>
+                      <details className="text-sm">
+                        <summary className="font-semibold cursor-pointer hover:text-yellow-900">
+                          View all warnings
+                        </summary>
+                        <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                          {candidates
+                            .filter(c => c.flags && c.flags.length > 0)
+                            .map((c, idx) => (
+                              <div key={idx} className="bg-yellow-100 rounded p-2">
+                                <div className="font-medium text-yellow-900">{c.normalizedTitle}</div>
+                                <ul className="text-xs text-yellow-700 mt-1 ml-4 list-disc list-inside">
+                                  {c.flags?.map((flag, fIdx) => (
+                                    <li key={fIdx}>{flag}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Summary */}
+              {candidates.filter(c => c.errors && c.errors.length > 0).length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-red-900 mb-2 text-lg">
+                        Activity Errors ({candidates.filter(c => c.errors && c.errors.length > 0).length})
+                      </h3>
+                      <p className="text-sm text-red-800 mb-3">
+                        Some activities have critical errors and may not import correctly.
+                      </p>
+                      <details className="text-sm">
+                        <summary className="font-semibold cursor-pointer hover:text-red-900">
+                          View all errors
+                        </summary>
+                        <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                          {candidates
+                            .filter(c => c.errors && c.errors.length > 0)
+                            .map((c, idx) => (
+                              <div key={idx} className="bg-red-100 rounded p-2">
+                                <div className="font-medium text-red-900">{c.normalizedTitle}</div>
+                                <ul className="text-xs text-red-700 mt-1 ml-4 list-disc list-inside">
+                                  {c.errors?.map((error, eIdx) => (
+                                    <li key={eIdx}>{error}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {step === 'summary' && (
+          <div className="p-6 border-t flex items-center justify-between bg-gray-50">
+            <button
+              onClick={() => setStep('upload')}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              ← Back to Upload
+            </button>
+            <button
+              onClick={() => setStep('review')}
+              className="px-6 py-2 bg-[#0176D3] text-white rounded-lg hover:bg-[#0176D3]/90 transition-colors flex items-center gap-2"
+            >
+              Continue to Staging Area
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
