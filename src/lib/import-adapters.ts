@@ -270,13 +270,18 @@ const Org62SupportAdapter: ImportAdapter = {
       'Closed Date',
       'Date Closed',
       'Resolution Date',
-      'Date Resolved'
+      'Date Resolved',
+      'Date/Time Closed'
     ]));
 
     const lastModifiedDate = parseDate(findColumn(row, [
       'Last Modified Date',
       'Last Modified',
-      'Modified Date'
+      'Modified Date',
+      'Case Date/Time Last Modified',
+      'Date/Time Last Modified',
+      'Case Comment Last Modified Date',
+      'Case Comment Created Date'
     ]));
 
     // Use whichever date is more recent, or fallback to whichever exists
