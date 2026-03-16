@@ -809,8 +809,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
               >
-                <FolderOpen size={16} />
-                Import Workspace
+                <Upload size={16} />
+                Import Activities
               </button>
               <button
                 onClick={handleExportPng}

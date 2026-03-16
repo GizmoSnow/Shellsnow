@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from '../lib/router';
 import { loadBatches, deleteBatch } from '../lib/import-processor';
 import type { ImportBatch } from '../lib/import-types';
-import { ArrowLeft, FileText, Trash2, CreditCard as Edit } from 'lucide-react';
+import { ArrowLeft, FileText, Trash2, CreditCard as Edit, Upload } from 'lucide-react';
 
 interface ImportWorkspaceProps {
   roadmapId: string;
@@ -95,9 +95,16 @@ export function ImportWorkspace({ roadmapId }: ImportWorkspaceProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Import Workspace</h1>
-              <p className="text-gray-600 mt-1">Manage and review imported data batches</p>
+              <h1 className="text-3xl font-bold text-gray-900">Import Activities</h1>
+              <p className="text-gray-600 mt-1">Review imported report batches and prepare activities for the roadmap</p>
             </div>
+            <button
+              onClick={() => navigate(`/import-staging/${roadmapId}/new`)}
+              className="flex items-center gap-2 px-6 py-3 bg-[#0176D3] text-white rounded-lg hover:bg-[#0176D3]/90 transition-colors font-semibold"
+            >
+              <Upload className="w-5 h-5" />
+              Upload New Report
+            </button>
           </div>
         </div>
 

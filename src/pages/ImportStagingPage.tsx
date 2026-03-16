@@ -58,8 +58,10 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   useEffect(() => {
     loadRoadmapData();
-    if (batchId) {
+    if (batchId && batchId !== 'new') {
       loadExistingBatch();
+    } else if (batchId === 'new') {
+      setStep('upload');
     }
   }, [batchId]);
 
@@ -141,8 +143,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
       if (result.candidates.length > 0) {
         setCandidates(result.candidates);
-        setStep('summary');
-        // Update URL to include the new batch ID
+        setStep('review');
+        // Update URL to include the new batch ID and go directly to staging
         navigate(`/import-staging/${roadmapId}/${result.batchId}`);
       } else {
         setErrors(prev => [...prev, 'No valid activities found in file']);
@@ -329,12 +331,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Import Workspace
+            Back to Import Activities
           </button>
           <div>
-            <h1 className="text-2xl font-bold">Import Staging</h1>
+            <h1 className="text-2xl font-bold">
+              {step === 'upload' ? 'Upload New Report' : 'Import Staging'}
+            </h1>
             <p className="text-gray-600 text-sm mt-1">
-              Review, clean, and assign goals to imported activities
+              {step === 'upload'
+                ? 'Select a report file to begin importing activities'
+                : 'Review, clean, and assign goals to imported activities'}
             </p>
           </div>
         </div>
