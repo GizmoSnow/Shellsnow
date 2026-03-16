@@ -2,11 +2,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
+import type { RoadmapData } from '../lib/supabase';
 
 interface ImportStagingModalProps {
   roadmapId: string;
   userId: string;
   batchId?: string;
+  roadmapData: RoadmapData;
   onClose: () => void;
   onImportComplete: (batchId: string, candidates: NormalizedActivityCandidate[]) => void;
 }
@@ -31,7 +33,7 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
   training: 'Training',
 };
 
-export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId, onClose, onImportComplete }: ImportStagingModalProps) {
+export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId, roadmapData, onClose, onImportComplete }: ImportStagingModalProps) {
   const [step, setStep] = useState<'upload' | 'review'>(existingBatchId ? 'review' : 'upload');
   const [isProcessing, setIsProcessing] = useState(false);
   const [candidates, setCandidates] = useState<NormalizedActivityCandidate[]>([]);
@@ -148,6 +150,8 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
       overrideActivityType: candidate.overrideActivityType || candidate.activityType,
       overrideOwner: candidate.overrideOwner || candidate.owner,
       overrideStatus: candidate.overrideStatus || candidate.status,
+      goalId: candidate.goalId,
+      initiativeId: candidate.initiativeId,
     });
   };
 
@@ -480,6 +484,26 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                   {selectedIds.size > 0 && (
                     <>
                       <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                      <select
+                        onChange={async (e) => {
+                          if (!e.target.value) return;
+                          try {
+                            await updateCandidates(Array.from(selectedIds), { goalId: e.target.value, initiativeId: undefined });
+                            setCandidates(prev => prev.map(c => selectedIds.has(c.id) ? { ...c, goalId: e.target.value, initiativeId: undefined } : c));
+                            e.target.value = '';
+                          } catch (error) {
+                            alert(error instanceof Error ? error.message : 'Failed to update');
+                          }
+                        }}
+                        className="px-3 py-1.5 text-sm border rounded"
+                      >
+                        <option value="">Assign Goal...</option>
+                        {roadmapData.goals.map(goal => (
+                          <option key={goal.id} value={goal.id}>
+                            {goal.number} - {goal.title}
+                          </option>
+                        ))}
+                      </select>
                       <button
                         onClick={handleBulkIgnore}
                         className="px-3 py-1.5 text-sm bg-orange-50 text-orange-700 rounded hover:bg-orange-100 transition-colors flex items-center gap-1"
@@ -533,6 +557,8 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                     <th className="p-3">Type</th>
                     <th className="p-3">Owner</th>
                     <th className="p-3">Status</th>
+                    <th className="p-3">Goal</th>
+                    <th className="p-3">Initiative</th>
                     <th className="p-3">Diagnostics</th>
                     <th className="p-3 w-24">Actions</th>
                   </tr>
@@ -689,6 +715,56 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                             </select>
                           ) : (
                             <span className="text-sm capitalize">{displayStatus?.replace('_', ' ')}</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          {isEditing ? (
+                            <select
+                              value={editForm.goalId || ''}
+                              onChange={(e) => {
+                                const goalId = e.target.value || undefined;
+                                setEditForm(prev => ({ ...prev, goalId, initiativeId: undefined }));
+                              }}
+                              className="px-2 py-1 border rounded text-sm w-full"
+                            >
+                              <option value="">Select Goal...</option>
+                              {roadmapData.goals.map(goal => (
+                                <option key={goal.id} value={goal.id}>
+                                  {goal.number} - {goal.title}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-sm">
+                              {candidate.goalId
+                                ? roadmapData.goals.find(g => g.id === candidate.goalId)?.title || 'Unknown'
+                                : <span className="text-red-600 font-medium">Required</span>
+                              }
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          {isEditing ? (
+                            <select
+                              value={editForm.initiativeId || ''}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, initiativeId: e.target.value || undefined }))}
+                              className="px-2 py-1 border rounded text-sm w-full"
+                              disabled={!editForm.goalId}
+                            >
+                              <option value="">None</option>
+                              {editForm.goalId && roadmapData.goals.find(g => g.id === editForm.goalId)?.initiatives.map(initiative => (
+                                <option key={initiative.id} value={initiative.id}>
+                                  {initiative.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-sm">
+                              {candidate.initiativeId && candidate.goalId
+                                ? roadmapData.goals.find(g => g.id === candidate.goalId)?.initiatives.find(i => i.id === candidate.initiativeId)?.label || '-'
+                                : '-'
+                              }
+                            </span>
                           )}
                         </td>
                         <td className="p-3">

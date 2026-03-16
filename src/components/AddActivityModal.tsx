@@ -16,7 +16,7 @@ interface AddActivityModalProps {
   getTypeLabel: (typeKey: string) => string;
   getAllTypeKeys: () => string[];
   onClose: () => void;
-  onAdd: (activity: Activity | SpanningActivity) => void;
+  onAdd: (activity: Activity | SpanningActivity, moveInfo?: { goalId?: string; initiativeId?: string }) => void;
 }
 
 function getTextColor(bgColor: string): string {
@@ -44,6 +44,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
   const [status, setStatus] = useState<'not_started' | 'in_progress' | 'completed' | 'cancelled'>('not_started');
   const [description, setDescription] = useState('');
   const [isCriticalPath, setIsCriticalPath] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<string>('');
+  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string>('');
 
   const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
   const defaultMonth = roadmapMonths.length > 0 ? String(roadmapMonths[0].calendarMonth) : '0';
@@ -58,6 +60,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setStatus(editingActivity.status || 'not_started');
         setDescription(editingActivity.description || '');
         setIsCriticalPath(editingActivity.isCriticalPath || false);
+        setSelectedGoalId(context?.goalId || '');
+        setSelectedInitiativeId(context?.initiativeId || '');
 
         if ('quarters' in editingActivity) {
           setIsSpanning(true);
@@ -128,6 +132,10 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
       }
     }
 
+    const moveInfo = editingActivity && (selectedGoalId || selectedInitiativeId)
+      ? { goalId: selectedGoalId, initiativeId: selectedInitiativeId }
+      : undefined;
+
     if (isSpanning) {
       onAdd({
         id: editingActivity ? editingActivity.id : uid(),
@@ -139,7 +147,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
-      });
+      }, moveInfo);
     } else {
       onAdd({
         id: editingActivity ? editingActivity.id : uid(),
@@ -152,7 +160,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
-      });
+      }, moveInfo);
     }
 
     setName('');
@@ -576,6 +584,53 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   </button>
                 </div>
               </div>
+
+              {editingActivity && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Move to Goal
+                    </label>
+                    <select
+                      value={selectedGoalId}
+                      onChange={(e) => {
+                        setSelectedGoalId(e.target.value);
+                        setSelectedInitiativeId('');
+                      }}
+                      className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                      style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="">Select Goal...</option>
+                      {data.goals.map(goal => (
+                        <option key={goal.id} value={goal.id}>
+                          {goal.number} - {goal.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedGoalId && data.goals.find(g => g.id === selectedGoalId)?.initiatives.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        Move to Initiative
+                      </label>
+                      <select
+                        value={selectedInitiativeId}
+                        onChange={(e) => setSelectedInitiativeId(e.target.value)}
+                        className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                        style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                      >
+                        <option value="">Select Initiative...</option>
+                        {data.goals.find(g => g.id === selectedGoalId)?.initiatives.map(initiative => (
+                          <option key={initiative.id} value={initiative.id}>
+                            {initiative.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
 
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">

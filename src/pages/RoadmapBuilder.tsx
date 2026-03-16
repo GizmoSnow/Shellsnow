@@ -385,6 +385,31 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             continue;
           }
 
+          if (!candidate.goalId) {
+            failedImports.push({ candidate, error: 'Goal required before import' });
+            await updateCandidate(candidate.id, {
+              errors: ['Goal required before import'],
+            });
+            continue;
+          }
+
+          const targetGoal = updatedData.goals.find(g => g.id === candidate.goalId);
+          if (!targetGoal) {
+            failedImports.push({ candidate, error: 'Selected goal not found' });
+            await updateCandidate(candidate.id, {
+              errors: ['Selected goal not found'],
+            });
+            continue;
+          }
+
+          if (targetGoal.initiatives.length > 0 && !candidate.initiativeId) {
+            failedImports.push({ candidate, error: 'Initiative required for selected goal' });
+            await updateCandidate(candidate.id, {
+              errors: ['Initiative required for selected goal'],
+            });
+            continue;
+          }
+
           const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
 
           const activity: Activity = {
@@ -415,9 +440,27 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
             }
             updatedData.accountSpanning.push(spanningActivity);
           } else {
-            if (updatedData.goals.length > 0 && updatedData.goals[0].initiatives.length > 0) {
-              const targetQuarter = determineQuarterFromActivity(activity);
-              updatedData.goals[0].initiatives[0].activities[targetQuarter].push(activity);
+            const targetQuarter = determineQuarterFromActivity(activity);
+
+            if (candidate.initiativeId) {
+              const targetInitiative = targetGoal.initiatives.find(i => i.id === candidate.initiativeId);
+              if (targetInitiative) {
+                targetInitiative.activities[targetQuarter].push(activity);
+              }
+            } else {
+              if (!targetGoal.initiatives || targetGoal.initiatives.length === 0) {
+                if (!targetGoal.initiatives) {
+                  targetGoal.initiatives = [];
+                }
+                if (targetGoal.initiatives.length === 0) {
+                  targetGoal.initiatives.push({
+                    id: crypto.randomUUID(),
+                    label: '',
+                    activities: { q1: [], q2: [], q3: [], q4: [] }
+                  });
+                }
+                targetGoal.initiatives[0].activities[targetQuarter].push(activity);
+              }
             }
           }
 
@@ -1307,6 +1350,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         <ImportStagingModal
           roadmapId={roadmapId}
           userId={user.id}
+          roadmapData={data}
           onClose={() => setShowImportModal(false)}
           onImportComplete={handleImportComplete}
         />
@@ -1332,13 +1376,60 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
           setShowAddModal(false);
           setEditingActivity(null);
         }}
-        onAdd={(activity) => {
+        onAdd={(activity, moveInfo) => {
           console.log('=== ADD ACTIVITY DEBUG ===');
           console.log('Activity:', activity);
           console.log('Context:', addContext);
           console.log('Editing:', editingActivity);
+          console.log('Move info:', moveInfo);
 
           const newData = { ...data };
+
+          if (moveInfo && editingActivity) {
+            const oldGoalId = addContext.goalId;
+            const oldInitiativeId = addContext.initiativeId;
+            const oldQuarter = addContext.quarter;
+            const newGoalId = moveInfo.goalId;
+            const newInitiativeId = moveInfo.initiativeId;
+
+            if (oldGoalId !== newGoalId || oldInitiativeId !== newInitiativeId) {
+              const oldGoal = newData.goals.find(g => g.id === oldGoalId);
+              const oldInitiative = oldGoal?.initiatives.find(i => i.id === oldInitiativeId);
+
+              if (oldInitiative) {
+                if ('quarters' in activity || oldQuarter === 'spanning') {
+                  oldInitiative.spanning = oldInitiative.spanning?.filter(a => a.id !== activity.id) || [];
+                } else if (oldQuarter) {
+                  const acts = oldInitiative.activities[oldQuarter as keyof typeof oldInitiative.activities];
+                  const index = acts.findIndex(a => a.id === activity.id);
+                  if (index >= 0) {
+                    acts.splice(index, 1);
+                  }
+                }
+              }
+
+              const newGoal = newData.goals.find(g => g.id === newGoalId);
+              const newInitiative = newGoal?.initiatives.find(i => i.id === newInitiativeId);
+
+              if (newInitiative) {
+                if ('quarters' in activity) {
+                  if (!newInitiative.spanning) newInitiative.spanning = [];
+                  newInitiative.spanning.push(activity as any);
+                } else {
+                  const targetQuarter = determineQuarterFromMonth(activity, fiscalConfig);
+                  if (!newInitiative.activities[targetQuarter as keyof typeof newInitiative.activities]) {
+                    newInitiative.activities[targetQuarter as keyof typeof newInitiative.activities] = [];
+                  }
+                  newInitiative.activities[targetQuarter as keyof typeof newInitiative.activities].push(activity as any);
+                }
+              }
+
+              setData(newData);
+              setShowAddModal(false);
+              setEditingActivity(null);
+              return;
+            }
+          }
 
           if (addContext.isAccountLevel) {
             console.log('Adding to account level');
