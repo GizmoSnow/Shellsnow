@@ -18,6 +18,45 @@ function getTextColor(bgColor: string): string {
   return '#ffffff';
 }
 
+function ActivityTooltip({ text, children }: { text: string; children: React.ReactNode }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className="relative w-full"
+      style={{ display: 'contents' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
+    >
+      {children}
+      {isHovered && (
+        <div
+          className="absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-lg whitespace-normal max-w-xs print-hide"
+          style={{
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: '4px',
+            pointerEvents: 'none'
+          }}
+        >
+          {text}
+          <div
+            className="absolute w-2 h-2 bg-gray-900 transform rotate-45"
+            style={{
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%) translateY(-50%) rotate(45deg)'
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAddModal, onOpenEditModal, getTypeColor }: RoadmapGridProps) {
   const quarters = getRoadmapQuarters(fiscalConfig);
   const qkeys = ['q1', 'q2', 'q3', 'q4'] as const;
@@ -382,20 +421,24 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
 
     return (
       <div key={activity.id} className="relative">
-        <div
-          onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
-          className={`group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
-          style={{ background: bgColor, color: textColor }}
-        >
+        <ActivityTooltip text={activity.name}>
           <div
-            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ background: healthColor }}
-            title={getHealthLabel(activity.health)}
-          />
-          {activity.isCriticalPath && (
-            <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
-          )}
-          {activity.name}
+            onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
+            className={`activity-pill group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
+            style={{ background: bgColor, color: textColor }}
+            title={activity.name}
+          >
+            <div
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: healthColor }}
+              title={getHealthLabel(activity.health)}
+            />
+            {activity.isCriticalPath && (
+              <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+            )}
+            <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+              {activity.name}
+            </span>
           <div className="hidden group-hover:flex items-center gap-1 ml-auto">
             <button
               onClick={(e) => {
@@ -426,6 +469,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             </button>
           </div>
         </div>
+        </ActivityTooltip>
         {copyDropdown === dropdownId && (
           <div
             className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[140px]"
@@ -550,18 +594,18 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               const dropdownId = `account-spanning-${sp.id}`;
 
               return (
-                <div
-                  key={sp.id}
-                  className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
-                  style={{
-                    background: bgColor,
-                    color: textColor,
-                    gridColumnStart: minIdx + 1,
-                    gridColumnEnd: maxIdx + 2,
-                    boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                  }}
-                  title={sp.name}
-                >
+                <ActivityTooltip key={sp.id} text={sp.name}>
+                  <div
+                    className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                    style={{
+                      background: bgColor,
+                      color: textColor,
+                      gridColumnStart: minIdx + 1,
+                      gridColumnEnd: maxIdx + 2,
+                      boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}
+                    title={sp.name}
+                  >
                   <div
                     className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ background: healthColor }}
@@ -656,6 +700,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
                   )}
                 </div>
+                </ActivityTooltip>
               );
             })}
             <button
@@ -836,18 +881,18 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const dropdownId = `spanning-${goal.id}-${initiative.id}-${sp.id}`;
 
                           return (
-                            <div
-                              key={sp.id}
-                              className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
-                              style={{
-                                background: bgColor,
-                                color: textColor,
-                                gridColumnStart: minIdx + 1,
-                                gridColumnEnd: maxIdx + 2,
-                                boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                              }}
-                              title={sp.name}
-                            >
+                            <ActivityTooltip key={sp.id} text={sp.name}>
+                              <div
+                                className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                style={{
+                                  background: bgColor,
+                                  color: textColor,
+                                  gridColumnStart: minIdx + 1,
+                                  gridColumnEnd: maxIdx + 2,
+                                  boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                                }}
+                                title={sp.name}
+                              >
                               <div
                                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                 style={{ background: healthColor }}
@@ -940,6 +985,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 </div>
                               )}
                             </div>
+                            </ActivityTooltip>
                           );
                         })}
                         <button
@@ -1041,31 +1087,31 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           const healthColor = getHealthColor(item.activity.health);
 
                           return (
-                            <div
-                              key={item.activity.id}
-                              style={{
-                                position: 'absolute',
-                                left: `${leftPercent}%`,
-                                width: `${widthPercent}%`,
-                                top: `${item.row * 44 + 8}px`,
-                                height: '36px',
-                                padding: '0 2px',
-                                zIndex: 30
-                              }}
-                            >
+                            <ActivityTooltip key={item.activity.id} text={item.activity.name}>
                               <div
-                                onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
-                                className={`activity-pill group flex items-center gap-1.5 px-3.5 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                                 style={{
-                                  background: bgColor,
-                                  color: textColor,
-                                  borderRadius: '9999px',
-                                  justifyContent: 'center',
-                                  height: '100%',
-                                  boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                                  position: 'absolute',
+                                  left: `${leftPercent}%`,
+                                  width: `${widthPercent}%`,
+                                  top: `${item.row * 44 + 8}px`,
+                                  height: '36px',
+                                  padding: '0 2px',
+                                  zIndex: 30
                                 }}
-                                title={item.activity.name}
                               >
+                                <div
+                                  onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
+                                  className={`activity-pill group flex items-center gap-1.5 px-3.5 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                  style={{
+                                    background: bgColor,
+                                    color: textColor,
+                                    borderRadius: '9999px',
+                                    justifyContent: 'center',
+                                    height: '100%',
+                                    boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                                  }}
+                                  title={item.activity.name}
+                                >
                                 <div
                                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                   style={{ background: healthColor }}
@@ -1177,6 +1223,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 </div>
                               )}
                             </div>
+                            </ActivityTooltip>
                           );
                         })}
                       </div>
