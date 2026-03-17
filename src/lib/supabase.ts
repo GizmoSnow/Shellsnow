@@ -57,6 +57,12 @@ export interface Goal {
   title: string;
   color: string;
   initiatives: Initiative[];
+  activities?: {
+    q1: Activity[];
+    q2: Activity[];
+    q3: Activity[];
+    q4: Activity[];
+  };
 }
 
 export interface Initiative {

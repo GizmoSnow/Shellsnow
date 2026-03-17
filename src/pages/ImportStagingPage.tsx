@@ -155,27 +155,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   }, [includedCandidates]);
 
   const candidatesReadyToImport = useMemo(() => {
-    return includedCandidates.filter(c => {
-      if (!c.destinationGoalId) return false;
-      const goal = roadmapData.goals.find(g => g.id === c.destinationGoalId);
-      if (!goal) return false;
-      if (goal.initiatives.length > 1 && !c.destinationInitiativeId) return false;
-      return true;
-    });
-  }, [includedCandidates, roadmapData.goals]);
+    return includedCandidates.filter(c => c.destinationGoalId);
+  }, [includedCandidates]);
 
   const candidatesMissingGoals = useMemo(() => {
     return includedCandidates.filter(c => !c.destinationGoalId);
   }, [includedCandidates]);
 
-  const candidatesMissingInitiatives = useMemo(() => {
-    return includedCandidates.filter(c => {
-      if (!c.destinationGoalId) return false;
-      const goal = roadmapData.goals.find(g => g.id === c.destinationGoalId);
-      if (!goal) return false;
-      return goal.initiatives.length > 1 && !c.destinationInitiativeId;
-    });
-  }, [includedCandidates, roadmapData.goals]);
 
   const bulkGoalInitiatives = useMemo(() => {
     if (!bulkGoalId) return [];
@@ -262,17 +248,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       if (field === 'destinationGoalId' && value) {
         const selectedGoal = roadmapData.goals.find(g => g.id === value);
         if (selectedGoal) {
-          if (selectedGoal.initiatives.length === 1) {
-            update.destinationInitiativeId = selectedGoal.initiatives[0].id;
-          } else if (selectedGoal.initiatives.length > 1) {
-            const currentCandidate = candidates.find(c => c.id === candidateId);
-            const currentInitiativeId = currentCandidate?.destinationInitiativeId;
+          const currentCandidate = candidates.find(c => c.id === candidateId);
+          const currentInitiativeId = currentCandidate?.destinationInitiativeId;
+
+          if (selectedGoal.initiatives.length === 0) {
+            update.destinationInitiativeId = undefined;
+          } else if (currentInitiativeId) {
             const initiativeStillValid = selectedGoal.initiatives.some(i => i.id === currentInitiativeId);
             if (!initiativeStillValid) {
               update.destinationInitiativeId = undefined;
             }
-          } else {
-            update.destinationInitiativeId = undefined;
           }
         }
       }
@@ -550,25 +535,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
         {step === 'review' && (
           <>
             {/* Validation Banner */}
-            {(candidatesMissingGoals.length > 0 || candidatesMissingInitiatives.length > 0) && (
+            {candidatesMissingGoals.length > 0 && (
               <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-yellow-900">Assignment Required</h3>
-                    <div className="text-sm text-yellow-800 mt-1 space-y-1">
-                      {candidatesMissingGoals.length > 0 && (
-                        <p>
-                          <strong>{candidatesMissingGoals.length}</strong> of <strong>{includedCandidates.length}</strong> selected activities are missing goal assignments.
-                        </p>
-                      )}
-                      {candidatesMissingInitiatives.length > 0 && (
-                        <p>
-                          <strong>{candidatesMissingInitiatives.length}</strong> of <strong>{includedCandidates.length}</strong> selected activities are missing initiative assignments.
-                        </p>
-                      )}
-                      <p className="font-medium mt-2">Assign goals and initiatives to all selected activities before importing.</p>
-                    </div>
+                    <h3 className="font-semibold text-yellow-900">Goal Assignment Required</h3>
+                    <p className="text-sm text-yellow-800 mt-1">
+                      <strong>{candidatesMissingGoals.length}</strong> of <strong>{includedCandidates.length}</strong> selected activities are missing goal assignments.
+                      Assign goals to all selected activities before importing.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -609,13 +585,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                       </option>
                     ))}
                   </select>
-                  {bulkGoalInitiatives.length > 1 && (
+                  {bulkGoalInitiatives.length > 0 && (
                     <select
                       value={bulkInitiativeId}
                       onChange={(e) => setBulkInitiativeId(e.target.value)}
-                      className="px-3 py-1.5 border rounded text-sm border-blue-300"
+                      className="px-3 py-1.5 border rounded text-sm border-gray-300"
                     >
-                      <option value="">Select initiative...</option>
+                      <option value="">(Optional) Select initiative...</option>
                       {bulkGoalInitiatives.map(initiative => (
                         <option key={initiative.id} value={initiative.id}>
                           {initiative.label || '(Unnamed Initiative)'}
@@ -623,14 +599,9 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                       ))}
                     </select>
                   )}
-                  {bulkGoalInitiatives.length === 1 && (
-                    <span className="text-sm text-gray-600 italic">
-                      Auto-assigns: {bulkGoalInitiatives[0].label || '(Unnamed Initiative)'}
-                    </span>
-                  )}
                   <button
                     onClick={handleBulkAssignGoal}
-                    disabled={!bulkGoalId || includedCandidates.length === 0 || (bulkGoalInitiatives.length > 1 && !bulkInitiativeId)}
+                    disabled={!bulkGoalId || includedCandidates.length === 0}
                     className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Assign to {includedCandidates.length} Selected
@@ -668,8 +639,6 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                         ? roadmapData.goals.find(g => g.id === candidate.destinationGoalId)
                         : undefined;
                       const goalInitiatives = selectedGoal?.initiatives || [];
-                      const needsInitiative = goalInitiatives.length > 1;
-                      const missingInitiative = needsInitiative && !candidate.destinationInitiativeId;
 
                       return (
                         <>
@@ -748,18 +717,14 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                               {!candidate.destinationGoalId ? (
                                 <span className="text-xs text-gray-400 italic">Select goal first</span>
                               ) : goalInitiatives.length === 0 ? (
-                                <span className="text-xs text-gray-500 italic">No initiative required</span>
-                              ) : goalInitiatives.length === 1 ? (
-                                <span className="text-xs text-gray-600 italic">
-                                  Auto: {goalInitiatives[0].label || '(Unnamed)'}
-                                </span>
+                                <span className="text-xs text-gray-500 italic">None available</span>
                               ) : (
                                 <select
                                   value={candidate.destinationInitiativeId || ''}
                                   onChange={(e) => handleUpdateField(candidate.id, 'destinationInitiativeId', e.target.value)}
-                                  className={`w-full px-2 py-1 border rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none ${missingInitiative ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
                                 >
-                                  <option value="" className="text-red-600">Required - Select initiative...</option>
+                                  <option value="">(Optional)</option>
                                   {goalInitiatives.map(initiative => (
                                     <option key={initiative.id} value={initiative.id}>
                                       {initiative.label || '(Unnamed Initiative)'}
@@ -824,7 +789,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                 <span className="font-semibold">{candidatesReadyToImport.length}</span> of {includedCandidates.length} activities ready to import
                 {candidatesReadyToImport.length < includedCandidates.length && (
                   <span className="ml-2 text-yellow-600">
-                    ({includedCandidates.length - candidatesReadyToImport.length} missing assignments)
+                    ({includedCandidates.length - candidatesReadyToImport.length} missing goal assignment)
                   </span>
                 )}
               </div>

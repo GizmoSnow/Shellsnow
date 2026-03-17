@@ -110,18 +110,7 @@ export async function executeImport(
         continue;
       }
 
-      let initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
-      if (targetGoal.initiatives.length > 0 && !initiativeId) {
-        if (targetGoal.initiatives.length === 1) {
-          initiativeId = targetGoal.initiatives[0].id;
-        } else {
-          failedImports.push({ candidate, error: 'Initiative required for selected goal' });
-          await updateCandidate(candidate.id, {
-            errors: ['Initiative required for selected goal'],
-          });
-          continue;
-        }
-      }
+      const initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
 
       const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
 
@@ -159,21 +148,17 @@ export async function executeImport(
           const targetInitiative = targetGoal.initiatives.find(i => i.id === initiativeId);
           if (targetInitiative) {
             targetInitiative.activities[targetQuarter].push(activity);
+          } else {
+            if (!targetGoal.activities) {
+              targetGoal.activities = { q1: [], q2: [], q3: [], q4: [] };
+            }
+            targetGoal.activities[targetQuarter].push(activity);
           }
         } else {
-          if (!targetGoal.initiatives || targetGoal.initiatives.length === 0) {
-            if (!targetGoal.initiatives) {
-              targetGoal.initiatives = [];
-            }
-            if (targetGoal.initiatives.length === 0) {
-              targetGoal.initiatives.push({
-                id: crypto.randomUUID(),
-                label: '',
-                activities: { q1: [], q2: [], q3: [], q4: [] }
-              });
-            }
-            targetGoal.initiatives[0].activities[targetQuarter].push(activity);
+          if (!targetGoal.activities) {
+            targetGoal.activities = { q1: [], q2: [], q3: [], q4: [] };
           }
+          targetGoal.activities[targetQuarter].push(activity);
         }
       }
 
