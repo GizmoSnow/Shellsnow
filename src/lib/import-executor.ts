@@ -202,7 +202,7 @@ export async function executeImport(
 }
 
 function determineQuarterFromActivity(activity: Activity, fiscalConfig: FiscalYearConfig): 'q1' | 'q2' | 'q3' | 'q4' {
-  if (!activity.start_month) return 'q1';
+  if (activity.start_month === undefined || activity.start_month === null) return 'q1';
 
   const allMonths = getAllRoadmapMonths(fiscalConfig);
   const monthIndex = allMonths.findIndex(m => m.calendarMonth === activity.start_month);
