@@ -1,5 +1,7 @@
-import { RoadmapData } from './supabase';
+import { RoadmapData, Activity } from './supabase';
 import { getTypeMetadata } from './activity-types';
+import type { FiscalYearConfig } from './fiscal-year';
+import { getAllRoadmapMonths, getMonthPosition } from './fiscal-year';
 
 function getTypeColor(typeKey: string, data: RoadmapData): string {
   if (data.typeColors?.[typeKey]) {
@@ -31,7 +33,10 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.5 ? '#000000' : '#ffffff';
 }
 
-export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null, canvasStyle?: 'light' | 'dark'): Promise<void> {
+export async function exportToPng(title: string, data: RoadmapData, customerLogoBase64?: string | null, fiscalConfig?: FiscalYearConfig, canvasStyle?: 'light' | 'dark'): Promise<void> {
+  if (!fiscalConfig) {
+    fiscalConfig = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
+  }
   const isDark = canvasStyle === 'dark';
   const BG_COLOR = isDark ? '#0a0e1a' : '#ffffff';
   const CELL_BG = isDark ? '#121621' : '#ffffff';
@@ -245,37 +250,134 @@ export async function exportToPng(title: string, data: RoadmapData, customerLogo
         ctx.font = '11px Arial';
         ctx.fillText(initiative.label, MARGIN + 12, iniLabelY + 15);
 
-        qkeys.forEach((qk, qi) => {
+        // Collect all activities from all quarters and deduplicate
+        const allActivities: Activity[] = [];
+        qkeys.forEach(qk => {
           const acts = initiative.activities[qk] || [];
-          const cellX = Q_START_X + qi * Q_W;
-          const pillH = 24;
-          const pillPad = 5;
-
-          acts.forEach((act, aIdx) => {
-            const bgColor = getTypeColor(act.type, data);
-            const textColor = getTextColor(bgColor);
-            const pillY = currentY + 10 + aIdx * (pillH + pillPad);
-            if (pillY + pillH > currentY + ROW_H - 8) return;
-            const pillW = Q_W - 16;
-
-            ctx.fillStyle = bgColor;
-            roundRect(ctx, cellX + 8, pillY, pillW, pillH, 12);
-            ctx.fill();
-
-            if (act.isCriticalPath) {
-              ctx.strokeStyle = '#ffd700';
-              ctx.lineWidth = 3;
-              roundRect(ctx, cellX + 8, pillY, pillW, pillH, 12);
-              ctx.stroke();
-              ctx.lineWidth = 1;
+          acts.forEach(act => {
+            if (!allActivities.find(a => a.id === act.id)) {
+              allActivities.push(act);
             }
-
-            ctx.fillStyle = textColor;
-            ctx.font = 'bold 11px Arial';
-            ctx.textAlign = 'center';
-            const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
-            ctx.fillText(nameText, cellX + 8 + pillW / 2, pillY + pillH / 2);
           });
+        });
+
+        const allRoadmapMonths = getAllRoadmapMonths(fiscalConfig);
+        const activityRows: number[] = allActivities.map(() => 0);
+
+        // Calculate row assignment for each activity to prevent overlaps
+        allActivities.forEach((act, actIdx) => {
+          const startMonthNum = act.start_month ? Number(act.start_month) : null;
+          const endMonthNum = act.end_month ? Number(act.end_month) : null;
+
+          if (startMonthNum !== null && endMonthNum !== null) {
+            const startIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === startMonthNum);
+            const endIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === endMonthNum);
+
+            if (startIdx !== -1 && endIdx !== -1) {
+              const occupied: Set<number>[] = [];
+
+              // Check all previous activities for conflicts
+              allActivities.forEach((otherAct, otherIdx) => {
+                if (otherIdx >= actIdx) return;
+                const otherStart = otherAct.start_month ? Number(otherAct.start_month) : null;
+                const otherEnd = otherAct.end_month ? Number(otherAct.end_month) : null;
+
+                if (otherStart !== null && otherEnd !== null) {
+                  const otherStartIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === otherStart);
+                  const otherEndIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === otherEnd);
+
+                  if (otherStartIdx !== -1 && otherEndIdx !== -1) {
+                    const otherRow = activityRows[otherIdx];
+                    if (!occupied[otherRow]) occupied[otherRow] = new Set();
+                    for (let i = otherStartIdx; i <= otherEndIdx; i++) {
+                      occupied[otherRow].add(i);
+                    }
+                  }
+                }
+              });
+
+              // Find first available row
+              let row = 0;
+              while (true) {
+                if (!occupied[row]) {
+                  activityRows[actIdx] = row;
+                  break;
+                }
+                let hasConflict = false;
+                for (let i = startIdx; i <= endIdx; i++) {
+                  if (occupied[row].has(i)) {
+                    hasConflict = true;
+                    break;
+                  }
+                }
+                if (!hasConflict) {
+                  activityRows[actIdx] = row;
+                  break;
+                }
+                row++;
+              }
+            }
+          }
+        });
+
+        // Render activities with month-based positioning
+        const pillH = 24;
+        const pillPad = 5;
+
+        allActivities.forEach((act, actIdx) => {
+          const bgColor = getTypeColor(act.type, data);
+          const textColor = getTextColor(bgColor);
+          const startMonthNum = act.start_month ? Number(act.start_month) : null;
+          const endMonthNum = act.end_month ? Number(act.end_month) : null;
+
+          let pillX = 0;
+          let pillW = 0;
+
+          if (startMonthNum !== null && endMonthNum !== null) {
+            // Month-based positioning
+            const startIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === startMonthNum);
+            const endIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === endMonthNum);
+
+            if (startIdx !== -1 && endIdx !== -1) {
+              const leftPercent = (startIdx / 12) * 100;
+              const widthPercent = ((endIdx - startIdx + 1) / 12) * 100;
+
+              pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100) + 8;
+              pillW = (AVAILABLE_W * widthPercent / 100) - 16;
+            } else {
+              // Fallback: use first quarter if month position not found
+              pillX = Q_START_X + 8;
+              pillW = Q_W - 16;
+            }
+          } else {
+            // Fallback: no month data, render in first quarter
+            pillX = Q_START_X + 8;
+            pillW = Q_W - 16;
+          }
+
+          const row = activityRows[actIdx];
+          const pillY = currentY + 10 + row * (pillH + pillPad);
+
+          // Skip if pill would overflow the row
+          if (pillY + pillH > currentY + ROW_H - 8) return;
+
+          ctx.fillStyle = bgColor;
+          roundRect(ctx, pillX, pillY, pillW, pillH, 12);
+          ctx.fill();
+
+          if (act.isCriticalPath) {
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            roundRect(ctx, pillX, pillY, pillW, pillH, 12);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+          }
+
+          ctx.fillStyle = textColor;
+          ctx.font = 'bold 11px Arial';
+          ctx.textAlign = 'center';
+          const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
+          ctx.fillText(nameText, pillX + pillW / 2, pillY + pillH / 2);
         });
 
         currentY += ROW_H;

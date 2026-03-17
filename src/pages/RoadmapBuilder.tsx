@@ -312,7 +312,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     setExporting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      await exportToPng(title, data, customerLogoBase64, canvasStyle);
+      await exportToPng(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
     } catch (error) {
       console.error('Export error:', error);
       alert('Export failed');
