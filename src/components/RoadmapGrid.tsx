@@ -552,7 +552,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <div
                   key={sp.id}
-                  className={`group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                  className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                   style={{
                     background: bgColor,
                     color: textColor,
@@ -570,7 +570,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   {sp.isCriticalPath && (
                     <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                   )}
-                  {sp.name}
+                  <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                    {sp.name}
+                  </span>
                   <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
                     {!isFirst && (
                       <button
@@ -836,7 +838,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           return (
                             <div
                               key={sp.id}
-                              className={`group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                              className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                               style={{
                                 background: bgColor,
                                 color: textColor,
@@ -844,6 +846,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                 gridColumnEnd: maxIdx + 2,
                                 boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
                               }}
+                              title={sp.name}
                             >
                               <div
                                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -853,7 +856,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                               {sp.isCriticalPath && (
                                 <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                               )}
-                              {sp.name}
+                              <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                                {sp.name}
+                              </span>
                               <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
                                 <button
                                   onClick={(e) => {
@@ -1050,7 +1055,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             >
                               <div
                                 onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
-                                className={`group flex items-center gap-1.5 px-3.5 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                className={`activity-pill group flex items-center gap-1.5 px-3.5 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                                 style={{
                                   background: bgColor,
                                   color: textColor,
@@ -1070,6 +1075,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                                 )}
                                 <span
+                                  className="activity-pill-text"
                                   style={{
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
