@@ -772,7 +772,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   const startMonth = activity.start_month;
                   const endMonth = activity.end_month;
 
-                  if (!startMonth || !endMonth) {
+                  if (startMonth == null || endMonth == null) {
                     const qIdx = qkeys.indexOf(quarter as any);
                     activitiesWithSpan.push({
                       activity,
