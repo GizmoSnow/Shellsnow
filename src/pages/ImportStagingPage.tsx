@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 import type { RoadmapData } from '../lib/supabase';
@@ -11,6 +11,7 @@ import type { FiscalYearConfig } from '../lib/fiscal-year';
 import ImportConfirmModal from '../components/ImportConfirmModal';
 import ImportProcessingModal from '../components/ImportProcessingModal';
 import ImportErrorModal from '../components/ImportErrorModal';
+import { validateCandidate, buildErrorMessages } from '../lib/import-validation';
 
 interface ImportStagingPageProps {
   roadmapId: string;
@@ -230,6 +231,14 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
         if (!isNaN(date.getTime())) {
           update.overrideEndMonth = date.getMonth();
         }
+      }
+
+      const currentCandidate = candidates.find(c => c.id === candidateId);
+      if (currentCandidate) {
+        const updatedCandidate = { ...currentCandidate, ...update };
+        const validation = validateCandidate(updatedCandidate);
+        const currentErrors = buildErrorMessages(validation);
+        update.errors = currentErrors;
       }
 
       await updateCandidate(candidateId, update);
@@ -642,7 +651,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                 <div className="space-y-3 text-sm">
                                   {hasErrors && (
                                     <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded p-3">
-                                      <XCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                                      <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
                                       <div className="flex-1">
                                         <div className="font-semibold text-red-900">Validation Errors</div>
                                         <ul className="text-red-800 mt-1 space-y-1 ml-4">
@@ -667,6 +676,30 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                       </div>
                                     </div>
                                   )}
+
+                                  {candidate.destinationGoalId && (() => {
+                                    const selectedGoal = roadmapData.goals.find(g => g.id === candidate.destinationGoalId);
+                                    if (selectedGoal && selectedGoal.initiatives && selectedGoal.initiatives.length > 1) {
+                                      return (
+                                        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded p-3">
+                                          <label className="font-medium text-gray-700">Initiative:</label>
+                                          <select
+                                            value={candidate.destinationInitiativeId || ''}
+                                            onChange={(e) => handleUpdateField(candidate.id, 'destinationInitiativeId', e.target.value)}
+                                            className={`flex-1 px-3 py-1.5 border rounded hover:border-blue-400 focus:border-blue-500 focus:outline-none ${!candidate.destinationInitiativeId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
+                                          >
+                                            <option value="">Select initiative...</option>
+                                            {selectedGoal.initiatives.map(initiative => (
+                                              <option key={initiative.id} value={initiative.id}>
+                                                {initiative.label || '(Unnamed Initiative)'}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
                               </td>
                             </tr>

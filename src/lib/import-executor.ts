@@ -3,6 +3,7 @@ import type { RoadmapData, Activity } from './supabase';
 import { updateCandidate, updateCandidates, updateBatchCounts } from './import-processor';
 import { appendMetadataToDescription } from './import-metadata-formatter';
 import { getAllRoadmapMonths, type FiscalYearConfig } from './fiscal-year';
+import { validateCandidate, buildErrorMessages } from './import-validation';
 
 export interface ImportResult {
   importedCount: number;
@@ -41,8 +42,13 @@ export async function executeImport(
         continue;
       }
 
-      if (candidate.errors && candidate.errors.length > 0) {
-        failedImports.push({ candidate, error: candidate.errors.join('; ') });
+      const validation = validateCandidate(candidate);
+      const currentErrors = buildErrorMessages(validation);
+      if (currentErrors.length > 0) {
+        failedImports.push({ candidate, error: currentErrors.join('; ') });
+        await updateCandidate(candidate.id, {
+          errors: currentErrors,
+        });
         continue;
       }
 
@@ -170,6 +176,10 @@ export async function executeImport(
           }
         }
       }
+
+      await updateCandidate(candidate.id, {
+        errors: [],
+      });
 
       importedIds.push(candidate.id);
     } catch (error) {
