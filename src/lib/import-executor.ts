@@ -12,6 +12,13 @@ export interface ImportResult {
   updatedRoadmapData: RoadmapData;
 }
 
+function deriveMonthFromDate(date?: string): number | undefined {
+  if (!date) return undefined;
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return undefined;
+  return d.getMonth();
+}
+
 export async function executeImport(
   batchId: string,
   candidates: NormalizedActivityCandidate[],
@@ -54,8 +61,14 @@ export async function executeImport(
       const finalTitle = candidate.overrideTitle || candidate.normalizedTitle;
       const finalOwner = candidate.overrideOwner || candidate.owner;
       const finalStatus = candidate.overrideStatus || candidate.status;
-      const finalStartMonth = candidate.overrideStartMonth ?? candidate.startMonth;
-      const finalEndMonth = candidate.overrideEndMonth ?? candidate.endMonth;
+      const finalStartMonth =
+        candidate.overrideStartMonth ??
+        candidate.startMonth ??
+        deriveMonthFromDate(candidate.overrideStartDate ?? candidate.startDate);
+      const finalEndMonth =
+        candidate.overrideEndMonth ??
+        candidate.endMonth ??
+        deriveMonthFromDate(candidate.overrideEndDate ?? candidate.endDate);
 
       if (!finalTitle || !finalOwner) {
         failedImports.push({ candidate, error: 'Missing required fields: title or owner' });
@@ -91,13 +104,17 @@ export async function executeImport(
         continue;
       }
 
-      const initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
+      let initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
       if (targetGoal.initiatives.length > 0 && !initiativeId) {
-        failedImports.push({ candidate, error: 'Initiative required for selected goal' });
-        await updateCandidate(candidate.id, {
-          errors: ['Initiative required for selected goal'],
-        });
-        continue;
+        if (targetGoal.initiatives.length === 1) {
+          initiativeId = targetGoal.initiatives[0].id;
+        } else {
+          failedImports.push({ candidate, error: 'Initiative required for selected goal' });
+          await updateCandidate(candidate.id, {
+            errors: ['Initiative required for selected goal'],
+          });
+          continue;
+        }
       }
 
       const typeKey = mapSourceTypeToActivityType(candidate.sourceType);

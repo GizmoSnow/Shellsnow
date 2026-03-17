@@ -25,7 +25,7 @@ export function validateCandidate(candidate: NormalizedActivityCandidate): Valid
     fieldErrors.activityType = 'Activity type could not be determined';
   }
 
-  if (!candidate.startDate && !candidate.startMonth) {
+  if (!candidate.startDate && !candidate.startMonth && !candidate.overrideStartDate && !candidate.overrideStartMonth) {
     missingRequired.push('date');
     fieldErrors.date = 'No usable date field found';
   }

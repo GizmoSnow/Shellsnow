@@ -216,7 +216,22 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   const handleUpdateField = async (candidateId: string, field: keyof NormalizedActivityCandidate, value: any) => {
     try {
-      const update = { [field]: value || undefined };
+      const update: any = { [field]: value || undefined };
+
+      if (field === 'overrideStartDate' && value) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          update.overrideStartMonth = date.getMonth();
+        }
+      }
+
+      if (field === 'overrideEndDate' && value) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          update.overrideEndMonth = date.getMonth();
+        }
+      }
+
       await updateCandidate(candidateId, update);
       setCandidates(prev =>
         prev.map(c => (c.id === candidateId ? { ...c, ...update } : c))
