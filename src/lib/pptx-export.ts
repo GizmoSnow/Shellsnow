@@ -508,7 +508,9 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const rowH = Math.max(0.54, spanningActivities.length * 0.30 + 0.34);
+        const activityBlockHeight = spanningActivities.length * 0.27 + 0.15;
+        const minLabelBlockHeight = isFirstInitiativeOfGoal ? 0.84 : 0.42;
+        const rowH = Math.max(minLabelBlockHeight, activityBlockHeight);
         checkNewSlide();
 
         if (currentY + rowH > MAX_CONTENT_Y) {
@@ -555,8 +557,8 @@ export async function exportToPptx(
             x: LABEL_X + 0.07,
             y: currentY + 0.04,
             w: LEFT_COL - 0.1,
-            h: 0.18,
-            fontSize: 11,
+            h: 0.16,
+            fontSize: 10,
             bold: true,
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
@@ -565,24 +567,24 @@ export async function exportToPptx(
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
-            y: currentY + 0.20,
+            y: currentY + 0.22,
             w: LEFT_COL - 0.1,
-            h: 0.2,
-            fontSize: 10,
+            h: 0.30,
+            fontSize: 9,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
             margin: 0,
-            wrap: false,
+            wrap: true,
           });
         }
 
-        const iniLabelY = isFirstInitiativeOfGoal ? currentY + 0.46 : currentY + 0.04;
+        const iniLabelY = isFirstInitiativeOfGoal ? currentY + 0.54 : currentY + 0.04;
         currentSlide.addText('Key Initiative', {
           x: LABEL_X + 0.07,
           y: iniLabelY,
           w: LEFT_COL - 0.1,
-          h: 0.12,
+          h: 0.10,
           fontSize: 7,
           bold: true,
           color: TEXT_MUTED,
@@ -592,14 +594,14 @@ export async function exportToPptx(
         });
         currentSlide.addText(initiative.label, {
           x: LABEL_X + 0.07,
-          y: iniLabelY + 0.14,
+          y: iniLabelY + 0.12,
           w: LEFT_COL - 0.1,
-          h: 0.22,
+          h: 0.28,
           fontSize: 8,
           color: TEXT_COLOR,
           fontFace: 'Arial',
           margin: 0,
-          wrap: false,
+          wrap: true,
         });
 
         spanningActivities.forEach((sp, spIdx) => {
@@ -726,7 +728,9 @@ export async function exportToPptx(
         const numRows = maxRow + 1;
         const pillH = 0.20;
         const pillPad = 0.02;
-        const rowH = Math.max(0.54, numRows * 0.30 + 0.34);
+        const activityBlockHeight = numRows * 0.27 + 0.15;
+        const minLabelBlockHeight = isFirstInitiativeOfGoal ? 0.84 : 0.42;
+        const rowH = Math.max(minLabelBlockHeight, activityBlockHeight);
 
         checkNewSlide();
 
@@ -774,8 +778,8 @@ export async function exportToPptx(
             x: LABEL_X + 0.07,
             y: currentY + 0.04,
             w: LEFT_COL - 0.1,
-            h: 0.18,
-            fontSize: 11,
+            h: 0.16,
+            fontSize: 10,
             bold: true,
             color: goal.color.replace('#', ''),
             fontFace: 'Arial',
@@ -784,24 +788,24 @@ export async function exportToPptx(
           });
           currentSlide.addText(goal.title, {
             x: LABEL_X + 0.07,
-            y: currentY + 0.20,
+            y: currentY + 0.22,
             w: LEFT_COL - 0.1,
-            h: 0.2,
-            fontSize: 10,
+            h: 0.30,
+            fontSize: 9,
             bold: true,
             color: TEXT_COLOR,
             fontFace: 'Arial',
             margin: 0,
-            wrap: false,
+            wrap: true,
           });
         }
 
-        const iniLabelY = isFirstInitiativeOfGoal ? currentY + 0.46 : currentY + 0.04;
+        const iniLabelY = isFirstInitiativeOfGoal ? currentY + 0.54 : currentY + 0.04;
         currentSlide.addText('Key Initiative', {
           x: LABEL_X + 0.07,
           y: iniLabelY,
           w: LEFT_COL - 0.1,
-          h: 0.12,
+          h: 0.10,
           fontSize: 7,
           bold: true,
           color: TEXT_MUTED,
@@ -811,14 +815,14 @@ export async function exportToPptx(
         });
         currentSlide.addText(initiative.label, {
           x: LABEL_X + 0.07,
-          y: iniLabelY + 0.14,
+          y: iniLabelY + 0.12,
           w: LEFT_COL - 0.1,
-          h: 0.22,
+          h: 0.28,
           fontSize: 8,
           color: TEXT_COLOR,
           fontFace: 'Arial',
           margin: 0,
-          wrap: false,
+          wrap: true,
         });
 
         allActivities.forEach((act, actIdx) => {
