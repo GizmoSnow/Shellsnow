@@ -1,5 +1,6 @@
 import type { ActivityType, Quarter } from './import-types';
 import { extractQuarterFromTitle } from './title-normalizer';
+import { getMonthPosition, type FiscalYearConfig } from './fiscal-year';
 
 export interface ClassificationResult {
   activityType: ActivityType;
@@ -13,14 +14,15 @@ export function classifyActivity(
   title: string,
   startDate: string | undefined,
   endDate: string | undefined,
-  sourceType: 'engagement' | 'support' | 'training'
+  sourceType: 'engagement' | 'support' | 'training',
+  fiscalConfig?: FiscalYearConfig
 ): ClassificationResult {
   const flags: string[] = [];
 
   const titleQuarter = extractQuarterFromTitle(title);
 
   if (titleQuarter) {
-    const dateQuarter = startDate ? getQuarterFromDate(startDate) : null;
+    const dateQuarter = startDate ? getQuarterFromDate(startDate, fiscalConfig) : null;
 
     if (dateQuarter && titleQuarter !== dateQuarter) {
       flags.push('QuarterConflict');
@@ -71,7 +73,7 @@ export function classifyActivity(
   }
 
   if (durationDays > 45 && !sameMonth) {
-    const quarters = getQuartersInRange(start, end);
+    const quarters = getQuartersInRange(start, end, fiscalConfig);
     return {
       activityType: 'spanning',
       startMonth,
@@ -81,7 +83,7 @@ export function classifyActivity(
     };
   }
 
-  const quarters = getQuartersInRange(start, end);
+  const quarters = getQuartersInRange(start, end, fiscalConfig);
   return {
     activityType: 'standard',
     startMonth,
@@ -91,26 +93,44 @@ export function classifyActivity(
   };
 }
 
-function getQuarterFromDate(dateStr: string): Quarter {
+function getQuarterFromDate(dateStr: string, fiscalConfig?: FiscalYearConfig): Quarter {
   const date = new Date(dateStr);
-  const month = date.getMonth() + 1;
+  const calendarMonth = date.getMonth() + 1;
 
-  if (month >= 1 && month <= 3) return 'q1';
-  if (month >= 4 && month <= 6) return 'q2';
-  if (month >= 7 && month <= 9) return 'q3';
+  // Use fiscal year config if available
+  if (fiscalConfig) {
+    const pos = getMonthPosition(calendarMonth, fiscalConfig);
+    if (pos) {
+      return `q${pos.quarterIndex + 1}` as Quarter;
+    }
+  }
+
+  // Fallback to calendar quarters
+  if (calendarMonth >= 1 && calendarMonth <= 3) return 'q1';
+  if (calendarMonth >= 4 && calendarMonth <= 6) return 'q2';
+  if (calendarMonth >= 7 && calendarMonth <= 9) return 'q3';
   return 'q4';
 }
 
-function getQuartersInRange(start: Date, end: Date): Quarter[] {
+function getQuartersInRange(start: Date, end: Date, fiscalConfig?: FiscalYearConfig): Quarter[] {
   const quarters = new Set<Quarter>();
 
   const current = new Date(start);
   while (current <= end) {
-    const month = current.getMonth() + 1;
-    if (month >= 1 && month <= 3) quarters.add('q1');
-    if (month >= 4 && month <= 6) quarters.add('q2');
-    if (month >= 7 && month <= 9) quarters.add('q3');
-    if (month >= 10 && month <= 12) quarters.add('q4');
+    const calendarMonth = current.getMonth() + 1;
+
+    if (fiscalConfig) {
+      const pos = getMonthPosition(calendarMonth, fiscalConfig);
+      if (pos) {
+        quarters.add(`q${pos.quarterIndex + 1}` as Quarter);
+      }
+    } else {
+      // Fallback to calendar quarters
+      if (calendarMonth >= 1 && calendarMonth <= 3) quarters.add('q1');
+      if (calendarMonth >= 4 && calendarMonth <= 6) quarters.add('q2');
+      if (calendarMonth >= 7 && calendarMonth <= 9) quarters.add('q3');
+      if (calendarMonth >= 10 && calendarMonth <= 12) quarters.add('q4');
+    }
 
     current.setMonth(current.getMonth() + 1);
   }

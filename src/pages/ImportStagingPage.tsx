@@ -173,6 +173,21 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // File size validation (10MB max)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setErrors(['File too large. Maximum file size is 10MB.']);
+      return;
+    }
+
+    // File type validation
+    const validExtensions = ['.csv', '.xlsx', '.xls'];
+    const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
+    if (!validExtensions.includes(ext)) {
+      setErrors(['Unsupported file type. Please upload a CSV or Excel file (.csv, .xlsx, .xls).']);
+      return;
+    }
+
     setIsProcessing(true);
     setErrors([]);
 
@@ -215,10 +230,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   const handleBulkToggle = async (included: boolean) => {
     try {
-      const updates = filteredCandidates.map(c =>
-        updateCandidate(c.id, { include: included })
-      );
-      await Promise.all(updates);
+      const ids = filteredCandidates.map(c => c.id);
+      await updateCandidates(ids, { include: included });
       setCandidates(prev =>
         prev.map(c => filteredCandidates.find(fc => fc.id === c.id) ? { ...c, include: included } : c)
       );

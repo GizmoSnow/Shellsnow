@@ -134,7 +134,14 @@ export async function processImportFile(
         importedCount: 0,
         ignoredCount: 0,
       });
-      await saveCandidatesToDatabase(candidates);
+
+      try {
+        await saveCandidatesToDatabase(candidates);
+      } catch (saveError) {
+        // Clean up orphaned batch if candidate save fails
+        await supabase.from('import_batches').delete().eq('id', batchId);
+        throw saveError;
+      }
     }
 
     return {
@@ -182,7 +189,7 @@ async function saveCandidatesToDatabase(candidates: NormalizedActivityCandidate[
     import_status: c.importStatus,
     imported_at: c.importedAt,
     goal_id: c.goalId,
-    initiative: c.initiative,
+    initiative_id: c.initiativeId,
     is_deleted: c.isDeleted,
     warnings: c.warnings,
     errors: c.errors,
