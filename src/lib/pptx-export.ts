@@ -638,9 +638,9 @@ export async function exportToPptx(
           const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
           const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
           currentSlide.addText(nameText, {
-            x: pillX + 0.04,
+            x: pillX,
             y: pillY,
-            w: pillW - 0.08,
+            w: pillW,
             h: pillH,
             fontSize: fs,
             bold: true,
