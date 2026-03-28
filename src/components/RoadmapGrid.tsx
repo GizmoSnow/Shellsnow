@@ -424,7 +424,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         <ActivityTooltip text={activity.name}>
           <div
             onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
-            className={`activity-pill group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
+            className={`activity-pill group inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
             style={{ background: bgColor, color: textColor }}
             title={activity.name}
           >
@@ -1052,7 +1052,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       <div
                         style={{
                           position: 'relative',
-                          minHeight: `${(rows.length || 1) * 44 + 70}px`,
+                          minHeight: `${(rows.length || 1) * 50 + 70}px`,
                           padding: '8px 8px 60px 8px'
                         }}
                       >
@@ -1093,15 +1093,15 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   position: 'absolute',
                                   left: `${leftPercent}%`,
                                   width: `${widthPercent}%`,
-                                  top: `${item.row * 44 + 8}px`,
-                                  height: '36px',
+                                  top: `${item.row * 50 + 8}px`,
+                                  height: '42px',
                                   padding: '0 2px',
                                   zIndex: 30
                                 }}
                               >
                                 <div
                                   onClick={() => setDetailCardActivity({ activity: item.activity, goal, initiative, quarter: item.quarter })}
-                                  className={`activity-pill group flex items-center gap-1.5 px-3.5 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                  className={`activity-pill group flex items-center gap-1.5 px-4 text-xs font-bold transition-all hover:opacity-90 cursor-pointer ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                                   style={{
                                     background: bgColor,
                                     color: textColor,
