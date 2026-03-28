@@ -614,7 +614,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   {sp.isCriticalPath && (
                     <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                   )}
-                  <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                  <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                     {sp.name}
                   </span>
                   <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
@@ -901,7 +901,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                               {sp.isCriticalPath && (
                                 <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
                               )}
-                              <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                              <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                                 {sp.name}
                               </span>
                               <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
