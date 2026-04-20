@@ -8,8 +8,9 @@ import type { ActivityOwner } from '../lib/activity-types';
 
 interface AddActivityModalProps {
   isOpen: boolean;
-  context: any;
+  context: { goalId?: string; initiativeId?: string } | null;
   editingActivity?: Activity | SpanningActivity | null;
+  openedAsSpanning: boolean;
   data: RoadmapData;
   fiscalConfig: FiscalYearConfig;
   getTypeColor: (typeKey: string) => string;
@@ -32,7 +33,7 @@ function uid() {
   return 'id_' + Math.random().toString(36).slice(2, 9);
 }
 
-export default function AddActivityModal({ isOpen, context, editingActivity, data, fiscalConfig, getTypeColor, getTypeLabel, getAllTypeKeys, onClose, onAdd }: AddActivityModalProps) {
+export default function AddActivityModal({ isOpen, context, editingActivity, openedAsSpanning, data, fiscalConfig, getTypeColor, getTypeLabel, getAllTypeKeys, onClose, onAdd }: AddActivityModalProps) {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState('csm');
   const [selectedOwner, setSelectedOwner] = useState<ActivityOwner>('salesforce');
@@ -40,12 +41,12 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
   const [selectedQuarters, setSelectedQuarters] = useState<string[]>([]);
   const [startMonth, setStartMonth] = useState<string>('');
   const [endMonth, setEndMonth] = useState<string>('');
-  const [health, setHealth] = useState<'on_track' | 'at_risk' | 'blocked'>('on_track');
   const [status, setStatus] = useState<'not_started' | 'in_progress' | 'completed' | 'cancelled'>('not_started');
   const [description, setDescription] = useState('');
   const [isCriticalPath, setIsCriticalPath] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
   const [selectedInitiativeId, setSelectedInitiativeId] = useState<string>('');
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const roadmapMonths = getAllRoadmapMonths(fiscalConfig);
   const defaultMonth = roadmapMonths.length > 0 ? String(roadmapMonths[0].calendarMonth) : '0';
@@ -56,7 +57,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setName(editingActivity.name);
         setSelectedType(editingActivity.type);
         setSelectedOwner(editingActivity.owner || 'salesforce');
-        setHealth(editingActivity.health || 'on_track');
         setStatus(editingActivity.status || 'not_started');
         setDescription(editingActivity.description || '');
         setIsCriticalPath(editingActivity.isCriticalPath || false);
@@ -78,17 +78,16 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         setName('');
         setSelectedType('csm');
         setSelectedOwner('salesforce');
-        setIsSpanning(context?.quarter === 'spanning');
-        setSelectedQuarters(context?.quarter === 'spanning' ? ['q1', 'q2', 'q3', 'q4'] : []);
+        setIsSpanning(openedAsSpanning);
+        setSelectedQuarters(openedAsSpanning ? ['q1', 'q2', 'q3', 'q4'] : []);
         setStartMonth(defaultMonth);
         setEndMonth(defaultMonth);
-        setHealth('on_track');
         setStatus('not_started');
         setDescription('');
         setIsCriticalPath(false);
       }
     }
-  }, [isOpen, editingActivity, context, defaultMonth]);
+  }, [isOpen, editingActivity, context, defaultMonth, openedAsSpanning]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -143,7 +142,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         type: selectedType,
         owner: selectedOwner,
         quarters: selectedQuarters,
-        health,
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
@@ -156,7 +154,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
         owner: selectedOwner,
         start_month: parseInt(startMonth),
         end_month: parseInt(endMonth),
-        health,
         status,
         description: description.trim() || undefined,
         isCriticalPath: isCriticalPath || undefined
@@ -170,10 +167,10 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
     setSelectedQuarters([]);
     setStartMonth(defaultMonth);
     setEndMonth(defaultMonth);
-    setHealth('on_track');
     setStatus('not_started');
     setDescription('');
     setIsCriticalPath(false);
+    setDescriptionExpanded(false);
   };
 
   const toggleQuarter = (qk: string) => {
@@ -194,15 +191,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
     }
   };
 
-  const getQuarterMonthRange = (quarterIndex: number) => {
-    const startMonthIdx = quarterIndex * 3;
-    const endMonthIdx = startMonthIdx + 2;
-    if (startMonthIdx < roadmapMonths.length && endMonthIdx < roadmapMonths.length) {
-      return `${roadmapMonths[startMonthIdx].abbrev}–${roadmapMonths[endMonthIdx].abbrev}`;
-    }
-    return '';
-  };
-
   const isQuarterSelected = (quarterIndex: number) => {
     const startMonthIdx = quarterIndex * 3;
     const endMonthIdx = startMonthIdx + 2;
@@ -221,6 +209,8 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
     label: month.abbrev,
     quarterIndex: Math.floor(roadmapMonths.indexOf(month) / 3)
   }));
+
+  const selectedGoal = selectedGoalId ? data.goals.find(g => g.id === selectedGoalId) : undefined;
 
   return (
     <>
@@ -244,8 +234,23 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 max-h-[70vh] overflow-y-auto pr-2">
             {/* Section 1 - Activity Definition */}
             <div className="space-y-4">
-              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+              <div className="text-[9px] font-medium uppercase tracking-wide opacity-40" style={{ color: 'var(--text-secondary)' }}>
                 Activity Definition
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Activity Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. CSM Health Check"
+                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                  autoFocus
+                />
               </div>
 
               <div>
@@ -285,7 +290,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   <button
                     type="button"
                     onClick={() => setSelectedOwner('salesforce')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    className="px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                     style={{
                       background: selectedOwner === 'salesforce' ? '#0176D3' : 'var(--button-neutral-bg)',
                       color: selectedOwner === 'salesforce' ? '#ffffff' : 'var(--text-primary)',
@@ -297,7 +302,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   <button
                     type="button"
                     onClick={() => setSelectedOwner('partner')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    className="px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                     style={{
                       background: selectedOwner === 'partner' ? '#0176D3' : 'var(--button-neutral-bg)',
                       color: selectedOwner === 'partner' ? '#ffffff' : 'var(--text-primary)',
@@ -309,7 +314,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   <button
                     type="button"
                     onClick={() => setSelectedOwner('customer')}
-                    className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all"
+                    className="px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                     style={{
                       background: selectedOwner === 'customer' ? '#0176D3' : 'var(--button-neutral-bg)',
                       color: selectedOwner === 'customer' ? '#ffffff' : 'var(--text-primary)',
@@ -320,41 +325,38 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Activity Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. CSM Health Check"
-                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors"
-                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Description <span className="opacity-60">(Optional)</span>
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add details..."
-                  rows={3}
-                  className="w-full rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none"
-                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
-                />
-              </div>
             </div>
 
             {/* Section 2 - Timeline Placement */}
             <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+              <div className="text-[9px] font-medium uppercase tracking-wide opacity-40" style={{ color: 'var(--text-secondary)' }}>
                 Timeline Placement
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isSpanning}
+                    onChange={(e) => {
+                      setIsSpanning(e.target.checked);
+                      if (e.target.checked && selectedQuarters.length === 0) {
+                        setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
+                      }
+                      if (!e.target.checked) {
+                        setSelectedQuarters([]);
+                      }
+                    }}
+                    className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                    Spanning Activity
+                  </span>
+                </label>
+                <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
+                  Creates a wide pill that stretches across multiple quarters
+                </p>
               </div>
 
               {!isSpanning && (
@@ -372,7 +374,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                             key={idx}
                             type="button"
                             onClick={() => selectQuarterRange(quarterIndex)}
-                            className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                            className="px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
                             style={{
                               background: isSelected ? '#066afe' : 'var(--button-neutral-bg)',
                               color: isSelected ? '#ffffff' : 'var(--text-primary)',
@@ -425,42 +427,19 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                 </>
               )}
 
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isSpanning}
-                    onChange={(e) => {
-                      setIsSpanning(e.target.checked);
-                      if (e.target.checked && selectedQuarters.length === 0) {
-                        setSelectedQuarters(['q1', 'q2', 'q3', 'q4']);
-                      }
-                    }}
-                    className="w-4 h-4 rounded text-[#6c63ff] focus:ring-[#6c63ff] focus:ring-offset-0"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                  />
-                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
-                    Spanning Activity
-                  </span>
-                </label>
-                <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-secondary)' }}>
-                  Creates a wide pill that stretches across multiple quarters
-                </p>
-              </div>
-
               {isSpanning && (
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                     Select Quarters
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {quarters.map((quarter, idx) => {
                       const qk = `q${quarter.quarter}`;
                       return (
                         <div
                           key={idx}
                           onClick={() => toggleQuarter(qk)}
-                          className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all"
+                          className="cursor-pointer px-3 py-2 rounded-lg text-xs font-semibold text-center transition-all whitespace-normal break-words"
                           style={{
                             background: selectedQuarters.includes(qk) ? '#6c63ff' : 'var(--button-neutral-bg)',
                             color: selectedQuarters.includes(qk) ? '#ffffff' : 'var(--text-secondary)',
@@ -478,7 +457,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
 
             {/* Section 3 - Status and Metadata */}
             <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-              <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-50" style={{ color: 'var(--text-secondary)' }}>
+              <div className="text-[9px] font-medium uppercase tracking-wide opacity-40" style={{ color: 'var(--text-secondary)' }}>
                 Status &amp; Metadata
               </div>
 
@@ -538,53 +517,6 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Health
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setHealth('on_track')}
-                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                    style={{
-                      background: health === 'on_track' ? '#22c55e' : 'var(--button-neutral-bg)',
-                      color: health === 'on_track' ? '#ffffff' : 'var(--text-primary)',
-                      border: health === 'on_track' ? '2px solid #22c55e' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-current"></div>
-                    On Track
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHealth('at_risk')}
-                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                    style={{
-                      background: health === 'at_risk' ? '#eab308' : 'var(--button-neutral-bg)',
-                      color: health === 'at_risk' ? '#ffffff' : 'var(--text-primary)',
-                      border: health === 'at_risk' ? '2px solid #eab308' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-current"></div>
-                    At Risk
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHealth('blocked')}
-                    className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                    style={{
-                      background: health === 'blocked' ? '#ef4444' : 'var(--button-neutral-bg)',
-                      color: health === 'blocked' ? '#ffffff' : 'var(--text-primary)',
-                      border: health === 'blocked' ? '2px solid #ef4444' : '2px solid var(--border-subtle)'
-                    }}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-current"></div>
-                    Blocked
-                  </button>
-                </div>
-              </div>
-
               {editingActivity && (
                 <>
                   <div>
@@ -609,7 +541,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                     </select>
                   </div>
 
-                  {selectedGoalId && data.goals.find(g => g.id === selectedGoalId)?.initiatives.length > 0 && (
+                  {selectedGoalId && (selectedGoal?.initiatives?.length ?? 0) > 0 && (
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
                         Move to Initiative
@@ -621,7 +553,7 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                         style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                       >
                         <option value="">Select Initiative...</option>
-                        {data.goals.find(g => g.id === selectedGoalId)?.initiatives.map(initiative => (
+                        {selectedGoal?.initiatives.map(initiative => (
                           <option key={initiative.id} value={initiative.id}>
                             {initiative.label}
                           </option>
@@ -631,6 +563,22 @@ export default function AddActivityModal({ isOpen, context, editingActivity, dat
                   )}
                 </>
               )}
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Description <span className="opacity-60">(Optional)</span>
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onFocus={() => setDescriptionExpanded(true)}
+                  onClick={() => setDescriptionExpanded(true)}
+                  placeholder="Add details..."
+                  rows={descriptionExpanded ? 3 : 1}
+                  className="w-full rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#6c63ff] transition-colors resize-none min-h-[38px]"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                />
+              </div>
 
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">

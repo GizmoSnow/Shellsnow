@@ -704,7 +704,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               );
             })}
             <button
-              onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'q1' })}
+              onClick={() => onOpenAddModal({ isAccountLevel: true, quarter: 'spanning', openedAsSpanning: true })}
               className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
               style={{ borderColor: 'var(--roadmap-border)', color: 'var(--roadmap-text-secondary)', gridColumn: '1 / -1' }}
               onMouseEnter={(e) => {
@@ -719,7 +719,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               }}
             >
               <Plus size={12} />
-              Add
+              Add Spanning
             </button>
           </div>
         </div>
@@ -989,7 +989,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           );
                         })}
                         <button
-                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' })}
+                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, openedAsSpanning: false })}
                           className="border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
                           style={{ borderColor: 'var(--roadmap-border)', color: 'var(--roadmap-text-secondary)', gridColumn: '1 / -1' }}
                           onMouseEnter={(e) => {
@@ -1004,7 +1004,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           }}
                         >
                           <Plus size={12} />
-                          Add Spanning
+                          Add
                         </button>
                       </div>
                     </div>
@@ -1269,7 +1269,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       {/* Single Add button */}
                       <div className="absolute bottom-0 left-0 right-0 p-2" style={{ zIndex: 40 }}>
                         <button
-                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id })}
+                          onClick={() => onOpenAddModal({ goalId: goal.id, initiativeId: initiative.id, openedAsSpanning: false })}
                           className="w-full border border-dashed rounded-md px-3 py-1 text-[10px] font-medium transition-all flex items-center justify-center gap-1"
                           style={{ borderColor: 'var(--roadmap-border)', color: 'var(--roadmap-text-secondary)' }}
                           onMouseEnter={(e) => {
