@@ -64,12 +64,14 @@ function workbookSheetToJSON(worksheet: any): any[] {
         headers[C] = cell ? String(cell.v) : `Column${C}`;
       }
 
+      console.log('Excel headers:', headers);
+
       for (let R = range.s.r + 1; R <= range.e.r; ++R) {
         const row: any = {};
         for (let C = range.s.c; C <= range.e.c; ++C) {
           const cellAddress = encodeCell({ r: R, c: C });
           const cell = ws[cellAddress];
-          row[headers[C]] = cell ? cell.v : '';
+          row[headers[C]] = formatExcelCell(cell);
         }
         result.push(row);
       }
@@ -79,6 +81,49 @@ function workbookSheetToJSON(worksheet: any): any[] {
   };
 
   return XLSX_UTILS.sheet_to_json(worksheet);
+}
+
+function formatExcelCell(cell: any): string | number {
+  if (!cell) return '';
+
+  if (cell.t === 'd') {
+    return formatDateValue(cell.v instanceof Date ? cell.v : new Date(cell.v));
+  }
+
+  if (cell.t === 'n' && isExcelDateCell(cell)) {
+    return formatDateValue(excelSerialToJSDate(cell.v));
+  }
+
+  return cell.v ?? '';
+}
+
+function isExcelDateCell(cell: any): boolean {
+  if (!cell || cell.t !== 'n') return false;
+  const format = String(cell.z || '');
+  return /[ymdhs]/i.test(format.replace(/"[^"]*"/g, ''));
+}
+
+function excelSerialToJSDate(serial: number): Date {
+  // Excel stores dates as serial numbers based on 1900 epoch with a fake Feb 29 1900.
+  // Adjust the serial number for the leap-year bug for serials >= 61.
+  const days = Math.floor(serial) - (serial >= 61 ? 1 : 0);
+  const ms = (days - 25569) * 86400 * 1000;
+  const date = new Date(ms);
+  const fractional = serial - Math.floor(serial);
+  if (fractional > 0) {
+    const totalSeconds = Math.round(fractional * 86400);
+    date.setUTCHours(Math.floor(totalSeconds / 3600));
+    date.setUTCMinutes(Math.floor((totalSeconds % 3600) / 60));
+    date.setUTCSeconds(totalSeconds % 60);
+  }
+  return date;
+}
+
+function formatDateValue(value: Date): string {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(value.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function decodeRange(range: string): { s: { r: number; c: number }; e: { r: number; c: number } } {

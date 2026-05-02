@@ -113,16 +113,18 @@ const OrgCSEngagementAdapter: ImportAdapter = {
     ]) || '';
 
     const startDate = parseDate(findColumn(row, [
-      'Start Date',
+      'Planned Start Date',
+      'Effective Date',
       'Created Date',
       'Date Created',
       'Begin Date'
     ]));
 
     const endDate = parseDate(findColumn(row, [
-      'End Date',
-      'Close Date',
       'Closed Date',
+      'Close Date',
+      'End Date',
+      'Due Date',
       'Completion Date'
     ]));
 
@@ -145,6 +147,12 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       'Organization',
       'Org ID',
       'Organization Name'
+    ]);
+
+    const sourceOwnerName = findColumn(row, [
+      'Engagement Owner',
+      'Owner',
+      'Engagement Owner Name'
     ]);
 
     const titleNormalization = normalizeTitle(name);
@@ -183,6 +191,7 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       include: true,
       sourceAccountName: accountName,
       sourceOrgName: orgName,
+      sourceOwnerName,
       sourceTemplateName: template,
       sourceStageRaw: stage,
       sourceReportType: 'OrgCS Engagement',
