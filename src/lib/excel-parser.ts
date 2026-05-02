@@ -27,7 +27,7 @@ export async function parseExcelFile(file: File): Promise<ParsedCSVRow[]> {
 
 async function parseExcelData(data: ArrayBuffer): Promise<any> {
   const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
-  return XLSX.read(data, { type: 'array' });
+  return XLSX.read(data, { type: 'array', cellDates: true });
 }
 
 function extractRowsFromWorkbook(workbook: any): ParsedCSVRow[] {
@@ -87,14 +87,37 @@ function formatExcelCell(cell: any): string | number {
   if (!cell) return '';
 
   if (cell.t === 'd') {
-    return formatDateValue(cell.v instanceof Date ? cell.v : new Date(cell.v));
+    const date = cell.v instanceof Date ? cell.v : new Date(cell.v);
+    const formatted = formatDateValue(date);
+    return isValidReasonableDate(formatted) ? formatted : String(cell.w ?? cell.v ?? '');
   }
 
   if (cell.t === 'n' && isExcelDateCell(cell)) {
-    return formatDateValue(excelSerialToJSDate(cell.v));
+    const date = excelSerialToJSDate(cell.v);
+    const formatted = formatDateValue(date);
+    return isValidReasonableDate(formatted) ? formatted : String(cell.w ?? cell.v ?? '');
   }
 
   return cell.v ?? '';
+}
+
+function isValidReasonableDate(dateStr: string): boolean {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return false;
+
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+  if (year < 2000 || year > 2100) return false;
+
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() + 1 === month &&
+    date.getUTCDate() === day
+  );
 }
 
 function isExcelDateCell(cell: any): boolean {

@@ -30,11 +30,11 @@ export function validateCandidate(candidate: NormalizedActivityCandidate): Valid
     fieldErrors.date = 'No usable date field found';
   }
 
-  if (candidate.startMonth !== undefined && (candidate.startMonth < 0 || candidate.startMonth > 11)) {
+if (candidate.startMonth !== undefined && (candidate.startMonth < 1 || candidate.startMonth > 12)) {
     invalidValues.startMonth = `Invalid start month: ${candidate.startMonth}`;
   }
 
-  if (candidate.endMonth !== undefined && (candidate.endMonth < 0 || candidate.endMonth > 11)) {
+  if (candidate.endMonth !== undefined && (candidate.endMonth < 1 || candidate.endMonth > 12)) {
     invalidValues.endMonth = `Invalid end month: ${candidate.endMonth}`;
   }
 

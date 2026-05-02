@@ -39,6 +39,15 @@ function parseDate(dateStr: string | undefined): string | undefined {
   }
 }
 
+function isFutureDate(dateStr: string): boolean {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return false;
+
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return date.getTime() > todayUtc;
+}
+
 function mapTemplateToCategory(template: string): string | undefined {
   if (!template) return undefined;
 
@@ -120,12 +129,21 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       'Begin Date'
     ]));
 
+    const closedDate = parseDate(findColumn(row, [
+      'Closed Date',
+      'Close Date'
+    ]));
+
     const endDate = parseDate(findColumn(row, [
       'Closed Date',
       'Close Date',
       'End Date',
       'Due Date',
       'Completion Date'
+    ]));
+
+    const dueDate = parseDate(findColumn(row, [
+      'Due Date'
     ]));
 
     const sourceRecordId = findColumn(row, [
@@ -158,7 +176,11 @@ const OrgCSEngagementAdapter: ImportAdapter = {
     const titleNormalization = normalizeTitle(name);
     const category = mapTemplateToCategory(template);
     const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement');
-    const status = mapStatus(stage, 'engagement') || inferStatusFromDates(startDate, endDate, 'engagement');
+    let status = mapStatus(stage, 'engagement') || inferStatusFromDates(startDate, endDate, 'engagement');
+
+    if (!closedDate && dueDate) {
+      status = startDate && isFutureDate(startDate) ? 'not_started' : 'in_progress';
+    }
 
     const allFlags = [...titleNormalization.flags, ...classification.flags];
     if (stage?.toLowerCase().includes('cancel')) {
