@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
@@ -68,6 +68,9 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     errors: Array<{ candidate: { rawTitle: string }; error: string }>;
   } | null>(null);
 
+  // Debounced update refs
+  const titleUpdateTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
   useEffect(() => {
     loadRoadmapData();
     if (batchId && batchId !== 'new') {
@@ -76,6 +79,14 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       setStep('upload');
     }
   }, [batchId]);
+
+  // Cleanup pending title update timeouts on unmount
+  useEffect(() => {
+    return () => {
+      titleUpdateTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      titleUpdateTimeouts.current.clear();
+    };
+  }, []);
 
   const loadRoadmapData = async () => {
     try {
@@ -151,7 +162,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   }, [filteredCandidates]);
 
   const candidatesWithGoals = useMemo(() => {
-    return includedCandidates.filter(c => c.destinationGoalId);
+    return includedCandidates.filter(c => c.destinationGoalId && c.destinationGoalId !== 'ongoing');
   }, [includedCandidates]);
 
   const candidatesReadyToImport = useMemo(() => {
@@ -259,17 +270,21 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       }
 
       if (field === 'destinationGoalId' && value) {
-        const selectedGoal = roadmapData.goals.find(g => g.id === value);
-        if (selectedGoal) {
-          const currentCandidate = candidates.find(c => c.id === candidateId);
-          const currentInitiativeId = currentCandidate?.destinationInitiativeId;
+        if (value === 'ongoing') {
+          update.destinationInitiativeId = undefined;
+        } else {
+          const selectedGoal = roadmapData.goals.find(g => g.id === value);
+          if (selectedGoal) {
+            const currentCandidate = candidates.find(c => c.id === candidateId);
+            const currentInitiativeId = currentCandidate?.destinationInitiativeId;
 
-          if (selectedGoal.initiatives.length === 0) {
-            update.destinationInitiativeId = undefined;
-          } else if (currentInitiativeId) {
-            const initiativeStillValid = selectedGoal.initiatives.some(i => i.id === currentInitiativeId);
-            if (!initiativeStillValid) {
+            if (selectedGoal.initiatives.length === 0) {
               update.destinationInitiativeId = undefined;
+            } else if (currentInitiativeId) {
+              const initiativeStillValid = selectedGoal.initiatives.some(i => i.id === currentInitiativeId);
+              if (!initiativeStillValid) {
+                update.destinationInitiativeId = undefined;
+              }
             }
           }
         }
@@ -291,6 +306,35 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       alert(error instanceof Error ? error.message : `Failed to update ${field}`);
     }
   };
+
+  // Debounced title update to prevent re-renders during typing
+  const handleTitleUpdate = useCallback((candidateId: string, value: string) => {
+    // Clear any existing timeout for this candidate
+    const existingTimeout = titleUpdateTimeouts.current.get(candidateId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Update local state immediately for smooth typing
+    setCandidates(prev =>
+      prev.map(c => (c.id === candidateId ? { ...c, overrideTitle: value } : c))
+    );
+
+    // Debounce the backend update
+    const timeout = setTimeout(async () => {
+      try {
+        await handleUpdateField(candidateId, 'overrideTitle', value);
+        titleUpdateTimeouts.current.delete(candidateId);
+      } catch (error) {
+        // Revert local state on error
+        setCandidates(prev =>
+          prev.map(c => (c.id === candidateId ? { ...c, overrideTitle: c.overrideTitle } : c))
+        );
+      }
+    }, 500); // 500ms delay
+
+    titleUpdateTimeouts.current.set(candidateId, timeout);
+  }, []);
 
   const handleBulkAssignGoal = async () => {
     if (!bulkGoalId) {
@@ -405,7 +449,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
           <button
@@ -689,8 +733,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                               <input
                                 type="text"
                                 value={displayTitle}
-                                onChange={(e) => handleUpdateField(candidate.id, 'overrideTitle', e.target.value)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                                onChange={(e) => handleTitleUpdate(candidate.id, e.target.value)}
+                                className="min-w-64 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
                                 placeholder="Enter title..."
                               />
                             </td>
@@ -714,10 +758,13 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                               <select
                                 value={candidate.destinationGoalId || ''}
                                 onChange={(e) => handleUpdateField(candidate.id, 'destinationGoalId', e.target.value)}
-                                className={`w-full px-2 py-1 border rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none ${!candidate.destinationGoalId ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
+                                className={`min-w-48 px-2 py-1 border rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none ${!candidate.destinationGoalId || candidate.destinationGoalId === '' ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
                               >
                                 <option value="" className="text-red-600">
                                   {roadmapData.goals.length === 0 ? 'No goals available' : 'Required - Select goal...'}
+                                </option>
+                                <option value="ongoing" className="text-blue-600 font-semibold">
+                                  📌 Ongoing Activities
                                 </option>
                                 {roadmapData.goals.map(goal => (
                                   <option key={goal.id} value={goal.id}>
@@ -727,15 +774,17 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                               </select>
                             </td>
                             <td className="p-3">
-                              {!candidate.destinationGoalId ? (
-                                <span className="text-xs text-gray-400 italic">Select goal first</span>
+                              {!candidate.destinationGoalId || candidate.destinationGoalId === 'ongoing' ? (
+                                <span className="text-xs text-gray-400 italic">
+                                  {candidate.destinationGoalId === 'ongoing' ? 'Not applicable for ongoing activities' : 'Select goal first'}
+                                </span>
                               ) : goalInitiatives.length === 0 ? (
                                 <span className="text-xs text-gray-500 italic">None available</span>
                               ) : (
                                 <select
                                   value={candidate.destinationInitiativeId || ''}
                                   onChange={(e) => handleUpdateField(candidate.id, 'destinationInitiativeId', e.target.value)}
-                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                                  className="min-w-48 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
                                 >
                                   <option value="">(Optional)</option>
                                   {goalInitiatives.map(initiative => (

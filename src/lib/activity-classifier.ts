@@ -72,7 +72,7 @@ export function classifyActivity(
     };
   }
 
-  if (durationDays > 45 && !sameMonth) {
+  if (durationDays > 90 && !sameMonth) {
     const quarters = getQuartersInRange(start, end, fiscalConfig);
     return {
       activityType: 'spanning',

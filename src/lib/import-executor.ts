@@ -92,26 +92,10 @@ export async function executeImport(
         continue;
       }
 
-      const goalId = candidate.destinationGoalId || candidate.goalId;
-      if (!goalId) {
-        failedImports.push({ candidate, error: 'Goal required before import' });
-        await updateCandidate(candidate.id, {
-          errors: ['Goal required before import'],
-        });
-        continue;
-      }
-
-      const targetGoal = updatedData.goals.find(g => g.id === goalId);
-      if (!targetGoal) {
-        failedImports.push({ candidate, error: 'Selected goal not found' });
-        await updateCandidate(candidate.id, {
-          errors: ['Selected goal not found'],
-        });
-        continue;
-      }
-
+      const goalId = candidate.destinationGoalId === 'ongoing'
+        ? null
+        : (candidate.destinationGoalId || candidate.goalId);
       const initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
-
       const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
 
       const activity: Activity = {
@@ -121,45 +105,60 @@ export async function executeImport(
         owner: finalOwner,
         status: finalStatus,
         health: candidate.health,
-        start_month: finalStartMonth,
-        end_month: finalEndMonth,
+        start_month: finalStartMonth - 1, // Convert from 1-12 to 0-11
+        end_month: (finalEndMonth ?? finalStartMonth) - 1, // Convert from 1-12 to 0-11, default to start
         sourceType: candidate.sourceType,
         sourceSystem: candidate.sourceSystem,
         sourceRecordId: candidate.sourceRecordId,
         description: appendMetadataToDescription(undefined, candidate),
       };
 
-      if (candidate.activityType === 'spanning' && candidate.quarters) {
+      const targetQuarter = determineQuarterFromActivity(activity, fiscalConfig);
+
+      if (goalId) {
+        const targetGoal = updatedData.goals.find(g => g.id === goalId);
+        if (!targetGoal) {
+          failedImports.push({ candidate, error: 'Selected goal not found' });
+          await updateCandidate(candidate.id, {
+            errors: ['Selected goal not found'],
+          });
+          continue;
+        }
+
+        let targetInitiative: any;
+        if (initiativeId) {
+          targetInitiative = targetGoal.initiatives.find(i => i.id === initiativeId);
+          if (!targetInitiative) {
+            failedImports.push({ candidate, error: 'Selected initiative not found' });
+            await updateCandidate(candidate.id, {
+              errors: ['Selected initiative not found'],
+            });
+            continue;
+          }
+        } else {
+          // Use first initiative if none specified
+          if (!targetGoal.initiatives || targetGoal.initiatives.length === 0) {
+            failedImports.push({ candidate, error: 'Goal has no initiatives' });
+            await updateCandidate(candidate.id, {
+              errors: ['Goal has no initiatives'],
+            });
+            continue;
+          }
+          targetInitiative = targetGoal.initiatives[0];
+        }
+
+        targetInitiative.activities[targetQuarter].push(activity);
+      } else {
         const spanningActivity: any = {
           ...activity,
-          quarters: candidate.quarters,
+          quarters: candidate.quarters ? candidate.quarters : [targetQuarter],
         };
-        delete spanningActivity.start_month;
-        delete spanningActivity.end_month;
+        // Keep start_month and end_month for proper positioning
 
         if (!updatedData.accountSpanning) {
           updatedData.accountSpanning = [];
         }
         updatedData.accountSpanning.push(spanningActivity);
-      } else {
-        const targetQuarter = determineQuarterFromActivity(activity, fiscalConfig);
-
-        if (initiativeId) {
-          const targetInitiative = targetGoal.initiatives.find(i => i.id === initiativeId);
-          if (targetInitiative) {
-            targetInitiative.activities[targetQuarter].push(activity);
-          } else {
-            if (!targetGoal.activities) {
-              targetGoal.activities = { q1: [], q2: [], q3: [], q4: [] };
-            }
-            targetGoal.activities[targetQuarter].push(activity);
-          }
-        } else {
-          if (!targetGoal.activities) {
-            targetGoal.activities = { q1: [], q2: [], q3: [], q4: [] };
-          }
-          targetGoal.activities[targetQuarter].push(activity);
-        }
       }
 
       await updateCandidate(candidate.id, {

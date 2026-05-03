@@ -584,10 +584,27 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             {(data.accountSpanning || []).map((sp, index) => {
               const bgColor = getTypeColor(sp.type);
               const textColor = getTextColor(bgColor);
-              const sortedQuarters = [...(sp.quarters || [])].sort();
-              const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
-              const minIdx = Math.min(...qIndexes);
-              const maxIdx = Math.max(...qIndexes);
+              
+              // Calculate quarters spanned based on start_month and end_month
+              let qIndexes: number[] = [];
+              if (sp.start_month !== undefined && sp.end_month !== undefined) {
+                const startPos = getMonthPosition(sp.start_month, fiscalConfig);
+                const endPos = getMonthPosition(sp.end_month, fiscalConfig);
+                if (startPos && endPos) {
+                  const startQuarter = startPos.quarterIndex;
+                  const endQuarter = endPos.quarterIndex;
+                  for (let q = startQuarter; q <= endQuarter; q++) {
+                    qIndexes.push(q);
+                  }
+                }
+              } else {
+                // Fallback to quarters array
+                const sortedQuarters = [...(sp.quarters || [])].sort();
+                qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
+              }
+              
+              const minIdx = qIndexes.length > 0 ? Math.min(...qIndexes) : 0;
+              const maxIdx = qIndexes.length > 0 ? Math.max(...qIndexes) : 0;
               const isFirst = index === 0;
               const isLast = index === (data.accountSpanning || []).length - 1;
               const healthColor = getHealthColor(sp.health);
@@ -814,25 +831,26 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 return (b.endCol - b.startCol) - (a.endCol - a.startCol);
               });
 
-              const rows: typeof activitiesWithSpan[] = [];
+              const spanRows: Array<typeof activitiesWithSpan> = [];
               activitiesWithSpan.forEach(item => {
                 let placed = false;
-                for (let r = 0; r < rows.length; r++) {
-                  const conflicts = rows[r].some(existing =>
+                for (let r = 0; r < spanRows.length; r++) {
+                  const conflicts = spanRows[r].some(existing =>
                     !(item.endCol <= existing.startCol || item.startCol >= existing.endCol)
                   );
                   if (!conflicts) {
-                    rows[r].push({ ...item, row: r });
+                    spanRows[r].push({ ...item, row: r });
                     placed = true;
                     break;
                   }
                 }
                 if (!placed) {
-                  rows.push([{ ...item, row: rows.length }]);
+                  spanRows.push([{ ...item, row: spanRows.length }]);
                 }
               });
 
-              const flatActivitiesWithRows = rows.flat();
+              const flatActivitiesWithRows = spanRows.flat();
+              const verticalActivities = flatActivitiesWithRows.map((item, index) => ({ ...item, row: index }));
 
               return (
                 <div key={initiative.id}>
@@ -869,108 +887,86 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           {initiative.label}
                         </div>
                       </div>
-                      <div className="p-3 grid gap-2" style={{ background: 'var(--roadmap-quarter-bg)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                        {spanningActivities.map((sp) => {
-                          const bgColor = getTypeColor(sp.type);
+                      <div className="p-3" style={{ background: 'var(--roadmap-quarter-bg)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: 'min-content', gap: '8px' }}>
+                        {flatActivitiesWithRows.map((item) => {
+                          const bgColor = getTypeColor(item.activity.type);
                           const textColor = getTextColor(bgColor);
-                          const sortedQuarters = [...(sp.quarters || [])].sort();
-                          const qIndexes = sortedQuarters.map(q => qkeys.indexOf(q as any));
-                          const minIdx = Math.min(...qIndexes);
-                          const maxIdx = Math.max(...qIndexes);
-                          const healthColor = getHealthColor(sp.health);
-                          const dropdownId = `spanning-${goal.id}-${initiative.id}-${sp.id}`;
+                          const healthColor = getHealthColor(item.activity.health);
+                          const dropdownId = `spanning-${goal.id}-${initiative.id}-${item.activity.id}`;
 
                           return (
-                            <ActivityTooltip key={sp.id} text={sp.name}>
+                            <ActivityTooltip key={item.activity.id} text={item.activity.name}>
                               <div
-                                className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                                 style={{
                                   background: bgColor,
                                   color: textColor,
-                                  gridColumnStart: minIdx + 1,
-                                  gridColumnEnd: maxIdx + 2,
+                                  gridColumnStart: item.startCol,
+                                  gridColumnEnd: item.endCol,
+                                  gridRowStart: item.row + 1,
                                   boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
                                 }}
-                                title={sp.name}
+                                title={item.activity.name}
                               >
-                              <div
-                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                style={{ background: healthColor }}
-                                title={getHealthLabel(sp.health)}
-                              />
-                              {sp.isCriticalPath && (
-                                <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
-                              )}
-                              <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                                {sp.name}
-                              </span>
-                              <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
-                                  }}
-                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
-                                >
-                                  <Copy size={9} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' }, sp);
-                                  }}
-                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
-                                >
-                                  <Pencil size={9} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteSpanning(goal.id, initiative.id, sp.id);
-                                  }}
-                                  className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
-                                >
-                                  <X size={10} />
-                                </button>
-                              </div>
-                              {copyDropdown === dropdownId && (
                                 <div
-                                  className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[160px]"
-                                  style={{
-                                    borderColor: 'var(--roadmap-border)',
-                                    background: 'var(--surface)',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)'
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <div className="text-xs font-semibold mb-2" style={{ color: 'var(--roadmap-text-primary)' }}>Copy as:</div>
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ background: healthColor }}
+                                  title={getHealthLabel(item.activity.health)}
+                                />
+                                {item.activity.isCriticalPath && (
+                                  <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                                )}
+                                <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                                  {item.activity.name}
+                                </span>
+                                <div className="hidden group-hover:flex absolute right-2 items-center gap-1">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      copyInitiativeSpanningActivity(goal.id, initiative.id, sp.id);
+                                      setCopyDropdown(copyDropdown === dropdownId ? null : dropdownId);
                                     }}
-                                    className="w-full text-left px-2 py-1 text-xs rounded transition-colors mb-1"
-                                    style={{ color: 'var(--roadmap-text-primary)' }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.background = 'transparent';
-                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 transition-colors"
                                   >
-                                    Spanning Activity
+                                    <Copy size={9} />
                                   </button>
-                                  <div className="text-xs font-semibold mt-2 mb-1" style={{ color: 'var(--roadmap-text-primary)' }}>Copy to quarter:</div>
-                                  {qkeys.map((targetQ) => (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onOpenEditModal({ goalId: goal.id, initiativeId: initiative.id, quarter: 'spanning' }, item.activity);
+                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                                  >
+                                    <Pencil size={9} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteSpanning(goal.id, initiative.id, item.activity.id);
+                                    }}
+                                    className="bg-black/40 hover:bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                                {copyDropdown === dropdownId && (
+                                  <div
+                                    className="fixed border rounded-lg shadow-lg p-2 z-[100] min-w-[160px]"
+                                    style={{
+                                      borderColor: 'var(--roadmap-border)',
+                                      background: 'var(--surface)',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)'
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="text-xs font-semibold mb-2" style={{ color: 'var(--roadmap-text-primary)' }}>Copy as:</div>
                                     <button
-                                      key={targetQ}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        copyInitiativeSpanningActivity(goal.id, initiative.id, sp.id, targetQ);
+                                        copyInitiativeSpanningActivity(goal.id, initiative.id, item.activity.id);
                                       }}
-                                      className="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                                      className="w-full text-left px-2 py-1 text-xs rounded transition-colors mb-1"
                                       style={{ color: 'var(--roadmap-text-primary)' }}
                                       onMouseEnter={(e) => {
                                         e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
@@ -979,12 +975,31 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                         e.currentTarget.style.background = 'transparent';
                                       }}
                                     >
-                                      {getQuarterTitle(targetQ)}
+                                      Spanning Activity
                                     </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                    <div className="text-xs font-semibold mt-2 mb-1" style={{ color: 'var(--roadmap-text-primary)' }}>Copy to quarter:</div>
+                                    {qkeys.map((targetQ) => (
+                                      <button
+                                        key={targetQ}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          copyInitiativeSpanningActivity(goal.id, initiative.id, item.activity.id, targetQ);
+                                        }}
+                                        className="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                                        style={{ color: 'var(--roadmap-text-primary)' }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background = 'transparent';
+                                        }}
+                                      >
+                                        {getQuarterTitle(targetQ)}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </ActivityTooltip>
                           );
                         })}
@@ -1048,36 +1063,21 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     </div>
 
                     <div className="relative" style={{ background: 'var(--roadmap-quarter-bg)' }}>
-                      {/* Activities container with absolute positioning */}
                       <div
                         style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+                          gridAutoRows: 'minmax(42px, auto)',
+                          gap: '8px',
                           position: 'relative',
-                          minHeight: `${(rows.length || 1) * 50 + 70}px`,
+                          minHeight: `${(spanRows.length || 1) * 58 + 60}px`,
                           padding: '8px 8px 60px 8px'
                         }}
                       >
-                        {flatActivitiesWithRows.map((item) => {
+                        {verticalActivities.map((item) => {
                           const bgColor = getTypeColor(item.activity.type);
                           const textColor = getTextColor(bgColor);
                           const dropdownId = `${goal.id}-${initiative.id}-${item.activity.id}`;
-
-                          // Calculate position as percentage of total width
-                          const allRoadmapMonths = getAllRoadmapMonths(fiscalConfig);
-                          const startMonthNum = item.activity.start_month ? Number(item.activity.start_month) : null;
-                          const endMonthNum = item.activity.end_month ? Number(item.activity.end_month) : null;
-
-                          let leftPercent = 0;
-                          let widthPercent = 100;
-
-                          if (startMonthNum !== null && endMonthNum !== null) {
-                            const startIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === startMonthNum);
-                            const endIdx = allRoadmapMonths.findIndex(m => m.calendarMonth === endMonthNum);
-
-                            if (startIdx !== -1 && endIdx !== -1) {
-                              leftPercent = (startIdx / 12) * 100;
-                              widthPercent = ((endIdx - startIdx + 1) / 12) * 100;
-                            }
-                          }
 
                           const activities = initiative.activities[item.quarter as keyof typeof initiative.activities];
                           const activityIndex = activities.findIndex(a => a.id === item.activity.id);
@@ -1090,11 +1090,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                             <ActivityTooltip key={item.activity.id} text={item.activity.name}>
                               <div
                                 style={{
-                                  position: 'absolute',
-                                  left: `${leftPercent}%`,
-                                  width: `${widthPercent}%`,
-                                  top: `${item.row * 50 + 8}px`,
-                                  height: '42px',
+                                  gridColumnStart: item.startCol,
+                                  gridColumnEnd: item.endCol,
+                                  gridRowStart: item.row + 1,
                                   padding: '0 2px',
                                   zIndex: 30
                                 }}
@@ -1292,6 +1290,61 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 </div>
               );
             })}
+
+            {/* Goal-Level Activities (for imports without specific initiative) */}
+            {goal.activities && (qkeys.some(qk => (goal.activities?.[qk as keyof typeof goal.activities] || []).length > 0)) && (
+              <div className="border-t" style={{ borderColor: 'var(--roadmap-border)' }}>
+                <div className="grid grid-cols-[200px_1fr]" style={{ background: 'var(--roadmap-cell-bg)' }}>
+                  <div className="py-4 px-4 border-r flex flex-col justify-center" style={{
+                    borderColor: 'var(--roadmap-border)',
+                    background: 'var(--roadmap-cell-bg)'
+                  }}>
+                    <div className="text-xs font-bold uppercase tracking-wider" style={{
+                      color: isDarkCanvas ? 'var(--roadmap-text-primary)' : 'var(--primary)',
+                      letterSpacing: '0.05em'
+                    }}>
+                      Activities
+                    </div>
+                  </div>
+                  <div className="p-3 grid gap-2" style={{ background: 'var(--roadmap-quarter-bg)', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                    {qkeys.flatMap(qk => (goal.activities?.[qk as keyof typeof goal.activities] || []).map((activity) => {
+                      const bgColor = getTypeColor(activity.type);
+                      const textColor = getTextColor(bgColor);
+                      const healthColor = getHealthColor(activity.health);
+                      const qIdx = qkeys.indexOf(qk);
+
+                      return (
+                        <ActivityTooltip key={activity.id} text={activity.name}>
+                          <div
+                            onClick={() => setDetailCardActivity({ activity, goal, initiative: goal.initiatives[0], quarter: qk })}
+                            className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 cursor-pointer ${activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                            style={{
+                              background: bgColor,
+                              color: textColor,
+                              gridColumn: qIdx + 1,
+                              boxShadow: isDarkCanvas ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                            title={activity.name}
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ background: healthColor }}
+                              title={getHealthLabel(activity.health)}
+                            />
+                            {activity.isCriticalPath && (
+                              <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                            )}
+                            <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                              {activity.name}
+                            </span>
+                          </div>
+                        </ActivityTooltip>
+                      );
+                    }))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           );
         })}

@@ -59,7 +59,7 @@ export default function Dashboard() {
         {
           id: 'g2',
           number: 'Goal #2',
-          title: 'Customer Retention',
+          title: 'Org Health, Security & Performance',
           color: '#45C65A',
           initiatives: [
             {
