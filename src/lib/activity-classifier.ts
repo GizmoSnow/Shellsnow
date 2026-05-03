@@ -1,4 +1,4 @@
-import type { ActivityType, Quarter } from './import-types';
+import type { CandidateActivityType, Quarter, ActivityType } from './import-types';
 import { extractQuarterFromTitle } from './title-normalizer';
 import { getMonthPosition, type FiscalYearConfig } from './fiscal-year';
 
@@ -27,7 +27,7 @@ export function getActivityTypeFromTemplate(rawTemplate?: string): ActivityType 
 }
 
 export interface ClassificationResult {
-  activityType: ActivityType;
+  activityType: CandidateActivityType;
   startMonth?: number;
   endMonth?: number;
   quarters?: Quarter[];
@@ -43,6 +43,13 @@ export function classifyActivity(
   rawTemplate?: string
 ): ClassificationResult {
   const flags: string[] = [];
+  const templateActivityType = getActivityTypeFromTemplate(rawTemplate);
+  const candidateTemplateType: CandidateActivityType | undefined =
+    templateActivityType === 'standard' ||
+    templateActivityType === 'spanning' ||
+    templateActivityType === 'quarter'
+      ? templateActivityType
+      : undefined;
 
   const titleQuarter = extractQuarterFromTitle(title);
 
@@ -60,11 +67,9 @@ export function classifyActivity(
     };
   }
 
-  const templateActivityType = getActivityTypeFromTemplate(rawTemplate);
-
   if (!startDate && !endDate) {
     return {
-      activityType: templateActivityType || 'standard',
+      activityType: candidateTemplateType || 'standard',
       flags: ['MissingDates'],
     };
   }
@@ -92,7 +97,7 @@ export function classifyActivity(
 
   if (sameMonth || sourceType === 'training') {
     return {
-      activityType: templateActivityType || 'standard',
+      activityType: candidateTemplateType || 'standard',
       startMonth,
       endMonth: startMonth,
       flags,
@@ -112,7 +117,7 @@ export function classifyActivity(
 
   const quarters = getQuartersInRange(start, end, fiscalConfig);
   return {
-    activityType: templateActivityType || 'standard',
+    activityType: candidateTemplateType || 'standard',
     startMonth,
     endMonth,
     quarters,

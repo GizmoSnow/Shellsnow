@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, Upload, AlertCircle, FileText, CheckSquare, Square, AlertTriangle, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
-import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
+import type { CandidateActivityType, NormalizedActivityCandidate, SourceType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
-import { getActivityTypeFromTemplate } from '../lib/activity-classifier';
 import type { RoadmapData } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from '../lib/router';
@@ -76,18 +75,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   // Debounced update refs
   const titleUpdateTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  const getStagingType = (candidate: NormalizedActivityCandidate): ActivityType => {
-    return (
-      candidate.overrideActivityType ||
-      getActivityTypeFromTemplate(candidate.rawTemplate) ||
-      (candidate.sourceType === 'engagement'
-        ? 'architect'
-        : candidate.sourceType === 'support'
-        ? 'specialist'
-        : candidate.sourceType === 'training'
-        ? 'enablement'
-        : 'csm')
-    );
+  const getStagingType = (candidate: NormalizedActivityCandidate): CandidateActivityType => {
+    return candidate.overrideActivityType || candidate.activityType || 'standard';
   };
 
   // Cleanup pending title update timeouts on unmount
@@ -285,7 +274,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       const update: Partial<NormalizedActivityCandidate> = {};
 
       if (field === 'overrideActivityType') {
-        update.overrideActivityType = value as ActivityType | undefined;
+        update.overrideActivityType = value as CandidateActivityType | undefined;
       } else if (field === 'overrideOwner') {
         update.overrideOwner = value as Owner | undefined;
       } else if (field === 'destinationGoalId') {
@@ -788,15 +777,12 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                             <td className="p-3">
                               <select
                                 value={candidate.overrideActivityType || getStagingType(candidate)}
-                                onChange={(e) => handleUpdateField(candidate.id, 'overrideActivityType', e.target.value as ActivityType)}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideActivityType', e.target.value as CandidateActivityType)}
                                 className="min-w-36 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
                               >
-                                <option value="csm">CSM</option>
-                                <option value="architect">Architect</option>
-                                <option value="specialist">Specialist</option>
-                                <option value="advisory">Advisory</option>
-                                <option value="enablement">Enablement</option>
-                                <option value="event">Event</option>
+                                <option value="standard">Standard</option>
+                                <option value="spanning">Spanning</option>
+                                <option value="quarter">Quarter</option>
                               </select>
                             </td>
                             <td className="p-3">

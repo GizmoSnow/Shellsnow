@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { X, Upload, Check, XCircle, CreditCard as Edit2, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight } from 'lucide-react';
-import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
+import type { CandidateActivityType, NormalizedActivityCandidate, SourceType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 import type { RoadmapData } from '../lib/supabase';
 
@@ -902,7 +902,7 @@ export function ImportStagingModal({ roadmapId, userId, batchId: existingBatchId
                           {isEditing ? (
                             <select
                               value={editForm.overrideActivityType || ''}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, overrideActivityType: e.target.value as ActivityType }))}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, overrideActivityType: e.target.value as CandidateActivityType }))}
                               className="px-2 py-1 border rounded text-sm"
                             >
                               <option value="standard">Standard</option>

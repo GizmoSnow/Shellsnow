@@ -1,10 +1,9 @@
 export type SourceSystem = 'orgcs_engagement' | 'org62_support' | 'org62_training';
 export type SourceType = 'engagement' | 'support' | 'training';
 export type Owner = 'salesforce' | 'partner' | 'customer';
+export type CandidateActivityType = 'standard' | 'spanning' | 'quarter';
 export type ActivityType =
-  | 'standard'
-  | 'spanning'
-  | 'quarter'
+  | CandidateActivityType
   | 'csm'
   | 'architect'
   | 'specialist'
@@ -61,7 +60,7 @@ export interface NormalizedActivityCandidate {
 
   owner: Owner;
 
-  activityType: ActivityType;
+  activityType: CandidateActivityType;
   startMonth?: number;
   endMonth?: number;
   quarters?: Quarter[];
@@ -86,7 +85,7 @@ export interface NormalizedActivityCandidate {
   overrideEndDate?: string;
   overrideStartMonth?: number;
   overrideEndMonth?: number;
-  overrideActivityType?: ActivityType;
+  overrideActivityType?: CandidateActivityType;
   overrideOwner?: Owner;
   overrideStatus?: Status;
 
