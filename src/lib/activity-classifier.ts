@@ -8,7 +8,7 @@ const TEMPLATE_ACTIVITY_TYPE_MAP: Record<string, ActivityType> = {
   'Architect: Architect Consultation': 'architect',
   'Architect: Architecture Design Review': 'architect',
   'Architect: Solution Design & Architecture': 'architect',
-  'Success Review': 'specialist',
+  'Success Review': 'csm',
   'Agentforce Activate': 'csm',
   'Agentforce Conversation': 'csm',
   'Contact Review': 'csm',
