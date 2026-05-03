@@ -175,7 +175,7 @@ const OrgCSEngagementAdapter: ImportAdapter = {
 
     const titleNormalization = normalizeTitle(name);
     const category = mapTemplateToCategory(template);
-    const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement');
+    const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement', undefined, template);
     let status = mapStatus(stage, 'engagement') || inferStatusFromDates(startDate, endDate, 'engagement');
 
     if (!closedDate && dueDate) {
@@ -342,7 +342,7 @@ const Org62SupportAdapter: ImportAdapter = {
     const isClosed = closedFlag?.toLowerCase() === 'true' || closedFlag?.toLowerCase() === 'yes' || closedFlag === '1';
 
     const titleNormalization = normalizeTitle(subject);
-    const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support');
+    const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support', undefined, caseType);
 
     // If we have a closed flag, use it to determine status, otherwise fall back to normal logic
     let status = mapStatus(caseStatus, 'support') || inferStatusFromDates(createdDate, closedDate, 'support');
@@ -508,7 +508,7 @@ const Org62TrainingAdapter: ImportAdapter = {
     ]);
 
     const titleNormalization = normalizeTitle(title);
-    const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'training');
+    const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'training', undefined, courseType);
     const status = mapStatus(trainingStatus, 'training') || inferStatusFromDates(startDate, endDate, 'training');
 
     const allFlags = [...titleNormalization.flags, ...classification.flags];

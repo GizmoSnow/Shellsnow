@@ -6,6 +6,7 @@
 - Uses Tailwind CSS for styling and Supabase for authentication and data persistence.
 - No separate backend service code is present in this repository; all app logic runs in the browser and talks directly to Supabase.
 - Main app code is under `src/`; routing and page composition are in `src/App.tsx` and `src/pages/`.
+- Import staging and roadmap transformation logic live in `src/pages/ImportStagingPage.tsx` and `src/lib/import-*`.
 
 ## Key commands
 
@@ -22,27 +23,37 @@
 - `src/main.tsx` – app bootstrap
 - `src/App.tsx` – top-level app with `AuthProvider`, `ThemeProvider`, and router logic
 - `src/contexts/` – auth and theme providers
-- `src/pages/` – page-level screens like `Dashboard`, `Login`, `RoadmapBuilder`, and import workflows
-- `src/lib/supabase.ts` – Supabase client and roadmap type definitions
+- `src/pages/` – page-level screens such as `Dashboard`, `Login`, `RoadmapBuilder`, `ImportStagingPage`, `ImportWorkspace`
+- `src/components/` – reusable UI components like modals, grid, and import workflow helpers
+- `src/lib/supabase.ts` – Supabase client, auth helpers, and roadmap type definitions
+- `src/lib/import-*` – import adapter, staging, normalization, validation, and execution logic
 - `supabase/migrations/` – database schema and RLS migration history
 
 ## Project conventions and behavior
 
-- Environment variables are required at runtime: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- `src/lib/supabase.ts` explicitly throws when those env vars are missing.
-- Routing is custom and based on pathname matching in `src/App.tsx`.
-- Roadmap state is stored as JSON inside Supabase `roadmaps` rows.
-- Authentication flows are handled client-side with Supabase Auth.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are required at runtime.
+- Supabase client initialization in `src/lib/supabase.ts` throws if env vars are missing.
+- The app is client-side only; do not introduce a separate backend service.
+- Roadmap state is stored as JSON inside `roadmaps` rows.
+- Most data operations are handled through Supabase and browser state.
+- Avoid breaking page-level data loading or auth flows when updating import logic.
+
+## Import workflow guidance
+
+- The import staging UI is in `src/pages/ImportStagingPage.tsx`.
+- Candidate normalization and validation logic is spread across `src/lib/import-*`.
+- Data can be imported into roadmap goals, initiatives, or account-level spanning activities.
+- Preserve the existing goal/initiative and account-spanning semantics when modifying import behavior.
 
 ## What to prioritize when modifying code
 
-- Keep Supabase config and auth flow intact when changing page or data loading logic.
-- Preserve JSON roadmap data shapes defined in `src/lib/supabase.ts`; these types are relied on across the app.
-- When refactoring UI, prefer existing `src/pages/`, `src/components/`, and `src/lib/` module boundaries.
-- Avoid assumptions about a separate server—changes should reflect a frontend app with direct Supabase integration.
+- Preserve Supabase config and auth flow.
+- Respect type definitions in `src/lib/supabase.ts` and import candidate shapes in `src/lib/import-types.ts`.
+- Prefer existing UI boundaries: `src/pages/`, `src/components/`, `src/lib/`.
+- When refactoring, favor minimal changes to avoid altering import or roadmap state semantics.
 
 ## When in doubt
 
 - Check `README.md` for setup instructions and feature expectations.
-- Review `supabase/migrations/` for database structure and security policy changes.
+- Review `supabase/migrations/` for database structure and RLS policy changes.
 - Use `npm run lint` and `npm run typecheck` to verify code quality and type safety.

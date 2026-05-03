@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
+import { getActivityTypeFromTemplate } from '../lib/activity-classifier';
 import type { RoadmapData } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from '../lib/router';
@@ -79,6 +80,20 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       setStep('upload');
     }
   }, [batchId]);
+
+  const getStagingType = (candidate: NormalizedActivityCandidate): ActivityType => {
+    return (
+      candidate.overrideActivityType ||
+      getActivityTypeFromTemplate(candidate.rawTemplate) ||
+      (candidate.sourceType === 'engagement'
+        ? 'architect'
+        : candidate.sourceType === 'support'
+        ? 'specialist'
+        : candidate.sourceType === 'training'
+        ? 'enablement'
+        : 'csm')
+    );
+  };
 
   // Cleanup pending title update timeouts on unmount
   useEffect(() => {
@@ -678,6 +693,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Raw Title</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                      <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Owner</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Goal</th>
@@ -737,6 +754,31 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                 className="min-w-64 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
                                 placeholder="Enter title..."
                               />
+                            </td>
+                            <td className="p-3">
+                              <select
+                                value={candidate.overrideActivityType || getStagingType(candidate)}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideActivityType', e.target.value as ActivityType)}
+                                className="min-w-36 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                              >
+                                <option value="csm">CSM</option>
+                                <option value="architect">Architect</option>
+                                <option value="specialist">Specialist</option>
+                                <option value="advisory">Advisory</option>
+                                <option value="enablement">Enablement</option>
+                                <option value="event">Event</option>
+                              </select>
+                            </td>
+                            <td className="p-3">
+                              <select
+                                value={candidate.overrideOwner || candidate.owner || 'salesforce'}
+                                onChange={(e) => handleUpdateField(candidate.id, 'overrideOwner', e.target.value as Owner)}
+                                className="min-w-28 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                              >
+                                <option value="salesforce">Salesforce</option>
+                                <option value="partner">Partner</option>
+                                <option value="customer">Customer</option>
+                              </select>
                             </td>
                             <td className="p-3">
                               <input

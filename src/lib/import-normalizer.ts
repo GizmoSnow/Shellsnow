@@ -29,7 +29,7 @@ export function normalizeEngagementReport(
   const titleNormalization = normalizeTitle(name);
   const category = mapTemplateToCategory(template);
 
-  const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement');
+  const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement', undefined, template);
 
   const status = mapStatus(stage, 'engagement') || inferStatusFromDates(startDate, endDate, 'engagement');
 
@@ -81,7 +81,7 @@ export function normalizeSupportReport(
   const closedDate = parseDate(findColumn(row, ['Closed Date', 'Date Closed', 'Resolution Date']));
 
   const titleNormalization = normalizeTitle(subject);
-  const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support');
+  const classification = classifyActivity(titleNormalization.normalizedTitle, createdDate, closedDate, 'support', undefined, caseType);
 
   const status = mapStatus(caseStatus, 'support') || inferStatusFromDates(createdDate, closedDate, 'support');
 
@@ -136,7 +136,7 @@ export function normalizeTrainingReport(
   const endDate = findColumn(row, ['End Date']) ? parseDate(findColumn(row, ['End Date'])) : completedDate;
 
   const titleNormalization = normalizeTitle(title);
-  const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'training');
+  const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'training', undefined, courseType);
 
   const status = mapStatus(trainingStatus, 'training') || inferStatusFromDates(startDate, endDate, 'training');
 

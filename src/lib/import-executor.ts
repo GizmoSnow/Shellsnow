@@ -4,6 +4,7 @@ import { updateCandidate, updateCandidates, updateBatchCounts } from './import-p
 import { appendMetadataToDescription } from './import-metadata-formatter';
 import { getAllRoadmapMonths, type FiscalYearConfig } from './fiscal-year';
 import { validateCandidate, buildErrorMessages } from './import-validation';
+import { getActivityTypeFromTemplate } from './activity-classifier';
 
 export interface ImportResult {
   importedCount: number;
@@ -96,7 +97,7 @@ export async function executeImport(
         ? null
         : (candidate.destinationGoalId || candidate.goalId);
       const initiativeId = candidate.destinationInitiativeId || candidate.initiativeId;
-      const typeKey = mapSourceTypeToActivityType(candidate.sourceType);
+      const typeKey = candidate.overrideActivityType || getActivityTypeFromTemplate(candidate.rawTemplate) || mapSourceTypeToActivityType(candidate.sourceType);
 
       const activity: Activity = {
         id: crypto.randomUUID(),

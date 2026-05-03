@@ -2,6 +2,30 @@ import type { ActivityType, Quarter } from './import-types';
 import { extractQuarterFromTitle } from './title-normalizer';
 import { getMonthPosition, type FiscalYearConfig } from './fiscal-year';
 
+const TEMPLATE_ACTIVITY_TYPE_MAP: Record<string, ActivityType> = {
+  'Red Account': 'csm',
+  'Orchestration': 'csm',
+  'Architect: Architect Consultation': 'architect',
+  'Architect: Architecture Design Review': 'architect',
+  'Architect: Solution Design & Architecture': 'architect',
+  'Success Review': 'specialist',
+  'Agentforce Activate': 'csm',
+  'Agentforce Conversation': 'csm',
+  'Contact Review': 'csm',
+  'KEM: Release Readiness - Core': 'csm',
+  'KEM: Customer Go-Live Support': 'csm',
+  'Security Health Review': 'csm',
+  'Renewal Review': 'csm',
+  'Success Methods': 'csm',
+  'Next Issue Avoidance': 'csm',
+};
+
+export function getActivityTypeFromTemplate(rawTemplate?: string): ActivityType | undefined {
+  if (!rawTemplate) return undefined;
+  const trimmed = rawTemplate.trim();
+  return TEMPLATE_ACTIVITY_TYPE_MAP[trimmed];
+}
+
 export interface ClassificationResult {
   activityType: ActivityType;
   startMonth?: number;
@@ -15,7 +39,8 @@ export function classifyActivity(
   startDate: string | undefined,
   endDate: string | undefined,
   sourceType: 'engagement' | 'support' | 'training',
-  fiscalConfig?: FiscalYearConfig
+  fiscalConfig?: FiscalYearConfig,
+  rawTemplate?: string
 ): ClassificationResult {
   const flags: string[] = [];
 
@@ -35,9 +60,11 @@ export function classifyActivity(
     };
   }
 
+  const templateActivityType = getActivityTypeFromTemplate(rawTemplate);
+
   if (!startDate && !endDate) {
     return {
-      activityType: 'standard',
+      activityType: templateActivityType || 'standard',
       flags: ['MissingDates'],
     };
   }
@@ -65,7 +92,7 @@ export function classifyActivity(
 
   if (sameMonth || sourceType === 'training') {
     return {
-      activityType: 'standard',
+      activityType: templateActivityType || 'standard',
       startMonth,
       endMonth: startMonth,
       flags,
@@ -85,7 +112,7 @@ export function classifyActivity(
 
   const quarters = getQuartersInRange(start, end, fiscalConfig);
   return {
-    activityType: 'standard',
+    activityType: templateActivityType || 'standard',
     startMonth,
     endMonth,
     quarters,
