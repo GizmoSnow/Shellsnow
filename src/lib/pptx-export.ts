@@ -149,7 +149,7 @@ export async function exportToPptx(
     return quarterTitle || qkey.toUpperCase();
   };
 
-  function addHeader(slide: any) {
+  const addHeader = (slide: any) => {
     const LOGO_GAP = 0.24;
     const LOGO_Y = 0.15;
     const LOGO_H = 0.45;
@@ -224,7 +224,7 @@ export async function exportToPptx(
     });
   }
 
-  function addQuarterHeaders(slide: any) {
+  const addQuarterHeaders = (slide: any) => {
     const headerColor = data.headerColor || '066afe';
 
     slide.addShape(pres.ShapeType.rect, {
@@ -263,7 +263,7 @@ export async function exportToPptx(
     });
   }
 
-  function addSuccessPath(slide: any) {
+  const addSuccessPath = (slide: any) => {
     const SP_Y = START_Y + HEADER_H;
 
     slide.addShape(pres.ShapeType.rect, {
@@ -333,7 +333,7 @@ export async function exportToPptx(
     return SP_Y + SP_H;
   }
 
-  function addLegend(slide: any, legendY?: number) {
+  const addLegend = (slide: any, legendY?: number) => {
     const y = legendY || (SLIDE_H - 0.4);
 
     // Get all types with stable ordering
@@ -397,7 +397,7 @@ export async function exportToPptx(
   addQuarterHeaders(currentSlide);
   let currentY = addSuccessPath(currentSlide);
 
-  function checkNewSlide() {
+  const checkNewSlide = () => {
     if (currentY > MAX_CONTENT_Y) {
       addLegend(currentSlide);
       currentSlide = pres.addSlide();

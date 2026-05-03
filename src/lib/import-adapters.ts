@@ -167,12 +167,6 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       'Organization Name'
     ]);
 
-    const sourceOwnerName = findColumn(row, [
-      'Engagement Owner',
-      'Owner',
-      'Engagement Owner Name'
-    ]);
-
     const titleNormalization = normalizeTitle(name);
     const category = mapTemplateToCategory(template);
     const classification = classifyActivity(titleNormalization.normalizedTitle, startDate, endDate, 'engagement', undefined, template);
@@ -213,10 +207,11 @@ const OrgCSEngagementAdapter: ImportAdapter = {
       include: true,
       sourceAccountName: accountName,
       sourceOrgName: orgName,
-      sourceOwnerName,
       sourceTemplateName: template,
       sourceStageRaw: stage,
       sourceReportType: 'OrgCS Engagement',
+      importStatus: 'pending',
+      isDeleted: false,
     };
   }
 };
@@ -316,7 +311,7 @@ const Org62SupportAdapter: ImportAdapter = {
     ]));
 
     // Use whichever date is more recent, or fallback to whichever exists
-    let closedDate: Date | null = null;
+    let closedDate: string | undefined;
     if (actualClosedDate && lastModifiedDate) {
       closedDate = actualClosedDate > lastModifiedDate ? actualClosedDate : lastModifiedDate;
     } else {
@@ -387,6 +382,8 @@ const Org62SupportAdapter: ImportAdapter = {
       sourceTemplateName: caseType,
       sourceStageRaw: caseStatus,
       sourceReportType: 'Org62 Support',
+      importStatus: 'pending',
+      isDeleted: false,
     };
   }
 };
@@ -542,6 +539,8 @@ const Org62TrainingAdapter: ImportAdapter = {
       sourceTemplateName: courseType,
       sourceStageRaw: trainingStatus,
       sourceReportType: 'Org62 Training',
+      importStatus: 'pending',
+      isDeleted: false,
     };
   }
 };

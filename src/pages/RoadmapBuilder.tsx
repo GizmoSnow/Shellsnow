@@ -824,6 +824,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 Batch History
               </button>
               <button
+                hidden
+                aria-hidden="true"
                 onClick={handleExportPng}
                 disabled={exporting}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"

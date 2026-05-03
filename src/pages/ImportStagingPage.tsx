@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Upload, AlertCircle, FileText, Filter, CheckSquare, Square, Trash2, Ban, AlertTriangle, Info, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, FileText, CheckSquare, Square, AlertTriangle, ChevronDown, ChevronRight, Check, XCircle } from 'lucide-react';
 import type { NormalizedActivityCandidate, SourceType, ActivityType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
-import { processImportFile, updateCandidate, deleteBatch, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
+import { processImportFile, updateCandidate, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
 import { getActivityTypeFromTemplate } from '../lib/activity-classifier';
 import type { RoadmapData } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -51,8 +51,12 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [bulkGoalId, setBulkGoalId] = useState<string>('');
   const [bulkInitiativeId, setBulkInitiativeId] = useState<string>('');
-  const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({ startMonth: 1 });
-  const [filters, setFilters] = useState<FilterState>({
+  const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({
+    startMonth: 1,
+    baseYear: new Date().getFullYear(),
+    roadmapStartQuarter: 1,
+  });
+  const [filters] = useState<FilterState>({
     sourceType: 'all',
     status: 'all',
     owner: 'all',
@@ -72,15 +76,6 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   // Debounced update refs
   const titleUpdateTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  useEffect(() => {
-    loadRoadmapData();
-    if (batchId && batchId !== 'new') {
-      loadExistingBatch();
-    } else if (batchId === 'new') {
-      setStep('upload');
-    }
-  }, [batchId]);
-
   const getStagingType = (candidate: NormalizedActivityCandidate): ActivityType => {
     return (
       candidate.overrideActivityType ||
@@ -97,13 +92,14 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
   // Cleanup pending title update timeouts on unmount
   useEffect(() => {
+    const currentTimeouts = titleUpdateTimeouts.current;
     return () => {
-      titleUpdateTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      titleUpdateTimeouts.current.clear();
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
     };
   }, []);
 
-  const loadRoadmapData = async () => {
+  const loadRoadmapData = useCallback(async () => {
     try {
       console.log('Loading roadmap data for ID:', roadmapId);
       const { data, error } = await supabase
@@ -135,8 +131,8 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
 
       if (data?.fiscal_start_month !== undefined && data?.base_fiscal_year !== undefined) {
         setFiscalConfig({
-          fiscalStartMonth: data.fiscal_start_month,
-          baseFiscalYear: data.base_fiscal_year,
+          startMonth: data.fiscal_start_month,
+          baseYear: data.base_fiscal_year,
           roadmapStartQuarter: data.roadmap_start_quarter || 1
         });
       }
@@ -144,9 +140,9 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       console.error('Failed to load roadmap data:', error);
       setErrors([error instanceof Error ? error.message : 'Failed to load roadmap']);
     }
-  };
+  }, [roadmapId]);
 
-  const loadExistingBatch = async () => {
+  const loadExistingBatch = useCallback(async () => {
     if (!batchId) return;
 
     try {
@@ -159,7 +155,16 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [batchId]);
+
+  useEffect(() => {
+    loadRoadmapData();
+    if (batchId && batchId !== 'new') {
+      loadExistingBatch();
+    } else if (batchId === 'new') {
+      setStep('upload');
+    }
+  }, [batchId, loadExistingBatch, loadRoadmapData]);
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter(c => {
@@ -175,10 +180,6 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   const includedCandidates = useMemo(() => {
     return filteredCandidates.filter(c => c.include !== false);
   }, [filteredCandidates]);
-
-  const candidatesWithGoals = useMemo(() => {
-    return includedCandidates.filter(c => c.destinationGoalId && c.destinationGoalId !== 'ongoing');
-  }, [includedCandidates]);
 
   const candidatesReadyToImport = useMemo(() => {
     return includedCandidates.filter(c => c.destinationGoalId);
@@ -266,21 +267,50 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     }
   };
 
-  const handleUpdateField = async (candidateId: string, field: keyof NormalizedActivityCandidate, value: any) => {
+  type UpdatableField =
+    | 'overrideTitle'
+    | 'overrideStartDate'
+    | 'overrideEndDate'
+    | 'overrideActivityType'
+    | 'overrideOwner'
+    | 'destinationGoalId'
+    | 'destinationInitiativeId';
+
+  const handleUpdateField = async (
+    candidateId: string,
+    field: UpdatableField,
+    value: string | undefined
+  ) => {
     try {
-      const update: any = { [field]: value || undefined };
+      const update: Partial<NormalizedActivityCandidate> = {};
+
+      if (field === 'overrideActivityType') {
+        update.overrideActivityType = value as ActivityType | undefined;
+      } else if (field === 'overrideOwner') {
+        update.overrideOwner = value as Owner | undefined;
+      } else if (field === 'destinationGoalId') {
+        update.destinationGoalId = value || undefined;
+      } else if (field === 'destinationInitiativeId') {
+        update.destinationInitiativeId = value || undefined;
+      } else if (field === 'overrideStartDate') {
+        update.overrideStartDate = value || undefined;
+      } else if (field === 'overrideEndDate') {
+        update.overrideEndDate = value || undefined;
+      } else if (field === 'overrideTitle') {
+        update.overrideTitle = value || undefined;
+      }
 
       if (field === 'overrideStartDate' && value) {
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
-          update.overrideStartMonth = date.getMonth();
+          update.overrideStartMonth = date.getMonth() + 1;
         }
       }
 
       if (field === 'overrideEndDate' && value) {
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
-          update.overrideEndMonth = date.getMonth();
+          update.overrideEndMonth = date.getMonth() + 1;
         }
       }
 
@@ -323,7 +353,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
   };
 
   // Debounced title update to prevent re-renders during typing
-  const handleTitleUpdate = useCallback((candidateId: string, value: string) => {
+  const handleTitleUpdate = (candidateId: string, value: string) => {
     // Clear any existing timeout for this candidate
     const existingTimeout = titleUpdateTimeouts.current.get(candidateId);
     if (existingTimeout) {
@@ -340,7 +370,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
       try {
         await handleUpdateField(candidateId, 'overrideTitle', value);
         titleUpdateTimeouts.current.delete(candidateId);
-      } catch (error) {
+      } catch {
         // Revert local state on error
         setCandidates(prev =>
           prev.map(c => (c.id === candidateId ? { ...c, overrideTitle: c.overrideTitle } : c))
@@ -349,7 +379,7 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     }, 500); // 500ms delay
 
     titleUpdateTimeouts.current.set(candidateId, timeout);
-  }, []);
+  };
 
   const handleBulkAssignGoal = async () => {
     if (!bulkGoalId) {
