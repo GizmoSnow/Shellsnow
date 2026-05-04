@@ -87,14 +87,19 @@ function getTodayDateString(): string {
   return today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-export async function exportToPptx(
+function pillFontSize(name: string, pillW: number): number {
+  if (pillW < 0.8) return 6;
+  if (pillW < 1.5 || name.length > 40) return 7;
+  return 8;
+}
+
+async function buildPresentation(
   title: string,
   data: RoadmapData,
   customerLogoBase64?: string | null,
   fiscalConfig?: FiscalYearConfig,
   canvasStyle?: 'light' | 'dark'
-) {
-  try {
+): Promise<{ pres: PptxGenJS; fileName: string }> {
     if (!fiscalConfig) {
       fiscalConfig = { startMonth: 0, baseYear: 26, roadmapStartQuarter: 1 };
     }
@@ -131,7 +136,7 @@ export async function exportToPptx(
   const Q_W = AVAILABLE_W / Q_COUNT;
   const HEADER_H = 0.50;
   const SP_H = 0.36;
-  const START_Y = 0.95;
+  const START_Y = 0.72;
   const LABEL_X = MARGIN_L;
   const Q_START_X = MARGIN_L + LEFT_COL;
   const LEGEND_H = 0.4;
@@ -200,10 +205,10 @@ export async function exportToPptx(
 
     slide.addText(title, {
       x: 0.3,
-      y: 0.15,
-      w: 10.0,
-      h: 0.4,
-      fontSize: 32,
+      y: 0.18,
+      w: 8.5,
+      h: 0.3,
+      fontSize: 18,
       bold: true,
       color: TEXT_COLOR,
       fontFace: 'Arial',
@@ -213,7 +218,7 @@ export async function exportToPptx(
 
     slide.addText(`Last updated: ${getTodayDateString()}`, {
       x: 0.3,
-      y: 0.64,
+      y: 0.48,
       w: 9.5,
       h: 0.25,
       fontSize: 9,
@@ -251,7 +256,7 @@ export async function exportToPptx(
         y: START_Y,
         w: Q_W,
         h: HEADER_H - 0.04,
-        fontSize: 13,
+        fontSize: 9,
         bold: true,
         color: HEADER_TEXT,
         fontFace: 'Arial',
@@ -319,7 +324,7 @@ export async function exportToPptx(
         y: SP_Y + 0.05,
         w: pillW - 0.08,
         h: SP_H - 0.1,
-        fontSize: 9,
+        fontSize: 8,
         bold: true,
         color: spTextColor,
         fontFace: 'Arial',
@@ -410,7 +415,7 @@ export async function exportToPptx(
 
   const accountSpanning = data.accountSpanning || [];
   if (accountSpanning.length > 0) {
-    const ACCOUNT_ROW_H = Math.max(0.54, accountSpanning.length * 0.30 + 0.34);
+    const ACCOUNT_ROW_H = Math.max(0.54, accountSpanning.length * 0.36 + 0.34);
     checkNewSlide();
 
     if (currentY + ACCOUNT_ROW_H > MAX_CONTENT_Y) {
@@ -454,10 +459,10 @@ export async function exportToPptx(
       const maxIdx = Math.max(...qIndexes);
       const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-      const pillH = 0.20;
-      const pillY = currentY + 0.15 + spIdx * 0.27;
       const pillX = Q_START_X + minIdx * Q_W + 0.05;
       const pillW = spanWidth - 0.1;
+      const pillH = (sp.name.length > 30 && pillW < 2.5) ? 0.32 : 0.20;
+      const pillY = currentY + 0.15 + spIdx * 0.36;
 
       currentSlide.addShape(pres.ShapeType.roundRect, {
         x: pillX,
@@ -476,7 +481,7 @@ export async function exportToPptx(
           opacity: 0.15,
         },
       });
-      const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
+      const fs = pillFontSize(sp.name, pillW);
       const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
       currentSlide.addText(nameText, {
         x: pillX + 0.04,
@@ -489,9 +494,8 @@ export async function exportToPptx(
         fontFace: 'Arial',
         align: 'center',
         valign: 'middle',
-        margin: 0,
-        wrap: false,
-        autoFit: false,
+        margin: [0, 4, 0, 4],
+        wrap: true,
       });
     });
 
@@ -508,7 +512,7 @@ export async function exportToPptx(
       const hasRegularActivities = qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
 
       if (spanningActivities.length > 0) {
-        const activityBlockHeight = spanningActivities.length * 0.27 + 0.15;
+        const activityBlockHeight = spanningActivities.length * 0.36 + 0.15;
         const minLabelBlockHeight = isFirstInitiativeOfGoal ? 0.84 : 0.42;
         const rowH = Math.max(minLabelBlockHeight, activityBlockHeight);
         checkNewSlide();
@@ -613,10 +617,10 @@ export async function exportToPptx(
           const maxIdx = Math.max(...qIndexes);
           const spanWidth = (maxIdx - minIdx + 1) * Q_W;
 
-          const pillH = 0.20;
-          const pillY = currentY + 0.15 + spIdx * 0.27;
           const pillX = Q_START_X + minIdx * Q_W + 0.05;
           const pillW = spanWidth - 0.1;
+          const pillH = (sp.name.length > 30 && pillW < 2.5) ? 0.32 : 0.20;
+          const pillY = currentY + 0.15 + spIdx * 0.36;
 
           currentSlide.addShape(pres.ShapeType.roundRect, {
             x: pillX,
@@ -635,7 +639,7 @@ export async function exportToPptx(
               opacity: 0.15,
             },
           });
-          const fs = sp.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
+          const fs = pillFontSize(sp.name, pillW);
           const nameText = sp.isCriticalPath ? `★ ${sp.name}` : sp.name;
           currentSlide.addText(nameText, {
             x: pillX,
@@ -648,9 +652,8 @@ export async function exportToPptx(
             fontFace: 'Arial',
             align: 'center',
             valign: 'middle',
-            margin: 0,
-            wrap: false,
-            autoFit: false,
+            margin: [0, 4, 0, 4],
+            wrap: true,
           });
         });
 
@@ -726,9 +729,8 @@ export async function exportToPptx(
 
         const maxRow = activityRows.length > 0 ? Math.max(...activityRows) : 0;
         const numRows = maxRow + 1;
-        const pillH = 0.20;
         const pillPad = 0.02;
-        const activityBlockHeight = numRows * 0.27 + 0.15;
+        const activityBlockHeight = numRows * 0.36 + 0.15;
         const minLabelBlockHeight = isFirstInitiativeOfGoal ? 0.84 : 0.42;
         const rowH = Math.max(minLabelBlockHeight, activityBlockHeight);
 
@@ -841,8 +843,9 @@ export async function exportToPptx(
 
               const pillX = Q_START_X + (AVAILABLE_W * leftPercent / 100);
               const pillW = AVAILABLE_W * widthPercent / 100;
+              const pillH = (act.name.length > 30 && pillW < 2.5) ? 0.32 : 0.20;
               const row = activityRows[actIdx];
-              const pillY = currentY + 0.15 + row * 0.27;
+              const pillY = currentY + 0.15 + row * 0.36;
 
               currentSlide.addShape(pres.ShapeType.roundRect, {
                 x: pillX,
@@ -861,7 +864,7 @@ export async function exportToPptx(
                   opacity: 0.15,
                 },
               });
-              const fs = act.name.length > 35 && pillW < 3 ? 7 : pillW < 1.5 ? 7 : 8;
+              const fs = pillFontSize(act.name, pillW);
               const nameText = act.isCriticalPath ? `★ ${act.name}` : act.name;
               currentSlide.addText(nameText, {
                 x: pillX + 0.04,
@@ -874,9 +877,8 @@ export async function exportToPptx(
                 fontFace: 'Arial',
                 align: 'center',
                 valign: 'middle',
-                margin: 0,
-                wrap: false,
-                autoFit: false,
+                margin: [0, 4, 0, 4],
+                wrap: true,
               });
             }
           }
@@ -895,7 +897,39 @@ export async function exportToPptx(
     .trim()
     .replace(/\s+/g, '-') || 'Success-Roadmap';
 
-  await pres.writeFile({ fileName: `${fileName}.pptx` });
+  return { pres, fileName };
+}
+
+export async function exportToPptx(
+  title: string,
+  data: RoadmapData,
+  customerLogoBase64?: string | null,
+  fiscalConfig?: FiscalYearConfig,
+  canvasStyle?: 'light' | 'dark'
+) {
+  try {
+    const { pres, fileName } = await buildPresentation(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
+    await pres.writeFile({ fileName: `${fileName}.pptx` });
+  } catch (error) {
+    console.error('PowerPoint export error:', error);
+    throw error;
+  }
+}
+
+export async function exportToPptxBlob(
+  title: string,
+  data: RoadmapData,
+  customerLogoBase64?: string | null,
+  fiscalConfig?: FiscalYearConfig,
+  canvasStyle?: 'light' | 'dark'
+): Promise<{ blob: Blob; fileName: string }> {
+  try {
+    const { pres, fileName } = await buildPresentation(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
+    const buffer = await pres.write({ outputType: 'arraybuffer' }) as ArrayBuffer;
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    });
+    return { blob, fileName };
   } catch (error) {
     console.error('PowerPoint export error:', error);
     throw error;

@@ -11,7 +11,8 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
-import { exportToPptx } from '../lib/pptx-export';
+import { exportToPptx, exportToPptxBlob } from '../lib/pptx-export';
+import { exportToGoogleSlides } from '../lib/googleSlidesExport';
 import { exportToPng } from '../lib/png-export';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
@@ -82,6 +83,8 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [customerLogoBase64, setCustomerLogoBase64] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [slidesLoading, setSlidesLoading] = useState(false);
+  const [slidesStatus, setSlidesStatus] = useState('');
   const [showFiscalYearSettings, setShowFiscalYearSettings] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [fiscalConfig, setFiscalConfig] = useState<FiscalYearConfig>({
@@ -301,6 +304,20 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       alert('Export failed');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportToSlides = async () => {
+    console.log('google object:', (window as any).google);
+    setSlidesLoading(true);
+    setSlidesStatus('');
+    try {
+      const { blob, fileName } = await exportToPptxBlob(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
+      await exportToGoogleSlides(blob, fileName, setSlidesStatus);
+    } catch (err: any) {
+      setSlidesStatus(`Error: ${err.message}`);
+    } finally {
+      setSlidesLoading(false);
     }
   };
 
@@ -848,6 +865,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               >
                 <FileDown size={16} />
                 {exporting ? 'Exporting...' : 'Export PowerPoint'}
+              </button>
+              <button
+                onClick={handleExportToSlides}
+                disabled={slidesLoading}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
+                style={{ background: slidesLoading ? '#6b7280' : 'var(--primary)' }}
+                onMouseEnter={(e) => !slidesLoading && (e.currentTarget.style.background = 'var(--primary-hover)')}
+                onMouseLeave={(e) => !slidesLoading && (e.currentTarget.style.background = 'var(--primary)')}
+              >
+                <FileDown size={16} />
+                {slidesLoading ? (slidesStatus || 'Exporting...') : 'Export to Google Slides'}
               </button>
               <button
                 onClick={() => setShowResetConfirmation(true)}
