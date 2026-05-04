@@ -8,6 +8,7 @@ import RoadmapBuilder from './pages/RoadmapBuilder';
 import ResetPassword from './pages/ResetPassword';
 import { ImportWorkspace } from './pages/ImportWorkspace';
 import { ImportStagingPage } from './pages/ImportStagingPage';
+import { AccountDetails } from './pages/AccountDetails';
 
 // Main router component that handles authentication and page routing
 function Router() {
@@ -64,6 +65,11 @@ function Router() {
   const importStagingMatch = pathname.match(/^\/import-staging\/([^/]+)\/(.+)$/);
   if (importStagingMatch) {
     return <ImportStagingPage roadmapId={importStagingMatch[1]} batchId={importStagingMatch[2]} />;
+  }
+
+  const accountMatch = pathname.match(/^\/account\/(.+)$/);
+  if (accountMatch) {
+    return <AccountDetails roadmapId={accountMatch[1]} />;
   }
 
   return <Dashboard />;

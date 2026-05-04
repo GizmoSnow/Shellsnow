@@ -30,16 +30,24 @@ export function validateCandidate(candidate: NormalizedActivityCandidate): Valid
     fieldErrors.date = 'No usable date field found';
   }
 
-if (candidate.startMonth !== undefined && (candidate.startMonth < 1 || candidate.startMonth > 12)) {
-    invalidValues.startMonth = `Invalid start month: ${candidate.startMonth}`;
+const effectiveType = candidate.overrideActivityType || candidate.activityType;
+
+  if (effectiveType !== 'quarter') {
+    if (candidate.startMonth != null && (candidate.startMonth < 1 || candidate.startMonth > 12)) {
+      invalidValues.startMonth = `Invalid start month: ${candidate.startMonth}`;
+    }
+
+    if (candidate.endMonth != null && (candidate.endMonth < 1 || candidate.endMonth > 12)) {
+      invalidValues.endMonth = `Invalid end month: ${candidate.endMonth}`;
+    }
   }
 
-  if (candidate.endMonth !== undefined && (candidate.endMonth < 1 || candidate.endMonth > 12)) {
-    invalidValues.endMonth = `Invalid end month: ${candidate.endMonth}`;
-  }
-
-  if (candidate.activityType === 'spanning' && !candidate.quarters?.length) {
+  if (effectiveType === 'spanning' && !candidate.quarters?.length) {
     invalidValues.quarters = 'Spanning activity missing quarters';
+  }
+
+  if (effectiveType === 'quarter' && !candidate.quarters?.length) {
+    invalidValues.quarters = 'Quarter activity missing quarters';
   }
 
   const isValid = missingRequired.length === 0 && Object.keys(invalidValues).length === 0;

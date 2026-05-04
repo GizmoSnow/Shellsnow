@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FileInput, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FolderOpen, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -17,7 +17,7 @@ import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
 import { getAllTypeMetadata, getTypeMetadata, DEFAULT_ACTIVITY_TYPES, getNextAvailableColor } from '../lib/activity-types';
-import type { ActivityTypeMetadata, ActivityOwner } from '../lib/activity-types';
+import type { ActivityOwner } from '../lib/activity-types';
 import salesforceLogo from '../assets/69416b267de7ae6888996981_logo_(1).svg';
 
 interface RoadmapBuilderProps {
@@ -93,10 +93,9 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() - 2000);
   const [canvasStyle, setCanvasStyle] = useState<'light' | 'dark'>('light');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  const { user } = useAuth();
+  useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -286,7 +285,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
       }
 
       console.log('[SAVE SUCCESS] Roadmap saved successfully');
-      setLastSaveTime(new Date());
       setSaveError(null);
     } catch (err) {
       console.error('[SAVE FAILED] Exception during save:', err);
@@ -447,13 +445,6 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     // Then check metadata (default or custom types)
     const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
     return metadata?.color || '#6c63ff';
-  };
-
-  const getTypeOwner = (typeKey: string): ActivityOwner | undefined => {
-    const metadata = getTypeMetadata(typeKey, data.customActivityTypes);
-    if (metadata?.owner) return metadata.owner;
-
-    return data.typeOwners?.[typeKey] || TYPE_OWNERS[typeKey];
   };
 
   const getAllTypeKeys = () => {
@@ -824,6 +815,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 Batch History
               </button>
               <button
+                onClick={() => navigate(`/account/${roadmapId}`)}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold"
+                style={{ background: 'var(--primary)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary)'}
+                title="View and edit account details"
+              >
+                <BookOpen size={16} />
+                Account Details
+              </button>
+              <button
                 hidden
                 aria-hidden="true"
                 onClick={handleExportPng}
@@ -950,7 +952,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                     <div className="relative flex items-center">
                       <div
                         className="w-3.5 h-3.5 rounded-full shrink-0 cursor-pointer hover:ring-2 hover:ring-offset-1 transition-all"
-                        style={{ background: getTypeColor(typeKey), ringColor: 'var(--primary)' }}
+                        style={{ background: getTypeColor(typeKey) }}
                         onClick={() => setEditingColorKey(editingColorKey === typeKey ? null : typeKey)}
                       ></div>
                       {editingColorKey === typeKey && (
@@ -1145,6 +1147,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
         isOpen={showAddModal}
         context={addContext}
         editingActivity={editingActivity}
+        openedAsSpanning={addContext?.openedAsSpanning ?? false}
         data={data}
         fiscalConfig={fiscalConfig}
         getTypeColor={getTypeColor}
@@ -1233,14 +1236,14 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
               console.error('Goal not found!');
               return;
             }
-            console.log('Found goal:', goal.name);
+            console.log('Found goal:', goal.title);
 
             const initiative = goal.initiatives.find(i => i.id === initiativeId);
             if (!initiative) {
               console.error('Initiative not found!');
               return;
             }
-            console.log('Found initiative:', initiative.name);
+            console.log('Found initiative:', initiative.label);
 
             const isSpanningActivity = 'quarters' in activity;
 

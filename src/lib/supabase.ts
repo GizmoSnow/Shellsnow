@@ -28,6 +28,32 @@ export interface Roadmap {
   updated_at: string;
 }
 
+export interface OrgRow {
+  id: string;
+  accountName: string;
+  products: string;
+  instanceUrl: string;
+  maintenanceUrl: string;
+  orgId: string;
+  notes: string;
+}
+
+export interface TeamMember {
+  id: string;
+  photoUrl?: string;
+  name: string;
+  title: string;
+  pronouns?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface AccountDetailsData {
+  orgRows: OrgRow[];
+  salesforceTeam: TeamMember[];
+  customerTeam: TeamMember[];
+}
+
 export interface RoadmapData {
   goals: Goal[];
   accountSpanning?: SpanningActivity[];
@@ -49,6 +75,7 @@ export interface RoadmapData {
     q3?: string;
     q4?: string;
   };
+  accountDetails?: AccountDetailsData;
 }
 
 export interface Goal {
@@ -101,6 +128,8 @@ export interface SpanningActivity {
   type: string;
   owner?: 'salesforce' | 'partner' | 'customer';
   quarters: string[];
+  start_month?: number;
+  end_month?: number;
   health?: 'on_track' | 'at_risk' | 'blocked';
   status?: 'not_started' | 'in_progress' | 'completed' | 'cancelled';
   completedDate?: string;

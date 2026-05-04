@@ -424,7 +424,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
         <ActivityTooltip text={activity.name}>
           <div
             onClick={() => setDetailCardActivity({ activity, goal, initiative, quarter })}
-            className={`activity-pill group inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
+            className={`activity-pill group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all hover:opacity-85 relative cursor-pointer ${context === 'full' ? 'w-full justify-center' : ''} ${activity.isCriticalPath ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
             style={{ background: bgColor, color: textColor }}
             title={activity.name}
           >
@@ -434,7 +434,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               title={getHealthLabel(activity.health)}
             />
             {activity.isCriticalPath && (
-              <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+              <Star size={11} className="fill-current flex-shrink-0" />
             )}
             <span className="activity-pill-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
               {activity.name}
@@ -613,7 +613,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
               return (
                 <ActivityTooltip key={sp.id} text={sp.name}>
                   <div
-                    className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                    className={`activity-pill group flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${sp.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                     style={{
                       background: bgColor,
                       color: textColor,
@@ -629,7 +629,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                     title={getHealthLabel(sp.health)}
                   />
                   {sp.isCriticalPath && (
-                    <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                    <Star size={11} className="fill-current flex-shrink-0" />
                   )}
                   <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                     {sp.name}
@@ -772,6 +772,9 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
           <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--roadmap-border)' }}>
             {deduplicatedInitiatives.map((initiative, iniIdx) => {
               const spanningActivities = initiative.spanning || [];
+              const hasAnyActivity = spanningActivities.length > 0 ||
+                qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
+              if (!hasAnyActivity) return null;
 
               const allActivitiesByQuarter = qkeys.map(qk => ({
                 quarter: qk,
@@ -856,7 +859,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                 <div key={initiative.id}>
                   {spanningActivities.length > 0 && (
                     <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--roadmap-border-subtle)' }}>
-                      <div className="py-5 px-4 border-r flex flex-col justify-center relative" style={{
+                      <div className="py-2 px-4 border-r flex flex-col justify-center relative" style={{
                         borderColor: 'var(--roadmap-border)',
                         background: 'var(--roadmap-cell-bg)'
                       }}>
@@ -867,23 +870,17 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         {iniIdx === 0 && (
                           <>
                             <div
-                              className="text-xs font-bold uppercase tracking-wider mb-1.5"
+                              className="text-xs font-bold uppercase tracking-wider mb-0.5"
                               style={{ color: goal.color, letterSpacing: '0.05em' }}
                             >
                               {goal.number}
                             </div>
-                            <div className="text-sm font-bold mb-2" style={{ color: 'var(--roadmap-text-primary)' }}>
+                            <div className="text-sm font-bold mb-1" style={{ color: 'var(--roadmap-text-primary)' }}>
                               {goal.title}
                             </div>
                           </>
                         )}
-                        <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{
-                          color: 'var(--roadmap-text-secondary)',
-                          letterSpacing: '0.06em'
-                        }}>
-                          Key Initiative
-                        </div>
-                        <div className="text-xs leading-relaxed" style={{ color: 'var(--roadmap-text-secondary)' }}>
+                        <div className="text-xs leading-snug" style={{ color: 'var(--roadmap-text-secondary)' }}>
                           {initiative.label}
                         </div>
                       </div>
@@ -897,7 +894,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           return (
                             <ActivityTooltip key={item.activity.id} text={item.activity.name}>
                               <div
-                                className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                                className={`activity-pill group flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs relative transition-all hover:opacity-90 ${item.activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                                 style={{
                                   background: bgColor,
                                   color: textColor,
@@ -914,7 +911,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   title={getHealthLabel(item.activity.health)}
                                 />
                                 {item.activity.isCriticalPath && (
-                                  <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                                  <Star size={11} className="fill-current flex-shrink-0" />
                                 )}
                                 <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                                   {item.activity.name}
@@ -1026,7 +1023,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                   )}
 
                   <div className="grid grid-cols-[200px_1fr] border-t print-avoid-break" style={{ borderColor: 'var(--roadmap-border-subtle)' }}>
-                    <div className="py-5 px-4 border-r flex flex-col justify-center relative" style={{
+                    <div className="py-2 px-4 border-r flex flex-col justify-center relative" style={{
                       borderColor: 'var(--roadmap-border)',
                       background: 'var(--roadmap-cell-bg)'
                     }}>
@@ -1037,28 +1034,20 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                       {iniIdx === 0 && spanningActivities.length === 0 && (
                         <>
                           <div
-                            className="text-xs font-bold uppercase tracking-wider mb-1.5"
+                            className="text-xs font-bold uppercase tracking-wider mb-0.5"
                             style={{ color: goal.color, letterSpacing: '0.05em' }}
                           >
                             {goal.number}
                           </div>
-                          <div className="text-sm font-bold mb-2" style={{ color: 'var(--roadmap-text-primary)' }}>
+                          <div className="text-sm font-bold mb-1" style={{ color: 'var(--roadmap-text-primary)' }}>
                             {goal.title}
                           </div>
                         </>
                       )}
                       {spanningActivities.length === 0 && (
-                        <>
-                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{
-                            color: 'var(--roadmap-text-secondary)',
-                            letterSpacing: '0.06em'
-                          }}>
-                            Key Initiative
-                          </div>
-                          <div className="text-xs leading-relaxed" style={{ color: 'var(--roadmap-text-secondary)' }}>
-                            {initiative.label}
-                          </div>
-                        </>
+                        <div className="text-xs leading-snug" style={{ color: 'var(--roadmap-text-secondary)' }}>
+                          {initiative.label}
+                        </div>
                       )}
                     </div>
 
@@ -1067,11 +1056,11 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         style={{
                           display: 'grid',
                           gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-                          gridAutoRows: 'minmax(42px, auto)',
-                          gap: '8px',
+                          gridAutoRows: 'minmax(28px, auto)',
+                          gap: '4px',
                           position: 'relative',
-                          minHeight: `${(spanRows.length || 1) * 58 + 60}px`,
-                          padding: '8px 8px 60px 8px'
+                          minHeight: `${(spanRows.length || 1) * 32 + 36}px`,
+                          padding: '4px 4px 36px 4px'
                         }}
                       >
                         {verticalActivities.map((item) => {
@@ -1116,7 +1105,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                                   title={getHealthLabel(item.activity.health)}
                                 />
                                 {item.activity.isCriticalPath && (
-                                  <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                                  <Star size={11} className="fill-current flex-shrink-0" />
                                 )}
                                 <span
                                   className="activity-pill-text"
@@ -1248,7 +1237,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                           })
                         )}
                         {/* Month labels */}
-                        <div className="absolute top-0 left-0 right-0 h-[30px] flex">
+                        <div className="absolute top-0 left-0 right-0 h-[18px] flex">
                           {quarters.flatMap((quarter) =>
                             quarter.months.map((month, mIdx) => (
                               <div
@@ -1317,7 +1306,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                         <ActivityTooltip key={activity.id} text={activity.name}>
                           <div
                             onClick={() => setDetailCardActivity({ activity, goal, initiative: goal.initiatives[0], quarter: qk })}
-                            className={`activity-pill group flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold text-xs relative transition-all hover:opacity-90 cursor-pointer ${activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
+                            className={`activity-pill group flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs relative transition-all hover:opacity-90 cursor-pointer ${activity.isCriticalPath ? 'ring-2 ring-yellow-400' : ''}`}
                             style={{
                               background: bgColor,
                               color: textColor,
@@ -1332,7 +1321,7 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
                               title={getHealthLabel(activity.health)}
                             />
                             {activity.isCriticalPath && (
-                              <Star size={11} className="fill-current flex-shrink-0" title="Critical Path" />
+                              <Star size={11} className="fill-current flex-shrink-0" />
                             )}
                             <span className="activity-pill-text text-center" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                               {activity.name}

@@ -1,10 +1,6 @@
 import type {
   NormalizedActivityCandidate,
   ParsedCSVRow,
-  SourceSystem,
-  SourceType,
-  ActivityType,
-  Quarter,
 } from './import-types';
 import { findColumn } from './csv-parser';
 import { normalizeTitle, detectLowValueSupportActivity } from './title-normalizer';

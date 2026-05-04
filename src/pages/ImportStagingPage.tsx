@@ -3,7 +3,7 @@ import { ArrowLeft, Upload, AlertCircle, FileText, CheckSquare, Square, AlertTri
 import type { ActivityType, NormalizedActivityCandidate, SourceType, Owner, Status, Quarter, ImportDiagnostics } from '../lib/import-types';
 import { getActivityTypeFromTemplate } from '../lib/activity-classifier';
 import { processImportFile, updateCandidate, loadCandidatesFromDatabase, updateCandidates } from '../lib/import-processor';
-import type { RoadmapData } from '../lib/supabase';
+import type { RoadmapData, Goal, Initiative } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from '../lib/router';
 import { supabase } from '../lib/supabase';
@@ -39,6 +39,12 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
   training: 'Training',
 };
 
+const GOAL_COLORS = ['#6c63ff', '#00d4aa', '#f77f00', '#e8194b', '#00b4d8', '#9b5de5'];
+
+function uid() {
+  return 'id_' + Math.random().toString(36).slice(2, 9);
+}
+
 export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,6 +69,10 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     quarter: 'all',
     flaggedOnly: false,
   });
+  const [addingGoalForCandidate, setAddingGoalForCandidate] = useState<string | null>(null);
+  const [newGoalName, setNewGoalName] = useState('');
+  const [addingInitiativeForCandidate, setAddingInitiativeForCandidate] = useState<string | null>(null);
+  const [newInitiativeName, setNewInitiativeName] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -414,6 +424,51 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to bulk assign');
     }
+  };
+
+  const handleConfirmAddGoal = async (candidateId: string) => {
+    if (!newGoalName.trim()) return;
+    const newGoal: Goal = {
+      id: uid(),
+      number: `Goal #${roadmapData.goals.length + 1}`,
+      title: newGoalName.trim(),
+      color: GOAL_COLORS[roadmapData.goals.length % GOAL_COLORS.length],
+      initiatives: [{ id: uid(), label: 'New Initiative', activities: { q1: [], q2: [], q3: [], q4: [] } }],
+    };
+    const updatedData = { ...roadmapData, goals: [...roadmapData.goals, newGoal] };
+    try {
+      await supabase.from('roadmaps').update({ data: updatedData }).eq('id', roadmapId);
+      setRoadmapData(updatedData);
+      await handleUpdateField(candidateId, 'destinationGoalId', newGoal.id);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to create goal');
+    }
+    setAddingGoalForCandidate(null);
+    setNewGoalName('');
+  };
+
+  const handleConfirmAddInitiative = async (candidateId: string, goalId: string) => {
+    if (!newInitiativeName.trim()) return;
+    const newInitiative: Initiative = {
+      id: uid(),
+      label: newInitiativeName.trim(),
+      activities: { q1: [], q2: [], q3: [], q4: [] },
+    };
+    const updatedData = {
+      ...roadmapData,
+      goals: roadmapData.goals.map(g =>
+        g.id === goalId ? { ...g, initiatives: [...g.initiatives, newInitiative] } : g
+      ),
+    };
+    try {
+      await supabase.from('roadmaps').update({ data: updatedData }).eq('id', roadmapId);
+      setRoadmapData(updatedData);
+      await handleUpdateField(candidateId, 'destinationInitiativeId', newInitiative.id);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to create initiative');
+    }
+    setAddingInitiativeForCandidate(null);
+    setNewInitiativeName('');
   };
 
   const handleInitiateImport = () => {
@@ -818,7 +873,14 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                             <td className="p-3">
                               <select
                                 value={candidate.destinationGoalId || ''}
-                                onChange={(e) => handleUpdateField(candidate.id, 'destinationGoalId', e.target.value)}
+                                onChange={(e) => {
+                                  if (e.target.value === '__add_new_goal__') {
+                                    setAddingGoalForCandidate(candidate.id);
+                                    setNewGoalName('');
+                                  } else {
+                                    handleUpdateField(candidate.id, 'destinationGoalId', e.target.value);
+                                  }
+                                }}
                                 className={`min-w-48 px-2 py-1 border rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none ${!candidate.destinationGoalId || candidate.destinationGoalId === '' ? 'border-red-300 bg-red-50 text-red-900 font-semibold' : 'border-gray-300'}`}
                               >
                                 <option value="" className="text-red-600">
@@ -832,28 +894,85 @@ export function ImportStagingPage({ roadmapId, batchId }: ImportStagingPageProps
                                     {goal.number} – {goal.title}
                                   </option>
                                 ))}
+                                <option value="__add_new_goal__">+ Add New Goal</option>
                               </select>
+                              {addingGoalForCandidate === candidate.id && (
+                                <div className="mt-1 flex gap-1">
+                                  <input
+                                    type="text"
+                                    value={newGoalName}
+                                    onChange={(e) => setNewGoalName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleConfirmAddGoal(candidate.id);
+                                      if (e.key === 'Escape') setAddingGoalForCandidate(null);
+                                    }}
+                                    className="flex-1 min-w-0 px-2 py-1 border border-blue-400 rounded text-sm focus:outline-none focus:border-blue-500"
+                                    placeholder="Goal name..."
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleConfirmAddGoal(candidate.id)}
+                                    className="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                                  >✓</button>
+                                  <button
+                                    onClick={() => setAddingGoalForCandidate(null)}
+                                    className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100"
+                                  >✕</button>
+                                </div>
+                              )}
                             </td>
                             <td className="p-3">
                               {!candidate.destinationGoalId || candidate.destinationGoalId === 'ongoing' ? (
                                 <span className="text-xs text-gray-400 italic">
                                   {candidate.destinationGoalId === 'ongoing' ? 'Not applicable for ongoing activities' : 'Select goal first'}
                                 </span>
-                              ) : goalInitiatives.length === 0 ? (
-                                <span className="text-xs text-gray-500 italic">None available</span>
                               ) : (
-                                <select
-                                  value={candidate.destinationInitiativeId || ''}
-                                  onChange={(e) => handleUpdateField(candidate.id, 'destinationInitiativeId', e.target.value)}
-                                  className="min-w-48 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
-                                >
-                                  <option value="">(Optional)</option>
-                                  {goalInitiatives.map(initiative => (
-                                    <option key={initiative.id} value={initiative.id}>
-                                      {initiative.label || '(Unnamed Initiative)'}
-                                    </option>
-                                  ))}
-                                </select>
+                                <>
+                                  <select
+                                    value={candidate.destinationInitiativeId || ''}
+                                    onChange={(e) => {
+                                      if (e.target.value === '__add_new_initiative__') {
+                                        setAddingInitiativeForCandidate(candidate.id);
+                                        setNewInitiativeName('');
+                                      } else {
+                                        handleUpdateField(candidate.id, 'destinationInitiativeId', e.target.value);
+                                      }
+                                    }}
+                                    className="min-w-48 px-2 py-1 border border-gray-300 rounded text-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none"
+                                  >
+                                    <option value="">(Optional)</option>
+                                    {goalInitiatives.map(initiative => (
+                                      <option key={initiative.id} value={initiative.id}>
+                                        {initiative.label || '(Unnamed Initiative)'}
+                                      </option>
+                                    ))}
+                                    <option value="__add_new_initiative__">+ Add New Initiative</option>
+                                  </select>
+                                  {addingInitiativeForCandidate === candidate.id && (
+                                    <div className="mt-1 flex gap-1">
+                                      <input
+                                        type="text"
+                                        value={newInitiativeName}
+                                        onChange={(e) => setNewInitiativeName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') handleConfirmAddInitiative(candidate.id, candidate.destinationGoalId!);
+                                          if (e.key === 'Escape') setAddingInitiativeForCandidate(null);
+                                        }}
+                                        className="flex-1 min-w-0 px-2 py-1 border border-blue-400 rounded text-sm focus:outline-none focus:border-blue-500"
+                                        placeholder="Initiative name..."
+                                        autoFocus
+                                      />
+                                      <button
+                                        onClick={() => handleConfirmAddInitiative(candidate.id, candidate.destinationGoalId!)}
+                                        className="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                                      >✓</button>
+                                      <button
+                                        onClick={() => setAddingInitiativeForCandidate(null)}
+                                        className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100"
+                                      >✕</button>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </td>
                           </tr>
