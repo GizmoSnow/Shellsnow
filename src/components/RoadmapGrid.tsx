@@ -768,13 +768,18 @@ export default function RoadmapGrid({ data, fiscalConfig, onDataChange, onOpenAd
             return acc;
           }, [] as typeof goal.initiatives);
 
+          const goalHasAnyActivity = deduplicatedInitiatives.some(ini => {
+            const sp = ini.spanning || [];
+            return sp.length > 0 || qkeys.some(qk => (ini.activities[qk] || []).length > 0);
+          }) || qkeys.some(qk => (goal.activities?.[qk as keyof typeof goal.activities] || []).length > 0);
+
           return (
           <div key={goal.id} className={`${goalIdx < data.goals.length - 1 ? 'border-b' : ''}`} style={{ borderColor: 'var(--roadmap-border)' }}>
             {deduplicatedInitiatives.map((initiative, iniIdx) => {
               const spanningActivities = initiative.spanning || [];
               const hasAnyActivity = spanningActivities.length > 0 ||
                 qkeys.some(qk => (initiative.activities[qk] || []).length > 0);
-              if (!hasAnyActivity) return null;
+              if (!hasAnyActivity && goalHasAnyActivity) return null;
 
               const allActivitiesByQuarter = qkeys.map(qk => ({
                 quarter: qk,

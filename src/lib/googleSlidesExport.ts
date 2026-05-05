@@ -1,17 +1,25 @@
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-export async function getDriveAccessToken(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
-      callback: (response: any) => {
-        if (response.error) reject(new Error(response.error));
-        else resolve(response.access_token);
-      },
-    });
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+export function initDriveTokenClient(
+  onSuccess: (accessToken: string) => void,
+  onError: (err: Error) => void
+): any {
+  return (window as any).google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SCOPES,
+    callback: (response: any) => {
+      if (response.error) {
+        console.error('[GSI] token error:', response.error, response.error_description);
+        onError(new Error(response.error));
+      } else {
+        onSuccess(response.access_token);
+      }
+    },
+    error_callback: (err: any) => {
+      console.error('[GSI] error_callback:', err);
+      onError(new Error(err.type || 'token_error'));
+    },
   });
 }
 
@@ -35,17 +43,4 @@ export async function uploadToGoogleSlides(
   if (!response.ok) throw new Error(`Drive upload failed: ${response.status}`);
   const file = await response.json();
   return file.webViewLink as string;
-}
-
-export async function exportToGoogleSlides(
-  blob: Blob,
-  fileName: string,
-  onStatus: (status: string) => void
-): Promise<void> {
-  onStatus('Connecting to Google Drive...');
-  const accessToken = await getDriveAccessToken();
-  onStatus('Uploading to Google Slides...');
-  const slidesUrl = await uploadToGoogleSlides(blob, fileName, accessToken);
-  onStatus('Done!');
-  window.open(slidesUrl, '_blank');
 }

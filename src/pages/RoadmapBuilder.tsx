@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, Image, ChevronUp, ChevronDown, X, Palette, FolderOpen, BookOpen } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Settings, Printer, FileDown, RotateCcw, Moon, Sun, Upload, ChevronUp, ChevronDown, X, Palette, FolderOpen, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from '../lib/router';
@@ -11,9 +11,8 @@ import FiscalYearSettings from '../components/FiscalYearSettings';
 import ResetConfirmationModal from '../components/ResetConfirmationModal';
 import { EngagementValueSummary } from '../components/EngagementValueSummary';
 import { SalesforceContributionSummary } from '../components/SalesforceContributionSummary';
-import { exportToPptx, exportToPptxBlob } from '../lib/pptx-export';
-import { exportToGoogleSlides } from '../lib/googleSlidesExport';
-import { exportToPng } from '../lib/png-export';
+import { exportToPptx } from '../lib/pptx-export';
+import { initDriveTokenClient, uploadToGoogleSlides } from '../lib/googleSlidesExport';
 import type { FiscalYearConfig } from '../lib/fiscal-year';
 import { getAllRoadmapMonths } from '../lib/fiscal-year';
 import { createDefaultSuccessPathItems } from '../lib/default-success-path';
@@ -98,6 +97,15 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
+  const tokenClientRef = useRef<any>(null);
+  const pendingExportRef = useRef<{
+    title: string;
+    data: RoadmapData;
+    customerLogoBase64: string | null;
+    fiscalConfig: FiscalYearConfig;
+    canvasStyle: 'light' | 'dark';
+  } | null>(null);
+
   useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -124,6 +132,53 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    console.log('[GSI] Client ID value:', clientId);
+    if (!clientId) return;
+
+    let intervalId: ReturnType<typeof setInterval>;
+    const tryInit = () => {
+      try {
+        const g = (window as any).google;
+        if (!g?.accounts?.oauth2) return;
+        clearInterval(intervalId);
+        tokenClientRef.current = initDriveTokenClient(
+          async (accessToken: string) => {
+            const pending = pendingExportRef.current;
+            if (!pending) return;
+            pendingExportRef.current = null;
+            try {
+              setSlidesStatus('Building presentation…');
+              const { blob, fileName } = await (await import('../lib/pptx-export')).exportToPptxBlob(
+                pending.title, pending.data, pending.customerLogoBase64, pending.fiscalConfig, pending.canvasStyle
+              );
+              setSlidesStatus('Uploading…');
+              const url = await uploadToGoogleSlides(blob, fileName, accessToken);
+              setSlidesStatus('');
+              setSlidesLoading(false);
+              window.open(url, '_blank');
+            } catch (err: any) {
+              console.error('[Slides upload]', err);
+              setSlidesStatus(`Error: ${err.message}`);
+              setSlidesLoading(false);
+            }
+          },
+          (err: Error) => {
+            console.error('[Slides auth]', err);
+            setSlidesStatus(`Auth error: ${err.message}`);
+            setSlidesLoading(false);
+          }
+        );
+      } catch (err) {
+        console.error('[Slides init]', err);
+      }
+    };
+    tryInit();
+    intervalId = setInterval(tryInit, 200);
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -307,35 +362,17 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
     }
   };
 
-  const handleExportToSlides = async () => {
-    console.log('google object:', (window as any).google);
+  const handleExportToSlides = () => {
+    if (!tokenClientRef.current) {
+      setSlidesStatus('Google auth not ready yet, please try again.');
+      return;
+    }
+    pendingExportRef.current = { title, data, customerLogoBase64, fiscalConfig, canvasStyle };
     setSlidesLoading(true);
     setSlidesStatus('');
-    try {
-      const { blob, fileName } = await exportToPptxBlob(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
-      await exportToGoogleSlides(blob, fileName, setSlidesStatus);
-    } catch (err: any) {
-      setSlidesStatus(`Error: ${err.message}`);
-    } finally {
-      setSlidesLoading(false);
-    }
+    tokenClientRef.current.requestAccessToken({ prompt: 'consent' });
   };
 
-  const handleExportPng = async () => {
-    const wasCollapsed = toolbarCollapsed;
-    setToolbarCollapsed(true);
-    setExporting(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await exportToPng(title, data, customerLogoBase64, fiscalConfig, canvasStyle);
-    } catch (error) {
-      console.error('Export error:', error);
-      alert('Export failed');
-    } finally {
-      setExporting(false);
-      setToolbarCollapsed(wasCollapsed);
-    }
-  };
 
 
   const handleReset = () => {
@@ -842,19 +879,7 @@ export default function RoadmapBuilder({ roadmapId }: RoadmapBuilderProps) {
                 <BookOpen size={16} />
                 Account Details
               </button>
-              <button
-                hidden
-                aria-hidden="true"
-                onClick={handleExportPng}
-                disabled={exporting}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all hover:-translate-y-0.5 text-sm font-semibold disabled:opacity-50"
-                style={{ background: exporting ? '#6b7280' : 'var(--primary)' }}
-                onMouseEnter={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary-hover)')}
-                onMouseLeave={(e) => !exporting && (e.currentTarget.style.background = 'var(--primary)')}
-              >
-                <Image size={16} />
-                {exporting ? 'Exporting...' : 'Export PNG'}
-              </button>
+
               <button
                 onClick={handleExportPptx}
                 disabled={exporting}
